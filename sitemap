@@ -1,0 +1,108 @@
+# Bee Cee Logistics Ltd — Website Sitemap & Feature Plan
+
+**Prepared for:** Bellion Chola & Songwe Kabonde
+**Prepared by:** Tiki Chilomo
+**Scope tier:** Tier 2 — Interactive site with client/admin dashboard
+
+---
+
+## 1. Public Site
+
+### 1.1 Home
+- Hero banner: "Logistics Our Game" — car hire, customs clearing, freight forwarding, removals, general supply
+- Trust strip: client logos (National Assembly, Oxfam, PATH, CIHEB, GIZ, Stanbic, PwC, CHAZ, Catholic Relief Services, etc.)
+- Compliance badges: ZPPA Registered, ZRA Tax Cleared, NAPSA Compliant, PACRA Incorporated
+- Quick-access buttons: Request a Quote | WhatsApp Us | Track My Job
+- Snapshot of fleet (photos, categorized)
+
+### 1.2 About Us
+- Company history (est. 2015, 28+ years combined industry experience)
+- Mission / Vision / Quality Statement
+- Provinces served (all 10)
+- Leadership: Bellion Chola (CEO), Songwe Kabonde (Marketing Executive)
+
+### 1.3 Services (parent page + 5 sub-pages, each SEO-targeted)
+- **3.1 Car Hire** — self-drive & chauffeur-driven, staff shuttle/bus hire, school pickups/tours
+- **3.2 Customs Clearing** — border town + international airport coverage
+- **3.3 Freight Forwarding** — sea, road, air; door-to-door
+- **3.4 Removals & Relocation** — pre-move survey, packing/crating, piano/heavy items, local + international
+- **3.5 General Supply & Project Logistics Consultancy**
+
+Each sub-page: description, process steps, relevant fleet, "Request a Quote" CTA specific to that service.
+
+### 1.4 Fleet
+- Filterable gallery: Saloon Cars | 4x4 | Buses | Trucks
+- Vehicle specs (capacity, use case)
+- Live availability indicator (pulled from admin calendar — "Available" / "Booked")
+
+### 1.5 Our Clients
+- Logo wall + short case-style blurbs (e.g., NGO condom distribution logistics for CHAZ, National Assembly committee touring)
+- Builds procurement-officer confidence at a glance
+
+### 1.6 Request a Quote
+- Structured form: service type → dates → route/province → vehicle/cargo type → passenger/cargo volume → contact details
+- Auto-generates PDF summary, emails to Bellion/Songwe + confirmation to client
+- Feeds directly into Admin Dashboard as a new lead
+
+### 1.7 Track My Job *(client-portal gate)*
+- Enter PO/job reference number → see status (Quote Sent → Confirmed → In Progress → Cleared/Delivered → Completed)
+- Optional login for full history (see 2.1)
+
+### 1.8 Downloads
+- Company Profile PDF
+- Compliance certificates (ZRA, NAPSA, ZPPA, PACRA) — ready for tender submissions
+- Bank confirmation letter (on request/behind form)
+
+### 1.9 Contact
+- Office address, phone numbers, email
+- WhatsApp click-to-chat
+- Simple contact form
+- Google Maps embed (Musonda Ngosa Rd, Villa Elizabetha)
+
+---
+
+## 2. Client Portal (login-gated)
+
+### 2.1 Dashboard
+- Active & past quote requests
+- Job status tracker (per job/PO)
+- Downloadable invoices/POs history
+
+### 2.2 Profile
+- Company details, saved contact info for faster repeat quote requests
+
+---
+
+## 3. Admin Dashboard (Bee Cee staff only)
+
+### 3.1 Leads / Quote Requests
+- Incoming quote requests from site, status management (New → Quoted → Won/Lost)
+
+### 3.2 Fleet & Availability Calendar
+- Mark vehicles booked/available by date — prevents double-booking, powers the public "Available" indicator
+
+### 3.3 Job / PO Tracker
+- Log PO number, client, service, amount, status (Pending → Delivered → Paid)
+- Mirrors their current paper-based PO workflow (CHAZ, Oxfam, PATH, National Assembly POs) but centralized
+
+### 3.4 Client Records
+- Client contact list, quote/job history per client
+
+### 3.5 Notifications
+- Email/SMS trigger when a quote is sent or job status changes (client sees update in portal)
+
+---
+
+## 4. Suggested Build Phases
+
+| Phase | Includes | Notes |
+|---|---|---|
+| **Phase 1 — Launch** | Sections 1.1–1.9 (full public site), basic Quote Request form → email | Gets them a credible, lead-generating site fast |
+| **Phase 2 — Dashboard** | Admin Dashboard (3.1–3.3) + Fleet Availability | Internal ops value, matches church-website scope |
+| **Phase 3 — Client Portal** | Client login, job tracking, notifications (2.1–2.2, 3.4–3.5) | Adds the "futurized" self-service layer |
+
+This phasing lets them start using and paying for value early, while Phase 2–3 become natural upsells once they see Phase 1 working.
+
+---
+
+*Next step: review with Bellion & Songwe, confirm which phase(s) to scope into the quote, then move into wireframes.*

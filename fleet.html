@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Fleet Gallery - Bee Cee Logistics</title>
+<meta name="description" content="Browse Bee Cee Logistics' fleet of saloon cars, 4x4s, buses and trucks, with live availability for hire across Zambia."/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="bee.js"></script>
+<script src="cee.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="bee.css" rel="stylesheet"/>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col pt-20">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface border-b border-outline-variant" data-site-header>
+<a class="flex items-center gap-4 font-headline-md text-headline-md font-bold text-primary" href="index.html">Bee Cee Logistics</a>
+<nav class="hidden md:flex gap-6" aria-label="Primary">
+<a class="font-body-md text-body-md nav-link--inactive" data-page="services.html" href="services.html">Services</a>
+<a class="font-body-md text-body-md nav-link--inactive" data-page="fleet.html" href="fleet.html">Fleet</a>
+<a class="font-body-md text-body-md nav-link--inactive" data-page="client.html" href="client.html">Clients</a>
+<a class="font-body-md text-body-md nav-link--inactive" data-page="contact.html" href="contact.html">Contact</a>
+</nav>
+<div class="flex items-center gap-4">
+<a class="btn btn-primary btn-sm hidden md:inline-flex" href="request.html">Request a Quote</a>
+<button class="md:hidden text-primary p-2" data-menu-toggle aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation menu">
+<span class="material-symbols-outlined" data-icon-open="">menu</span>
+<span class="material-symbols-outlined hidden" data-icon-close="">close</span>
+</button>
+</div>
+</header>
+<!-- Mobile Nav Drawer -->
+<div id="mobile-menu" data-mobile-menu="" hidden="">
+<a data-page="index.html" href="index.html">Home</a>
+<a data-page="services.html" href="services.html">Services</a>
+<a data-page="fleet.html" href="fleet.html">Fleet</a>
+<a data-page="client.html" href="client.html">Clients</a>
+<a data-page="contact.html" href="contact.html">Contact</a>
+<a class="btn btn-primary btn-block mobile-menu__cta" href="request.html">Request a Quote</a>
+</div>
+<main class="flex-grow px-margin-mobile md:px-margin-desktop py-margin-desktop max-w-container-max mx-auto w-full">
+<!-- Header & Filters -->
+<section class="mb-gutter text-center md:text-left">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-4">Our Fleet</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Reliable vehicles for every logistics need, from executive transport to heavy freight.</p>
+</section>
+<section class="mb-8 overflow-x-auto pb-2">
+<div class="flex gap-4 min-w-max" data-fleet-filters="" role="group" aria-label="Filter fleet by category">
+<button class="fleet-filter" data-filter="all" aria-pressed="true">All</button>
+<button class="fleet-filter" data-filter="saloon" aria-pressed="false">Saloon Cars</button>
+<button class="fleet-filter" data-filter="4x4" aria-pressed="false">4x4 &amp; SUVs</button>
+<button class="fleet-filter" data-filter="bus" aria-pressed="false">Buses</button>
+<button class="fleet-filter" data-filter="truck" aria-pressed="false">Trucks</button>
+</div>
+</section>
+<!-- Fleet Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Card 1 -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card="" data-category="4x4">
+<div class="h-48 relative">
+<img class="w-full h-full object-cover" alt="Toyota Land Cruiser Prado parked outside a corporate office building" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAneVpa1rZfe1lGEupamQQJjI3kVDM1QmC0ToiCngotCVk9sQFlPbs21EeD5JCbhysVhoHPCL1ve9FSNX07MUFO-JVCCiEW7bJ_L9tteUrGzMOm3JmwH7JeimTzGwt3STCSWV4wprGGQB0Quz-5dAPYCWfoy76Doo8Uclmo56PjO1ivsMNuZ-zpPaUmL2MBrkvUv_zEMemu0-Co7XB-OBjdftg-WpNLG3F1wevepRLWNBB5iziNf6aV"/>
+<span class="absolute top-2 right-2 bg-success text-white font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">Available</span>
+</div>
+<div class="p-4 flex-grow flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Toyota Land Cruiser Prado</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">4x4 &amp; SUV</p>
+</div>
+<a class="btn btn-primary btn-block btn-sm" href="request.html">Book Now</a>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card="" data-category="saloon">
+<div class="h-48 relative">
+<img class="w-full h-full object-cover" alt="Black Mercedes-Benz E-Class sedan waiting at a business district curb" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8FUPj2-Gougy8ytxd57l-ZKEyP6SLGBBPS-Q9jEnlsMDLwj2Y9r2srZ1I__dYw66l3s1G_E-kzmSKydZZS-EcRl_wAbxM_snBshU6VaSv5Sq0k8rWho6MLojHLFPbSy3VkAc9UoHr3aQXH-1FX4llTIq8NXaWTOpHuuFJQJ_TLOuBR-NAIX1K1yMtyqwZ0nBTrX8BX39-7adbVZrAU8LFo03nUeqKvlWZ2c8_Tb4DTua0CtjLSua3"/>
+<span class="absolute top-2 right-2 bg-error text-on-error font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">Booked</span>
+</div>
+<div class="p-4 flex-grow flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Mercedes-Benz E-Class</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Saloon Car</p>
+</div>
+<button class="btn btn-outline btn-block btn-sm" disabled="" aria-disabled="true">Currently Booked</button>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card="" data-category="truck">
+<div class="h-48 relative">
+<img class="w-full h-full object-cover" alt="Scania freight truck with a branded Bee Cee Logistics trailer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPLtPNyvZ_TFxqoYWGX3wIm8-AAGuDd3oM0Wf0tziKBRfaonBkMJVa10flL6yZXMa7qQi3gbJmGRynL0fV0thIWz7lfF8nQOHj1emakue1TcUQEGZuSswTs8fDT_Fz0qhIYbqU3N8NkbL0aJrIaFsxIYciD48AEAY5hYwNwxL_kn-vaZOHdLThMCAPJJ_ha8zpyjYfz0PsfxJCObjmXbc_EfTVYTwmXEMiGmqCN5JtgE2M-PLimgxE"/>
+<span class="absolute top-2 right-2 bg-success text-white font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">Available</span>
+</div>
+<div class="p-4 flex-grow flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Scania R450 Truck</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Trucks</p>
+</div>
+<a class="btn btn-primary btn-block btn-sm" href="request.html">Book Now</a>
+</div>
+</article>
+<!-- Card 4 -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card="" data-category="bus">
+<div class="h-48 relative">
+<img class="w-full h-full object-cover" alt="White Toyota Coaster bus parked in a paved transport yard" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl6A1R7snXZwuq8J-oq3K_oFO-xPaDnauSKLAvgBHXYaKchPM3woRZFCH-y2pufjKRjVui3v_1KKZfiMfWJ8BKY0QsbDsgUDgJLnx2mRXqJPAT-NU530kGik8Z2LZFe_CJTF-MAtb7ucaeDc3BudN5y6xQlleV6MHgHpNL8SA9IyGmfa3ULUvdWdT0w_LMbodAtF07j_JcfR6Xj-HecrfH8o9JdF81FVx98nrW65fcoqvmPkcJCcI3"/>
+<span class="absolute top-2 right-2 bg-success text-white font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">Available</span>
+</div>
+<div class="p-4 flex-grow flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Toyota Coaster Bus</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Buses</p>
+</div>
+<a class="btn btn-primary btn-block btn-sm" href="request.html">Book Now</a>
+</div>
+</article>
+<!-- Card 5 -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card="" data-category="4x4">
+<div class="h-48 relative">
+<img class="w-full h-full object-cover" alt="Ford Ranger double-cab pickup truck near a mining site perimeter" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4gtgGkVg4cf5U5ZXbAXG6iDYK2hq76n7d2qY2-n35P-tFD_WtLehVwz74-bRBP4vzyJzOKXWDGW_P5AU7alsRwV4gz4wKUb2DTRijcG07mZqc_5oHilpJHIzj3EDu5i4Iv4b7ZQj8S85PY_u0AEij3QjYK9Ft0ag9HpYTKR6SY7y1kmYR3fxj2yR19Rf0_huBdRpOvIMLlRMkQFWESAGGKDeI-74L4fZTNO0ZKrU0qqRjzxbqPkmg"/>
+<span class="absolute top-2 right-2 bg-success text-white font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">Available</span>
+</div>
+<div class="p-4 flex-grow flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Ford Ranger Double Cab</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">4x4 &amp; SUV</p>
+</div>
+<a class="btn btn-primary btn-block btn-sm" href="request.html">Book Now</a>
+</div>
+</article>
+<!-- Card 6 -->
+<article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card="" data-category="truck">
+<div class="h-48 relative">
+<img class="w-full h-full object-cover" alt="Isuzu NQR box truck parked at a loading dock" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6tZqCRvl9bplSXrJBePgvwowRBBtoRysnPNLT0fniq5ftLL0Nsipp8JEM-VlJj_n_iShTBi2xotGh8GrNqcfrn2JJ3oIIcRPG6WW6sD90WryMnRnj7D9CAdEUi5iSr44UDv29FFFodr2wou-TI2izDUho0Lh7VsgWwNXIRWVgGLRraj1KJ_5MGEUzVXm2B9Ii9nrtbs4Ekl23M9BDtZ6k7aAUZQe5Oqxgo9jNtBpKQcUwiqHeauOk"/>
+<span class="absolute top-2 right-2 bg-error text-on-error font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">Booked</span>
+</div>
+<div class="p-4 flex-grow flex flex-col justify-between">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary mb-1">Isuzu NQR Box Truck</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Trucks</p>
+</div>
+<button class="btn btn-outline btn-block btn-sm" disabled="" aria-disabled="true">Currently Booked</button>
+</div>
+</article>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full py-margin-desktop px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-4 gap-gutter bg-primary border-t border-primary-container mt-auto text-on-primary font-label-sm text-label-sm">
+<div class="flex flex-col gap-4 md:col-span-1">
+<span class="font-headline-md text-headline-md font-bold text-on-primary">Bee Cee Logistics</span>
+<p class="text-on-primary-container">28+ years of combined experience in freight, car hire, and customs clearing across Zambia.</p>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="text-on-primary font-bold mb-2">Company</h4>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="index.html">Home</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="services.html">Services</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="fleet.html">Fleet</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="client.html">Our Clients</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="contact.html">Contact</a>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="text-on-primary font-bold mb-2">Get Started</h4>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="request.html">Request a Quote</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="clientarea.html">Client Portal</a>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="text-on-primary font-bold mb-2">Compliance</h4>
+<div class="flex flex-wrap gap-2">
+<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZPPA Certified</span>
+<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZRA Compliant</span>
+<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">NAPSA Registered</span>
+<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">PACRA Verified</span>
+</div>
+</div>
+<div class="col-span-1 md:col-span-4 mt-4 pt-4 border-t border-primary-container/40 text-on-primary-container">
+            © <span data-current-year="">2024</span> Bee Cee Logistics Ltd. All rights reserved.
+        </div>
+</footer>
+</body>
+</html>

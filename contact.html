@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Contact Us - Bee Cee Logistics</title>
+<meta name="description" content="Get in touch with Bee Cee Logistics for inquiries, quotes, or support. Musonda Ngosa Rd, Villa Elizabetha, Lusaka, Zambia."/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="bee.js"></script>
+<script src="cee.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="bee.css" rel="stylesheet"/>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col pt-20">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface border-b border-outline-variant" data-site-header>
+<a class="flex items-center gap-4 font-headline-md text-headline-md font-bold text-primary" href="index.html">Bee Cee Logistics</a>
+<nav class="hidden md:flex gap-6" aria-label="Primary">
+<a class="font-body-md text-body-md nav-link--inactive" data-page="services.html" href="services.html">Services</a>
+<a class="font-body-md text-body-md nav-link--inactive" data-page="fleet.html" href="fleet.html">Fleet</a>
+<a class="font-body-md text-body-md nav-link--inactive" data-page="client.html" href="client.html">Clients</a>
+<a class="font-body-md text-body-md nav-link--inactive" data-page="contact.html" href="contact.html">Contact</a>
+</nav>
+<div class="flex items-center gap-4">
+<a class="btn btn-primary btn-sm hidden md:inline-flex" href="request.html">Request a Quote</a>
+<button class="md:hidden text-primary p-2" data-menu-toggle aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation menu">
+<span class="material-symbols-outlined" data-icon-open="">menu</span>
+<span class="material-symbols-outlined hidden" data-icon-close="">close</span>
+</button>
+</div>
+</header>
+<!-- Mobile Nav Drawer -->
+<div id="mobile-menu" data-mobile-menu="" hidden="">
+<a data-page="index.html" href="index.html">Home</a>
+<a data-page="services.html" href="services.html">Services</a>
+<a data-page="fleet.html" href="fleet.html">Fleet</a>
+<a data-page="client.html" href="client.html">Clients</a>
+<a data-page="contact.html" href="contact.html">Contact</a>
+<a class="btn btn-primary btn-block mobile-menu__cta" href="request.html">Request a Quote</a>
+</div>
+<!-- Main Content Canvas -->
+<main class="flex-grow px-margin-mobile md:px-margin-desktop py-margin-desktop max-w-container-max mx-auto w-full">
+<!-- Hero Section -->
+<section class="text-center mb-[80px]">
+<h1 class="font-display-lg text-display-lg text-primary mb-unit">Let's Talk Logistics</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">Get in touch with our team for inquiries, quotes, or support. We are here to keep your supply chain moving.</p>
+</section>
+<!-- Split Layout: Contact Info & Map / Form -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-[80px]">
+<!-- Left Column: Info & Map -->
+<div class="flex flex-col gap-gutter">
+<!-- Contact Info Card -->
+<div class="bg-surface-container-lowest p-gutter rounded-lg border border-outline-variant shadow-[0px_4px_12px_rgba(31,58,95,0.08)]">
+<h2 class="font-headline-md text-headline-md text-primary mb-gutter">Contact Information</h2>
+<div class="flex flex-col gap-6">
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-secondary icon-fill" aria-hidden="true">location_on</span>
+<div>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Head Office</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Musonda Ngosa Rd,<br/>Villa Elizabetha,<br/>Lusaka, Zambia</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-secondary icon-fill" aria-hidden="true">call</span>
+<div>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Phone / WhatsApp</h3>
+<p class="font-body-md text-body-md text-on-surface-variant"><a class="hover:text-primary transition-colors" href="tel:+260211000000">+260 211 000 000</a></p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-secondary icon-fill" aria-hidden="true">mail</span>
+<div>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Email</h3>
+<p class="font-body-md text-body-md text-on-surface-variant"><a class="hover:text-primary transition-colors" href="mailto:info@beeceelogistics.co.zm">info@beeceelogistics.co.zm</a></p>
+</div>
+</div>
+</div>
+</div>
+<!-- Embedded Map Card -->
+<div class="bg-surface-container-lowest p-unit rounded-lg border border-outline-variant h-[300px] overflow-hidden">
+<img class="w-full h-full object-cover rounded-DEFAULT" alt="Map view of Lusaka, Zambia highlighting the Villa Elizabetha area near the head office" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtRUaTT3H6OamB03XAYy-NuUh7OEsr5tGZ_4CSr0HXF8Tp24s5Zo2mwEtmJICuPBwKiKAio73Vx9JoYkGC10GcQh2HAcgvuHKnLXBgpkfUmfie5eM0EsVWYuQCuojkmroSJ8xAhz_XlSzwozLnUE4GaXo4jKs6pxtg8Q2faAyrU772e7UaK02pPCjngOC-SakKDlv1oGeFtoMPUFk7IYM4i9f4KQQCB_t_VynjNC-lVwhIh4ZCxDqR"/>
+</div>
+</div>
+<!-- Right Column: Contact Form -->
+<div class="bg-surface-container-lowest p-gutter rounded-lg border border-outline-variant shadow-[0px_4px_12px_rgba(31,58,95,0.08)]">
+<h2 class="font-headline-md text-headline-md text-primary mb-2">Send an Inquiry</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-gutter">Fill out the form below and our team will get back to you shortly.</p>
+<form class="flex flex-col gap-6" data-contact-form="">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="firstName">First Name</label>
+<input class="form-field font-body-md text-body-md" id="firstName" name="firstName" placeholder="John" type="text" required=""/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="lastName">Last Name</label>
+<input class="form-field font-body-md text-body-md" id="lastName" name="lastName" placeholder="Doe" type="text" required=""/>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="email">Email Address</label>
+<input class="form-field font-body-md text-body-md" id="email" name="email" placeholder="john@company.com" type="email" required=""/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="inquiryType">Inquiry Type</label>
+<select class="form-field font-body-md text-body-md" id="inquiryType" name="inquiryType">
+<option>General Inquiry</option>
+<option>Request a Quote</option>
+<option>Fleet Services</option>
+<option>Support</option>
+</select>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="message">Message</label>
+<textarea class="form-field font-body-md text-body-md resize-none" id="message" name="message" placeholder="How can we help you?" rows="5" required=""></textarea>
+</div>
+<button class="btn btn-primary mt-4 w-full md:w-auto self-start" type="submit">Submit Message</button>
+</form>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="w-full py-margin-desktop px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-4 gap-gutter bg-primary border-t border-primary-container mt-auto text-on-primary font-label-sm text-label-sm">
+<div class="flex flex-col gap-4 md:col-span-1">
+<span class="font-headline-md text-headline-md font-bold text-on-primary">Bee Cee Logistics</span>
+<p class="text-on-primary-container">28+ years of combined experience in freight, car hire, and customs clearing across Zambia.</p>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="text-on-primary font-bold mb-2">Company</h4>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="index.html">Home</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="services.html">Services</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="fleet.html">Fleet</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="client.html">Our Clients</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="contact.html">Contact</a>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="text-on-primary font-bold mb-2">Get Started</h4>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="request.html">Request a Quote</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="clientarea.html">Client Portal</a>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="text-on-primary font-bold mb-2">Compliance</h4>
+<div class="flex flex-wrap gap-2">
+<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZPPA Certified</span>
+<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZRA Compliant</span>
+<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">NAPSA Registered</span>
+<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">PACRA Verified</span>
+</div>
+</div>
+<div class="col-span-1 md:col-span-4 mt-4 pt-4 border-t border-primary-container/40 text-on-primary-container">
+            © <span data-current-year="">2024</span> Bee Cee Logistics Ltd. All rights reserved.
+        </div>
+</footer>
+</body>
+</html>

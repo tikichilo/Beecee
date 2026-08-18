@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bee Cee Logistics - Client Portal Dashboard</title>
+<meta name="description" content="Track active jobs, view invoices, and manage your Bee Cee Logistics account from the client portal."/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="bee.js"></script>
+<script src="cee.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="bee.css" rel="stylesheet"/>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased min-h-screen flex flex-col md:flex-row">
+<!-- Top Navigation (Mobile Only) -->
+<nav class="md:hidden fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile h-20 bg-surface border-b border-outline-variant" aria-label="Primary">
+<a class="font-headline-md text-headline-md font-bold text-primary" href="index.html">Bee Cee Logistics</a>
+<button class="text-on-surface-variant p-2" data-menu-toggle aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation menu">
+<span class="material-symbols-outlined text-2xl" data-icon-open="">menu</span>
+<span class="material-symbols-outlined text-2xl hidden" data-icon-close="">close</span>
+</button>
+</nav>
+<!-- Mobile Nav Drawer -->
+<div id="mobile-menu" data-mobile-menu="" hidden="">
+<a data-page="clientarea.html" href="clientarea.html">Job Tracking</a>
+<a href="clientarea.html">Invoice History</a>
+<a href="contact.html">Support</a>
+<a href="index.html">Back to Website</a>
+</div>
+<!-- Side Navigation (Desktop) -->
+<aside class="hidden md:flex fixed left-0 top-0 h-full w-[280px] flex-col gap-unit p-unit bg-surface-container-low border-r border-outline-variant z-40">
+<a class="p-4 mb-4 font-headline-md text-headline-md font-bold text-primary tracking-tight" href="index.html">Bee Cee Logistics</a>
+<div class="flex items-center gap-3 p-4 mb-6">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+                C
+            </div>
+<div>
+<div class="font-bold text-primary">Client Portal</div>
+<div class="text-on-surface-variant text-sm">Manage your logistics</div>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-2" aria-label="Client portal">
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container font-bold rounded-lg" href="clientarea.html" aria-current="page">
+<span class="material-symbols-outlined icon-fill" aria-hidden="true">local_shipping</span>
+                Job Tracking
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all" href="clientarea.html">
+<span class="material-symbols-outlined" aria-hidden="true">receipt_long</span>
+                Invoice History
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all" href="contact.html">
+<span class="material-symbols-outlined" aria-hidden="true">support_agent</span>
+                Support
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-variant rounded-lg transition-all mt-auto" href="index.html">
+<span class="material-symbols-outlined" aria-hidden="true">logout</span>
+                Back to Website
+            </a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-h-screen pt-20 md:pt-0 md:ml-[280px]">
+<!-- Header Section -->
+<header class="px-margin-mobile md:px-margin-desktop py-8 md:py-12 bg-surface">
+<div class="max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+<div>
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-2">Welcome back, Copperbelt Mining Corp.</h1>
+<p class="text-on-surface-variant font-body-lg text-body-lg">Here is an overview of your active logistics operations.</p>
+</div>
+<div class="flex gap-4">
+<button class="btn btn-outline" type="button">
+<span class="material-symbols-outlined text-sm" aria-hidden="true">download</span>
+                        Statements
+                    </button>
+<a class="btn btn-primary" href="request.html">
+<span class="material-symbols-outlined text-sm" aria-hidden="true">add</span>
+                        New Quote
+                    </a>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="flex-1 bg-background px-margin-mobile md:px-margin-desktop py-8 md:py-12">
+<div class="max-w-container-max mx-auto grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Left Column: Job Tracking -->
+<div class="lg:col-span-2 flex flex-col gap-6">
+<h2 class="font-headline-md text-headline-md text-primary border-b border-outline-variant pb-2">Active Job Tracking</h2>
+<!-- Tracking Card 1 -->
+<div class="bg-surface rounded-lg border border-outline-variant p-6 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Waybill #BC-8942-A</div>
+<h3 class="font-bold text-primary text-lg">Lusaka to Copperbelt Freight</h3>
+</div>
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px] mr-1" aria-hidden="true">moving</span>
+                                In Transit
+                            </span>
+</div>
+<div class="mb-6">
+<div class="flex justify-between text-sm text-on-surface-variant mb-2">
+<span>Dispatched: Today, 08:00 AM</span>
+<span>ETA: Tomorrow, 14:00 PM</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-secondary-container w-[45%] rounded-full"></div>
+</div>
+<div class="flex justify-between text-xs text-on-surface-variant mt-2 font-data-mono text-data-mono">
+<span>Lusaka Depot</span>
+<span class="text-center">Kabwe (Current)</span>
+<span>Ndola Hub</span>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-outline-variant">
+<div>
+<div class="text-xs text-on-surface-variant mb-1">Vehicle</div>
+<div class="font-data-mono text-data-mono text-primary">Volvo FH16 (ABJ 1234)</div>
+</div>
+<div>
+<div class="text-xs text-on-surface-variant mb-1">Driver</div>
+<div class="font-data-mono text-data-mono text-primary">K. Mulenga</div>
+</div>
+<div>
+<div class="text-xs text-on-surface-variant mb-1">Cargo</div>
+<div class="font-data-mono text-data-mono text-primary">Industrial Spares</div>
+</div>
+<div>
+<div class="text-xs text-on-surface-variant mb-1">Weight</div>
+<div class="font-data-mono text-data-mono text-primary">24 Tons</div>
+</div>
+</div>
+</div>
+<!-- Tracking Card 2 -->
+<div class="bg-surface rounded-lg border border-outline-variant p-6 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div>
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Waybill #BC-8945-C</div>
+<h3 class="font-bold text-primary text-lg">Solwezi Equipment Transfer</h3>
+</div>
+<span class="inline-flex items-center px-3 py-1 rounded-full bg-surface-variant text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px] mr-1" aria-hidden="true">inventory_2</span>
+                                Loading
+                            </span>
+</div>
+<div class="mb-6">
+<div class="flex justify-between text-sm text-on-surface-variant mb-2">
+<span>Scheduled: Today, 16:00 PM</span>
+<span>ETA: Pending Dispatch</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-2 bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-outline-variant w-[10%] rounded-full"></div>
+</div>
+<div class="flex justify-between text-xs text-on-surface-variant mt-2 font-data-mono text-data-mono">
+<span>Chingola</span>
+<span>Solwezi</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Invoice Summary & Stats -->
+<div class="flex flex-col gap-6">
+<h2 class="font-headline-md text-headline-md text-primary border-b border-outline-variant pb-2">Recent Invoices</h2>
+<div class="bg-surface rounded-lg border border-outline-variant overflow-hidden shadow-sm">
+<!-- Invoice Item 1 -->
+<div class="p-4 border-b border-outline-variant hover:bg-surface-container-lowest transition-colors flex justify-between items-center">
+<div>
+<div class="font-bold text-primary">INV-2024-1042</div>
+<div class="text-sm text-on-surface-variant">Oct 15, 2024 • K 45,000.00</div>
+</div>
+<span class="text-error font-label-sm text-label-sm bg-error-container px-2 py-1 rounded">Pending</span>
+</div>
+<!-- Invoice Item 2 -->
+<div class="p-4 border-b border-outline-variant hover:bg-surface-container-lowest transition-colors flex justify-between items-center">
+<div>
+<div class="font-bold text-primary">INV-2024-0988</div>
+<div class="text-sm text-on-surface-variant">Sep 28, 2024 • K 112,500.00</div>
+</div>
+<span class="text-on-success-container font-label-sm text-label-sm bg-success-container px-2 py-1 rounded">Paid</span>
+</div>
+<!-- Invoice Item 3 -->
+<div class="p-4 hover:bg-surface-container-lowest transition-colors flex justify-between items-center">
+<div>
+<div class="font-bold text-primary">INV-2024-0950</div>
+<div class="text-sm text-on-surface-variant">Sep 10, 2024 • K 88,200.00</div>
+</div>
+<span class="text-on-success-container font-label-sm text-label-sm bg-success-container px-2 py-1 rounded">Paid</span>
+</div>
+<div class="p-3 bg-surface-container-low border-t border-outline-variant text-center">
+<a class="link-arrow" href="clientarea.html">
+                                View All Invoices
+                                <span class="material-symbols-outlined text-sm" aria-hidden="true">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- Compliance / Quick Info -->
+<div class="bg-primary-container text-on-primary-container rounded-lg p-6 mt-4">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-secondary-container" aria-hidden="true">verified_user</span>
+<h3 class="font-bold text-on-primary">Account Status</h3>
+</div>
+<ul class="space-y-3 text-sm">
+<li class="flex justify-between border-b border-surface-tint pb-2">
+<span>Credit Limit</span>
+<span class="font-data-mono text-data-mono text-on-primary">K 500,000.00</span>
+</li>
+<li class="flex justify-between border-b border-surface-tint pb-2">
+<span>Current Balance</span>
+<span class="font-data-mono text-data-mono text-secondary-fixed">K 45,000.00</span>
+</li>
+<li class="flex justify-between">
+<span>ZRA TPIN</span>
+<span class="font-data-mono text-data-mono text-on-primary">Verified</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>
