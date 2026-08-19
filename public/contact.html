@@ -6,11 +6,665 @@
 <title>Contact Us - Bee Cee Logistics</title>
 <meta name="description" content="Get in touch with Bee Cee Logistics for inquiries, quotes, or support. Musonda Ngosa Rd, Villa Elizabetha, Lusaka, Zambia."/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script src="bee.js"></script>
-<script src="cee.js"></script>
+<script>
+/* ==========================================================================
+   Bee Cee Logistics — bee.js
+   Design-system config (Tailwind theme tokens) + site-wide UI reactivity.
+   Page-specific business logic (forms, filters, dashboards) lives in cee.js.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Tailwind design tokens (single source of truth for every page)
+   -------------------------------------------------------------------------- */
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "surface-bright": "#f8f9fa",
+        "on-background": "#191c1d",
+        "secondary": "#7b5800",
+        "tertiary-fixed-dim": "#ffb783",
+        "outline": "#74777f",
+        "secondary-fixed-dim": "#f7bd48",
+        "primary-fixed": "#d5e3ff",
+        "inverse-primary": "#aec8f4",
+        "on-tertiary-container": "#f2882c",
+        "on-tertiary-fixed": "#301400",
+        "surface-container-lowest": "#ffffff",
+        "tertiary": "#3c1b00",
+        "primary": "#032448",
+        "on-error": "#ffffff",
+        "primary-container": "#1f3a5f",
+        "surface": "#f8f9fa",
+        "secondary-container": "#fdc34d",
+        "on-surface": "#191c1d",
+        "surface-tint": "#465f86",
+        "on-primary": "#ffffff",
+        "on-secondary-fixed-variant": "#5d4200",
+        "secondary-fixed": "#ffdea6",
+        "tertiary-container": "#5d2c00",
+        "error": "#ba1a1a",
+        "on-surface-variant": "#43474e",
+        "on-tertiary": "#ffffff",
+        "on-secondary-container": "#715000",
+        "surface-container-low": "#f3f4f5",
+        "error-container": "#ffdad6",
+        "inverse-surface": "#2e3132",
+        "surface-variant": "#e1e3e4",
+        "primary-fixed-dim": "#aec8f4",
+        "outline-variant": "#c4c6cf",
+        "inverse-on-surface": "#f0f1f2",
+        "surface-container-high": "#e7e8e9",
+        "on-primary-container": "#8ba4cf",
+        "tertiary-fixed": "#ffdcc5",
+        "on-error-container": "#93000a",
+        "background": "#f8f9fa",
+        "on-tertiary-fixed-variant": "#713700",
+        "surface-container": "#edeeef",
+        "on-secondary": "#ffffff",
+        "surface-dim": "#d9dadb",
+        "on-primary-fixed": "#001c3b",
+        "surface-container-highest": "#e1e3e4",
+        "on-primary-fixed-variant": "#2d476d",
+        "on-secondary-fixed": "#271900",
+        "success": "#146c2e",
+        "success-container": "#d1f4e0",
+        "on-success-container": "#0e613b"
+      },
+      borderRadius: {
+        DEFAULT: "0.125rem",
+        lg: "0.25rem",
+        xl: "0.5rem",
+        full: "0.75rem"
+      },
+      spacing: {
+        "container-max": "1280px",
+        unit: "8px",
+        "margin-mobile": "16px",
+        "margin-desktop": "40px",
+        gutter: "24px"
+      },
+      fontFamily: {
+        "body-lg": ["Inter"],
+        "display-lg": ["Montserrat"],
+        "label-sm": ["Inter"],
+        "body-md": ["Inter"],
+        "display-lg-mobile": ["Montserrat"],
+        "headline-md": ["Montserrat"],
+        "data-mono": ["Inter"]
+      },
+      fontSize: {
+        "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }],
+        "display-lg": ["48px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "label-sm": ["12px", { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600" }],
+        "body-md": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+        "display-lg-mobile": ["32px", { lineHeight: "1.2", fontWeight: "700" }],
+        "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "600" }],
+        "data-mono": ["14px", { lineHeight: "1.4", fontWeight: "500" }]
+      }
+    }
+  }
+};
+
+/* --------------------------------------------------------------------------
+   2. Site-wide reactivity
+   -------------------------------------------------------------------------- */
+(function () {
+  "use strict";
+
+  document.addEventListener("DOMContentLoaded", init);
+
+  function init() {
+    highlightActiveNavLink();
+    setupMobileMenu();
+    setupHeaderScrollShadow();
+    setupYear();
+  }
+
+  /**
+   * Every nav link carries data-page="services" etc. We compare that against
+   * the current file name so the same nav markup can be reused, byte for
+   * byte, on every page instead of hand-editing "active" classes per page.
+   */
+  function highlightActiveNavLink() {
+    const current = (location.pathname.split("/").pop() || "index.html") || "index.html";
+
+    document.querySelectorAll("[data-page]").forEach((link) => {
+      const isActive = link.getAttribute("data-page") === current;
+      link.classList.toggle("nav-link--active", isActive);
+      link.classList.toggle("nav-link--inactive", !isActive);
+      if (isActive) {
+        link.setAttribute("aria-current", "page");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    });
+  }
+
+  /**
+   * Hamburger toggle shared by every page that has a mobile nav drawer.
+   * Markup contract:
+   *   <button data-menu-toggle aria-controls="mobile-menu" aria-expanded="false">
+   *   <div id="mobile-menu" data-mobile-menu hidden> ... </div>
+   */
+  function setupMobileMenu() {
+    const toggle = document.querySelector("[data-menu-toggle]");
+    const menu = document.querySelector("[data-mobile-menu]");
+    if (!toggle || !menu) return;
+
+    const openIcon = toggle.querySelector("[data-icon-open]");
+    const closeIcon = toggle.querySelector("[data-icon-close]");
+
+    function setState(isOpen) {
+      toggle.setAttribute("aria-expanded", String(isOpen));
+      menu.hidden = !isOpen;
+      menu.classList.toggle("mobile-menu--open", isOpen);
+      if (openIcon && closeIcon) {
+        openIcon.classList.toggle("hidden", isOpen);
+        closeIcon.classList.toggle("hidden", !isOpen);
+      }
+    }
+
+    toggle.addEventListener("click", () => {
+      setState(menu.hidden);
+    });
+
+    menu.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => setState(false));
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !menu.hidden) setState(false);
+    });
+  }
+
+  /** Adds a subtle shadow to the fixed header once the page has scrolled. */
+  function setupHeaderScrollShadow() {
+    const header = document.querySelector("[data-site-header]");
+    if (!header) return;
+
+    function update() {
+      header.classList.toggle("site-header--scrolled", window.scrollY > 8);
+    }
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+  }
+
+  /** Keeps every footer's © year correct without hand-editing each page. */
+  function setupYear() {
+    document.querySelectorAll("[data-current-year]").forEach((el) => {
+      el.textContent = new Date().getFullYear();
+    });
+  }
+})();
+</script>
+<script>
+/* ==========================================================================
+   Bee Cee Logistics — cee.js
+   Page-specific functionality: form validation & submission, fleet
+   filtering, toast notifications. Cross-page UI reactivity (nav, mobile
+   menu) lives in bee.js.
+   ========================================================================== */
+
+(function () {
+  "use strict";
+
+  document.addEventListener("DOMContentLoaded", init);
+
+  function init() {
+    setupFleetFilters();
+    setupFormValidation("[data-contact-form]", contactFormFields);
+    setupFormValidation("[data-quote-form]", quoteFormFields);
+  }
+
+  /* ------------------------------------------------------------------------
+     Toast helper (shared by both forms)
+     ------------------------------------------------------------------------ */
+  function showToast(message, variant) {
+    let toast = document.querySelector(".toast");
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.className = "toast";
+      toast.setAttribute("role", "status");
+      toast.innerHTML =
+        '<span class="material-symbols-outlined" aria-hidden="true">check_circle</span>' +
+        '<span class="toast__message"></span>';
+      document.body.appendChild(toast);
+    }
+    toast.classList.toggle("toast--error", variant === "error");
+    toast.querySelector(".toast__message").textContent = message;
+    toast.classList.add("toast--visible");
+    window.clearTimeout(showToast._timer);
+    showToast._timer = window.setTimeout(() => {
+      toast.classList.remove("toast--visible");
+    }, 4000);
+  }
+
+  /* ------------------------------------------------------------------------
+     Fleet filters (fleet.html)
+     ------------------------------------------------------------------------ */
+  function setupFleetFilters() {
+    const filterBar = document.querySelector("[data-fleet-filters]");
+    const cards = document.querySelectorAll("[data-fleet-card]");
+    if (!filterBar || !cards.length) return;
+
+    const buttons = filterBar.querySelectorAll("[data-filter]");
+
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        buttons.forEach((b) => b.setAttribute("aria-pressed", "false"));
+        btn.setAttribute("aria-pressed", "true");
+
+        const filter = btn.getAttribute("data-filter");
+        cards.forEach((card) => {
+          const category = card.getAttribute("data-category");
+          const show = filter === "all" || category === filter;
+          card.hidden = !show;
+        });
+      });
+    });
+  }
+
+  /* ------------------------------------------------------------------------
+     Form validation & mock submission
+     ------------------------------------------------------------------------ */
+  const contactFormFields = {
+    firstName: { required: true, label: "First name" },
+    lastName: { required: true, label: "Last name" },
+    email: { required: true, label: "Email address", type: "email" },
+    message: { required: true, label: "Message" }
+  };
+
+  const quoteFormFields = {
+    fullName: { required: true, label: "Full name" },
+    email: { required: true, label: "Email address", type: "email" },
+    phone: { required: true, label: "Phone number" },
+    serviceType: { required: true, label: "Service type" }
+  };
+
+  function setupFormValidation(selector, fieldMap) {
+    const form = document.querySelector(selector);
+    if (!form) return;
+
+    form.setAttribute("novalidate", "");
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const errors = validate(form, fieldMap);
+      if (errors.length) {
+        showToast(
+          "Please fix " + errors.length + " field" + (errors.length > 1 ? "s" : "") + " before submitting.",
+          "error"
+        );
+        return;
+      }
+      const submitBtn = form.querySelector('[type="submit"], [data-submit]');
+      const originalLabel = submitBtn ? submitBtn.textContent : "";
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending…";
+      }
+      // Placeholder for a real backend call — swap this for a fetch() to
+      // your quote/contact API endpoint when one is available.
+      window.setTimeout(() => {
+        showToast("Thanks — we've received your message and will be in touch shortly.");
+        form.reset();
+        clearFieldErrors(form, fieldMap);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalLabel;
+        }
+      }, 600);
+    });
+
+    // Clear a field's error state as soon as the person fixes it.
+    Object.keys(fieldMap).forEach((name) => {
+      const field = form.elements.namedItem(name);
+      if (!field) return;
+      field.addEventListener("input", () => setFieldError(field, false));
+      field.addEventListener("change", () => setFieldError(field, false));
+    });
+  }
+
+  function validate(form, fieldMap) {
+    const errors = [];
+    Object.entries(fieldMap).forEach(([name, rules]) => {
+      const field = form.elements.namedItem(name);
+      if (!field) return;
+      const value = (field.value || "").trim();
+      let invalid = false;
+
+      if (rules.required && !value) invalid = true;
+      if (!invalid && rules.type === "email" && value && !isValidEmail(value)) invalid = true;
+
+      setFieldError(field, invalid, invalid && rules.type === "email" && value ? "Enter a valid email address." : `${rules.label} is required.`);
+      if (invalid) errors.push(name);
+    });
+    return errors;
+  }
+
+  function setFieldError(field, isInvalid, message) {
+    field.setAttribute("data-invalid", String(isInvalid));
+    let helper = field.parentElement.querySelector(".form-error-text");
+    if (isInvalid) {
+      if (!helper) {
+        helper = document.createElement("p");
+        helper.className = "form-error-text";
+        field.parentElement.appendChild(helper);
+      }
+      helper.textContent = message || "This field is required.";
+    } else if (helper) {
+      helper.remove();
+    }
+  }
+
+  function clearFieldErrors(form, fieldMap) {
+    Object.keys(fieldMap).forEach((name) => {
+      const field = form.elements.namedItem(name);
+      if (field) setFieldError(field, false);
+    });
+  }
+
+  function isValidEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+})();
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Montserrat:wght@600;700&amp;display=swap" rel="stylesheet"/>
-<link href="bee.css" rel="stylesheet"/>
+<style>
+/* ==========================================================================
+   Bee Cee Logistics — bee.css
+   All hand-written CSS for the site. Tailwind (loaded via CDN, configured in
+   bee.js) supplies the utility classes used throughout the markup; this file
+   only holds things Tailwind utilities can't express cleanly: base type
+   rules, the Material Symbols fill defaults, small named components (nav,
+   footer, mobile menu) and one-off decorative patterns.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #f8f9fa; /* background */
+  color: #191c1d; /* on-background */
+}
+
+h1, h2, h3, h4, h5, h6, .display-font {
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Material Symbols: unfilled by default, filled where data-weight="fill"
+   or the .icon-fill helper is used. Keeps every page consistent instead of
+   each one re-declaring its own variation settings. */
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+.material-symbols-outlined[data-weight="fill"],
+.material-symbols-outlined.icon-fill {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* --------------------------------------------------------------------------
+   Site header / navigation
+   -------------------------------------------------------------------------- */
+.site-header--scrolled {
+  box-shadow: 0 4px 12px rgba(31, 58, 95, 0.08);
+}
+
+.nav-link--active {
+  color: #032448; /* primary */
+  font-weight: 700;
+  border-bottom: 2px solid #032448;
+  padding-bottom: 4px;
+}
+
+.nav-link--inactive {
+  color: #43474e; /* on-surface-variant */
+  transition: color 0.2s ease;
+}
+.nav-link--inactive:hover {
+  color: #032448; /* primary */
+}
+
+/* Mobile nav drawer, shared across every page */
+[data-mobile-menu] {
+  position: fixed;
+  top: 80px;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: #ffffff; /* surface-container-lowest */
+  border-bottom: 1px solid #c4c6cf; /* outline-variant */
+  box-shadow: 0 12px 24px rgba(31, 58, 95, 0.12);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+[data-mobile-menu][hidden] {
+  display: none;
+}
+
+[data-mobile-menu] a {
+  padding: 12px 8px;
+  border-radius: 0.25rem;
+  color: #191c1d;
+  font-weight: 500;
+}
+
+[data-mobile-menu] a.nav-link--active {
+  background: #fdc34d; /* secondary-container */
+  color: #715000; /* on-secondary-container */
+  border-bottom: none;
+}
+
+[data-mobile-menu] .mobile-menu__cta {
+  margin-top: 8px;
+  padding: 14px 24px;
+}
+
+/* --------------------------------------------------------------------------
+   Buttons — ONE set of CTA styles reused on every page. Any button/link that
+   triggers a primary action (Request a Quote, Book Now, Submit, New Quote)
+   uses .btn-primary; secondary/outline actions use .btn-outline or
+   .btn-outline-invert (for use on the dark primary hero background).
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 0.5rem; /* rounded-lg, matches index.html's CTA */
+  padding: 14px 24px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-sm {
+  padding: 8px 16px;
+}
+.btn-block {
+  width: 100%;
+}
+.btn-primary {
+  background-color: #fdc34d; /* secondary-container */
+  color: #715000; /* on-secondary-container */
+}
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+.btn-outline {
+  background-color: transparent;
+  border-color: #032448; /* primary */
+  color: #032448;
+}
+.btn-outline:hover:not(:disabled) {
+  background-color: #032448;
+  color: #ffffff;
+}
+.btn-outline-invert {
+  background-color: transparent;
+  border-color: #ffffff;
+  color: #ffffff;
+}
+.btn-outline-invert:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Secondary text link with a trailing arrow — used for "View Specs",
+   "Learn More", "Read Full Study" etc. so every instance matches. */
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #7b5800; /* secondary */
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.link-arrow:hover {
+  color: #032448; /* primary */
+  text-decoration: underline;
+}
+.link-arrow .material-symbols-outlined {
+  font-size: 16px;
+}
+/* Same component, tuned for use on dark/primary-colored card backgrounds
+   where the default secondary-brown wouldn't have enough contrast. */
+.link-arrow--invert {
+  color: #ffdea6; /* secondary-fixed */
+}
+.link-arrow--invert:hover {
+  color: #ffffff;
+}
+
+/* --------------------------------------------------------------------------
+   Decorative patterns
+   -------------------------------------------------------------------------- */
+.map-bg {
+  background-image: radial-gradient(circle at center, rgba(3, 36, 72, 0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* --------------------------------------------------------------------------
+   Forms — consistent focus/invalid states used on contact & quote forms
+   -------------------------------------------------------------------------- */
+.form-field {
+  border: 1px solid #c4c6cf; /* outline-variant */
+  border-radius: 0.125rem;
+  padding: 12px;
+  font-family: "Inter", sans-serif;
+  background-color: #f8f9fa; /* surface-bright */
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.form-field:focus {
+  outline: none;
+  border-color: #032448; /* primary */
+  box-shadow: 0 0 0 1px #032448;
+}
+.form-field[data-invalid="true"] {
+  border-color: #ba1a1a; /* error */
+  box-shadow: 0 0 0 1px #ba1a1a;
+}
+.form-error-text {
+  color: #ba1a1a;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Toast used by cee.js to confirm form submissions across pages */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 60;
+  max-width: 360px;
+  background: #032448; /* primary */
+  color: #ffffff;
+  border-radius: 0.25rem;
+  padding: 16px 20px;
+  box-shadow: 0 12px 24px rgba(31, 58, 95, 0.24);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+.toast--visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.toast--error {
+  background: #ba1a1a;
+}
+
+/* --------------------------------------------------------------------------
+   Fleet filters
+   -------------------------------------------------------------------------- */
+.fleet-filter {
+  padding: 8px 16px;
+  border-radius: 0.125rem;
+  border: 1px solid #c4c6cf; /* outline-variant */
+  background: #f8f9fa; /* surface */
+  color: #43474e; /* on-surface-variant */
+  font-family: "Inter", sans-serif;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+.fleet-filter:hover {
+  border-color: #032448;
+  color: #032448;
+}
+.fleet-filter[aria-pressed="true"] {
+  background: #032448; /* primary */
+  color: #ffffff;
+  border-color: #032448;
+  font-weight: 700;
+}
+
+.fleet-card[hidden] {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Accessibility
+   -------------------------------------------------------------------------- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #032448;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+</style>
 </head>
 <body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col pt-20">
 <!-- TopNavBar -->
