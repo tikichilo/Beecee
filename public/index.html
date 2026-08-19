@@ -27,19 +27,19 @@ tailwind.config = {
         "tertiary-fixed-dim": "#ffb783",
         "outline": "#74777f",
         "secondary-fixed-dim": "#f7bd48",
-        "primary-fixed": "#d5e3ff",
-        "inverse-primary": "#aec8f4",
+        "primary-fixed": "#E4EAC9",
+        "inverse-primary": "#C2CE93",
         "on-tertiary-container": "#f2882c",
         "on-tertiary-fixed": "#301400",
         "surface-container-lowest": "#ffffff",
         "tertiary": "#3c1b00",
-        "primary": "#032448",
+        "primary": "#3B4A1E",
         "on-error": "#ffffff",
-        "primary-container": "#1f3a5f",
+        "primary-container": "#4E5A26",
         "surface": "#f8f9fa",
         "secondary-container": "#fdc34d",
         "on-surface": "#191c1d",
-        "surface-tint": "#465f86",
+        "surface-tint": "#596A32",
         "on-primary": "#ffffff",
         "on-secondary-fixed-variant": "#5d4200",
         "secondary-fixed": "#ffdea6",
@@ -52,11 +52,11 @@ tailwind.config = {
         "error-container": "#ffdad6",
         "inverse-surface": "#2e3132",
         "surface-variant": "#e1e3e4",
-        "primary-fixed-dim": "#aec8f4",
+        "primary-fixed-dim": "#C2CE93",
         "outline-variant": "#c4c6cf",
         "inverse-on-surface": "#f0f1f2",
         "surface-container-high": "#e7e8e9",
-        "on-primary-container": "#8ba4cf",
+        "on-primary-container": "#B6C58C",
         "tertiary-fixed": "#ffdcc5",
         "on-error-container": "#93000a",
         "background": "#f8f9fa",
@@ -64,9 +64,9 @@ tailwind.config = {
         "surface-container": "#edeeef",
         "on-secondary": "#ffffff",
         "surface-dim": "#d9dadb",
-        "on-primary-fixed": "#001c3b",
+        "on-primary-fixed": "#16210C",
         "surface-container-highest": "#e1e3e4",
-        "on-primary-fixed-variant": "#2d476d",
+        "on-primary-fixed-variant": "#4A5426",
         "on-secondary-fixed": "#271900",
         "success": "#146c2e",
         "success-container": "#d1f4e0",
@@ -120,6 +120,7 @@ tailwind.config = {
     setupMobileMenu();
     setupHeaderScrollShadow();
     setupYear();
+    setupHeroSlideshow();
   }
 
   /**
@@ -196,6 +197,36 @@ tailwind.config = {
     document.querySelectorAll("[data-current-year]").forEach((el) => {
       el.textContent = new Date().getFullYear();
     });
+  }
+
+  /**
+   * Hero background slideshow (index.html only). Crossfades between all
+   * [data-hero-slide] layers on a timer. Markup contract:
+   *   <div data-hero-slideshow>
+   *     <div class="hero-slide hero-slide--active" data-hero-slide style="background-image:url(...)"></div>
+   *     <div class="hero-slide" data-hero-slide style="background-image:url(...)"></div>
+   *     ...
+   *   </div>
+   */
+  function setupHeroSlideshow() {
+    const container = document.querySelector("[data-hero-slideshow]");
+    if (!container) return;
+    const slides = container.querySelectorAll("[data-hero-slide]");
+    if (slides.length < 2) return;
+
+    let index = 0;
+    const intervalMs = 5000;
+
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return; // leave the first slide showing, no timer
+
+    window.setInterval(() => {
+      const current = slides[index];
+      index = (index + 1) % slides.length;
+      const next = slides[index];
+      current.classList.remove("hero-slide--active");
+      next.classList.add("hero-slide--active");
+    }, intervalMs);
   }
 })();
 </script>
@@ -415,9 +446,9 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 
 .nav-link--active {
-  color: #032448; /* primary */
+  color: #3B4A1E; /* primary */
   font-weight: 700;
-  border-bottom: 2px solid #032448;
+  border-bottom: 2px solid #3B4A1E;
   padding-bottom: 4px;
 }
 
@@ -426,7 +457,67 @@ h1, h2, h3, h4, h5, h6, .display-font {
   transition: color 0.2s ease;
 }
 .nav-link--inactive:hover {
-  color: #032448; /* primary */
+  color: #3B4A1E; /* primary */
+}
+
+/* Site logo — sized up and given a soft shadow so it reads clearly
+   against the light header background. */
+.site-logo {
+  height: 62px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(59, 74, 30, 0.25));
+  transition: transform 0.2s ease;
+}
+.site-logo:hover {
+  transform: scale(1.05);
+}
+.site-logo--lg {
+  height: 72px;
+}
+
+/* --------------------------------------------------------------------------
+   Hero slideshow (index.html) — stacked, absolutely-positioned layers that
+   crossfade via opacity, each with a slow Ken Burns zoom for a bit of life.
+   The dark tint overlay sits above all slides so hero text stays legible
+   regardless of which photo is showing.
+   -------------------------------------------------------------------------- */
+[data-hero-slideshow] {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+  animation: hero-ken-burns 14s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+.hero-slide--active {
+  opacity: 1;
+  z-index: 1;
+}
+.hero-slide__tint {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background-color: #3B4A1E;
+  opacity: 0.45;
+  mix-blend-mode: multiply;
+}
+@keyframes hero-ken-burns {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide {
+    animation: none;
+  }
 }
 
 /* Mobile nav drawer, shared across every page */
@@ -510,11 +601,11 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 .btn-outline {
   background-color: transparent;
-  border-color: #032448; /* primary */
-  color: #032448;
+  border-color: #3B4A1E; /* primary */
+  color: #3B4A1E;
 }
 .btn-outline:hover:not(:disabled) {
-  background-color: #032448;
+  background-color: #3B4A1E;
   color: #ffffff;
 }
 .btn-outline-invert {
@@ -541,7 +632,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
   transition: color 0.2s ease;
 }
 .link-arrow:hover {
-  color: #032448; /* primary */
+  color: #3B4A1E; /* primary */
   text-decoration: underline;
 }
 .link-arrow .material-symbols-outlined {
@@ -577,8 +668,8 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 .form-field:focus {
   outline: none;
-  border-color: #032448; /* primary */
-  box-shadow: 0 0 0 1px #032448;
+  border-color: #3B4A1E; /* primary */
+  box-shadow: 0 0 0 1px #3B4A1E;
 }
 .form-field[data-invalid="true"] {
   border-color: #ba1a1a; /* error */
@@ -597,7 +688,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
   right: 24px;
   z-index: 60;
   max-width: 360px;
-  background: #032448; /* primary */
+  background: #3B4A1E; /* primary */
   color: #ffffff;
   border-radius: 0.25rem;
   padding: 16px 20px;
@@ -632,13 +723,13 @@ h1, h2, h3, h4, h5, h6, .display-font {
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
 .fleet-filter:hover {
-  border-color: #032448;
-  color: #032448;
+  border-color: #3B4A1E;
+  color: #3B4A1E;
 }
 .fleet-filter[aria-pressed="true"] {
-  background: #032448; /* primary */
+  background: #3B4A1E; /* primary */
   color: #ffffff;
-  border-color: #032448;
+  border-color: #3B4A1E;
   font-weight: 700;
 }
 
@@ -654,7 +745,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #032448;
+  outline: 2px solid #3B4A1E;
   outline-offset: 2px;
 }
 
@@ -669,7 +760,7 @@ textarea:focus-visible {
 <body class="bg-background text-on-background font-body-md text-body-md overflow-x-hidden pt-20">
 <!-- TopNavBar -->
 <header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface border-b border-outline-variant" data-site-header>
-<a class="flex items-center gap-4 font-headline-md text-headline-md font-bold text-primary" href="index.html">Bee Cee Logistics</a>
+<a class="flex items-center gap-4" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" class="site-logo"/></a>
 <nav class="hidden md:flex gap-6" aria-label="Primary">
 <a class="font-body-md text-body-md nav-link--inactive" data-page="services.html" href="services.html">Services</a>
 <a class="font-body-md text-body-md nav-link--inactive" data-page="fleet.html" href="fleet.html">Fleet</a>
@@ -695,8 +786,18 @@ textarea:focus-visible {
 </div>
 <!-- Hero Section -->
 <section class="relative w-full min-h-[600px] flex items-center justify-center bg-primary text-on-primary">
-<div class="absolute inset-0 z-0" aria-hidden="true">
-<div class="w-full h-full bg-cover bg-center opacity-40 mix-blend-multiply" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuALKrskj4nEiSkvomaxjeQwsLjbjL5zt7FQ65eQ6YsSVXDM2VlTGm7d8a25DDUInyRRIMAgJgCtRP6hYCcG1tPPAWOnCVTRkxgDwgY3mrJ22XcOQW3Avw7a_KzM9sZMSZLxXUFGc5PH4o4ceeGvMMuZAa1IQu7_BDH1-EP6kwO9v65sfYfvpNfvX0Zt6gHx9fWMhMNFvLwuC56nSWwR-xIcp6sJTbGOsz2_eJO9s4WPuJjDtsL3niPl')"></div>
+<div class="absolute inset-0 z-0" aria-hidden="true" data-hero-slideshow>
+<div class="hero-slide hero-slide--active" data-hero-slide style="background-image: url('/images/hero1.jpg')"></div>
+<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero2.jpg')"></div>
+<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero3.jpg')"></div>
+<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero4.jpg')"></div>
+<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero5.jpg')"></div>
+<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero6.jpg')"></div>
+<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero7.jpg')"></div>
+<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero8.jpg')"></div>
+<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero9.jpg')"></div>
+<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero10.jpg')"></div>
+<div class="hero-slide__tint"></div>
 </div>
 <div class="relative z-10 text-center max-w-4xl px-margin-mobile md:px-margin-desktop py-20 flex flex-col items-center gap-6">
 <h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-on-primary">Logistics Our Game.</h1>
@@ -715,7 +816,8 @@ textarea:focus-visible {
 <span class="font-headline-md text-headline-md font-bold text-on-surface">Oxfam</span>
 <span class="font-headline-md text-headline-md font-bold text-on-surface">PATH</span>
 <span class="font-headline-md text-headline-md font-bold text-on-surface">GIZ</span>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Stanbic Bank</span>
+<span class="font-headline-md text-headline-md font-bold text-on-surface">ECZ</span>
+<span class="font-headline-md text-headline-md font-bold text-on-surface">CHAZ</span>
 </div>
 </div>
 </section>
@@ -825,7 +927,7 @@ textarea:focus-visible {
 </div>
 </div>
 <div class="col-span-1 md:col-span-4 mt-4 pt-4 border-t border-primary-container/40 text-on-primary-container">
-            © <span data-current-year="">2024</span> Bee Cee Logistics Ltd. All rights reserved.
+            © <span data-current-year="">2024</span> Bee Cee Logistics Ltd. All rights reserved. <span class="opacity-70">· Site by <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="https://tikichilo.github.io/tiki-portfolio/experience.html" target="_blank" rel="noopener">Tiki Chilomo</a></span>
         </div>
 </footer>
 </body>

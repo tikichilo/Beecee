@@ -27,19 +27,19 @@ tailwind.config = {
         "tertiary-fixed-dim": "#ffb783",
         "outline": "#74777f",
         "secondary-fixed-dim": "#f7bd48",
-        "primary-fixed": "#d5e3ff",
-        "inverse-primary": "#aec8f4",
+        "primary-fixed": "#E4EAC9",
+        "inverse-primary": "#C2CE93",
         "on-tertiary-container": "#f2882c",
         "on-tertiary-fixed": "#301400",
         "surface-container-lowest": "#ffffff",
         "tertiary": "#3c1b00",
-        "primary": "#032448",
+        "primary": "#3B4A1E",
         "on-error": "#ffffff",
-        "primary-container": "#1f3a5f",
+        "primary-container": "#4E5A26",
         "surface": "#f8f9fa",
         "secondary-container": "#fdc34d",
         "on-surface": "#191c1d",
-        "surface-tint": "#465f86",
+        "surface-tint": "#596A32",
         "on-primary": "#ffffff",
         "on-secondary-fixed-variant": "#5d4200",
         "secondary-fixed": "#ffdea6",
@@ -52,11 +52,11 @@ tailwind.config = {
         "error-container": "#ffdad6",
         "inverse-surface": "#2e3132",
         "surface-variant": "#e1e3e4",
-        "primary-fixed-dim": "#aec8f4",
+        "primary-fixed-dim": "#C2CE93",
         "outline-variant": "#c4c6cf",
         "inverse-on-surface": "#f0f1f2",
         "surface-container-high": "#e7e8e9",
-        "on-primary-container": "#8ba4cf",
+        "on-primary-container": "#B6C58C",
         "tertiary-fixed": "#ffdcc5",
         "on-error-container": "#93000a",
         "background": "#f8f9fa",
@@ -64,9 +64,9 @@ tailwind.config = {
         "surface-container": "#edeeef",
         "on-secondary": "#ffffff",
         "surface-dim": "#d9dadb",
-        "on-primary-fixed": "#001c3b",
+        "on-primary-fixed": "#16210C",
         "surface-container-highest": "#e1e3e4",
-        "on-primary-fixed-variant": "#2d476d",
+        "on-primary-fixed-variant": "#4A5426",
         "on-secondary-fixed": "#271900",
         "success": "#146c2e",
         "success-container": "#d1f4e0",
@@ -415,9 +415,9 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 
 .nav-link--active {
-  color: #032448; /* primary */
+  color: #3B4A1E; /* primary */
   font-weight: 700;
-  border-bottom: 2px solid #032448;
+  border-bottom: 2px solid #3B4A1E;
   padding-bottom: 4px;
 }
 
@@ -426,7 +426,23 @@ h1, h2, h3, h4, h5, h6, .display-font {
   transition: color 0.2s ease;
 }
 .nav-link--inactive:hover {
-  color: #032448; /* primary */
+  color: #3B4A1E; /* primary */
+}
+
+/* Site logo — sized up and given a soft shadow so it reads clearly
+   against the light header background. */
+.site-logo {
+  height: 62px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(59, 74, 30, 0.25));
+  transition: transform 0.2s ease;
+}
+.site-logo:hover {
+  transform: scale(1.05);
+}
+.site-logo--lg {
+  height: 72px;
 }
 
 /* Mobile nav drawer, shared across every page */
@@ -510,11 +526,11 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 .btn-outline {
   background-color: transparent;
-  border-color: #032448; /* primary */
-  color: #032448;
+  border-color: #3B4A1E; /* primary */
+  color: #3B4A1E;
 }
 .btn-outline:hover:not(:disabled) {
-  background-color: #032448;
+  background-color: #3B4A1E;
   color: #ffffff;
 }
 .btn-outline-invert {
@@ -541,7 +557,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
   transition: color 0.2s ease;
 }
 .link-arrow:hover {
-  color: #032448; /* primary */
+  color: #3B4A1E; /* primary */
   text-decoration: underline;
 }
 .link-arrow .material-symbols-outlined {
@@ -577,8 +593,8 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 .form-field:focus {
   outline: none;
-  border-color: #032448; /* primary */
-  box-shadow: 0 0 0 1px #032448;
+  border-color: #3B4A1E; /* primary */
+  box-shadow: 0 0 0 1px #3B4A1E;
 }
 .form-field[data-invalid="true"] {
   border-color: #ba1a1a; /* error */
@@ -597,7 +613,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
   right: 24px;
   z-index: 60;
   max-width: 360px;
-  background: #032448; /* primary */
+  background: #3B4A1E; /* primary */
   color: #ffffff;
   border-radius: 0.25rem;
   padding: 16px 20px;
@@ -632,13 +648,13 @@ h1, h2, h3, h4, h5, h6, .display-font {
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
 .fleet-filter:hover {
-  border-color: #032448;
-  color: #032448;
+  border-color: #3B4A1E;
+  color: #3B4A1E;
 }
 .fleet-filter[aria-pressed="true"] {
-  background: #032448; /* primary */
+  background: #3B4A1E; /* primary */
   color: #ffffff;
-  border-color: #032448;
+  border-color: #3B4A1E;
   font-weight: 700;
 }
 
@@ -654,7 +670,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #032448;
+  outline: 2px solid #3B4A1E;
   outline-offset: 2px;
 }
 
@@ -669,7 +685,7 @@ textarea:focus-visible {
 <body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col pt-20">
 <!-- TopNavBar -->
 <header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface border-b border-outline-variant" data-site-header>
-<a class="flex items-center gap-4 font-headline-md text-headline-md font-bold text-primary" href="index.html">Bee Cee Logistics</a>
+<a class="flex items-center gap-4" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" class="site-logo"/></a>
 <nav class="hidden md:flex gap-6" aria-label="Primary">
 <a class="font-body-md text-body-md nav-link--inactive" data-page="services.html" href="services.html">Services</a>
 <a class="font-body-md text-body-md nav-link--inactive" data-page="fleet.html" href="fleet.html">Fleet</a>
@@ -825,7 +841,7 @@ textarea:focus-visible {
 </div>
 </div>
 <div class="col-span-1 md:col-span-4 mt-4 pt-4 border-t border-primary-container/40 text-on-primary-container">
-            © <span data-current-year="">2024</span> Bee Cee Logistics Ltd. All rights reserved.
+            © <span data-current-year="">2024</span> Bee Cee Logistics Ltd. All rights reserved. <span class="opacity-70">· Site by <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="https://tikichilo.github.io/tiki-portfolio/experience.html" target="_blank" rel="noopener">Tiki Chilomo</a></span>
         </div>
 </footer>
 </body>
