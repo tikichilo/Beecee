@@ -11,7 +11,7 @@ app.use(express.static(SITE_DIR));
 
 // Fallback to index.html for any unmatched route (keeps direct links like
 // /services.html working, and covers refreshes on any page)
-app.get("*", (req, res) => {
+app.get("/*splat", (req, res) => {
   res.sendFile(path.join(SITE_DIR, "index.html"));
 });
 
