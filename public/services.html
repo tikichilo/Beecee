@@ -444,6 +444,23 @@ h1, h2, h3, h4, h5, h6, .display-font {
 .site-logo--lg {
   height: 72px;
 }
+.site-wordmark {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.15;
+  color: #3B4A1E; /* primary */
+  letter-spacing: -0.01em;
+  display: none;
+}
+.site-wordmark br { display: none; }
+@media (min-width: 480px) {
+  .site-wordmark { display: block; }
+}
+@media (min-width: 480px) and (max-width: 767px) {
+  .site-wordmark br { display: inline; }
+  .site-wordmark { font-size: 15px; }
+}
 
 /* Mobile nav drawer, shared across every page */
 [data-mobile-menu] {
@@ -685,7 +702,7 @@ textarea:focus-visible {
 <body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col pt-20">
 <!-- TopNavBar -->
 <header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface border-b border-outline-variant" data-site-header>
-<a class="flex items-center gap-4" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" class="site-logo"/></a>
+<a class="flex items-center gap-3 site-brand" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" class="site-logo"/><span class="site-wordmark">Bee Cee<br/>Logistics Ltd</span></a>
 <nav class="hidden md:flex gap-6" aria-label="Primary">
 <a class="font-body-md text-body-md nav-link--inactive" data-page="services.html" href="services.html">Services</a>
 <a class="font-body-md text-body-md nav-link--inactive" data-page="fleet.html" href="fleet.html">Fleet</a>
@@ -723,7 +740,7 @@ textarea:focus-visible {
 <!-- Car Hire -->
 <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col group hover:shadow-[0_8px_24px_rgba(31,58,95,0.12)] transition-shadow duration-300">
 <div class="h-48 w-full relative bg-surface-container-low overflow-hidden">
-<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Fleet of executive vehicles parked in a secure, well-lit logistics compound" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjLanTxAasjkr9NRck5y74V89VKBVEFIpo8_lQVPh9SQs7XB-fYk4CoSKl3myNB9nvsJsr1OoZsUswFi6ILHi32MCWo_0EOB64AYuF26FY4rqpphLddzITdtRhzpaB8AY0RNOuiIcCkj26QO7eMTlWMjDGvqll9PNb-9uCFUREHh277aFkDg-z-4mgklQpZXTEpX8Szvm3pSj0Jsi0H45bvbIMVjxUXVA2-d0iSzVXIIp1nigYXMlW"/>
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Fleet of executive vehicles parked in a secure, well-lit logistics compound" src="images/hero1.jpg"/>
 <div class="absolute top-4 right-4 bg-surface-container-lowest/90 backdrop-blur-sm p-2 rounded-lg border border-outline-variant">
 <span class="material-symbols-outlined text-primary text-2xl icon-fill" aria-hidden="true">directions_car</span>
 </div>
@@ -741,7 +758,7 @@ textarea:focus-visible {
 <!-- Customs Clearing -->
 <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col group hover:shadow-[0_8px_24px_rgba(31,58,95,0.12)] transition-shadow duration-300 lg:col-span-2 lg:row-span-2">
 <div class="h-64 lg:h-[400px] w-full relative bg-surface-container-low overflow-hidden">
-<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Logistics agent reviewing digital compliance documents at a commercial border crossing" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAxvzyGqb3wUAqTHeHUd1mj_eAnT6RFOaozyL-MDzo553Iq5Upuvt4vz3RhQZy9DqCLj9RkOSH8ejPAeaSTd8gj4xyWMk1DFVxPCkpnuEzzP9S01AEq3O1nlOrXmohMpzgkJfw8QyBu-EAv_E-kLcAferkLJbmwVCZxCoBaoCeu8R_H6PrCE_5PebM0frAOxRzlhCMG3LIr11Fav_Wa-PfQ2WuRSAB9gOhdMa5EQfotyveSbhSLwyv"/>
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Logistics agent reviewing digital compliance documents at a commercial border crossing" src="images/custo.jpg"/>
 <div class="absolute inset-0 bg-gradient-to-t from-primary-container/80 to-transparent"></div>
 <div class="absolute bottom-6 left-6 right-6">
 <div class="bg-surface-container-lowest/20 backdrop-blur-md p-3 rounded-lg border border-white/20 inline-block mb-4">
@@ -760,7 +777,7 @@ textarea:focus-visible {
 <!-- Freight Forwarding -->
 <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col group hover:shadow-[0_8px_24px_rgba(31,58,95,0.12)] transition-shadow duration-300">
 <div class="h-48 w-full relative bg-surface-container-low overflow-hidden">
-<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Fleet of heavy-duty semi-trucks loaded with shipping containers" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABGlQhJy0_7PJYARlB2wgBaMdYNFjGE4Y3M02EOFcpX6KMV2pPwKu-k8Ckja9RAOhPx7G1_EkqoTSULBJqKsC0UEZG9tOQ-ePYvXTTOjNDK5Mbh5ImX1CJJoB5jNbZj_AvPprocs3FdTEk5HMAjqxprJOI0JRhhanYOu2IT1Ty7R6nMspdlE4HeRk_ih01ejHVrZ89WMROPuKQh0BYfWdxpRAYMqygE49V7sUtV3HUx3I7kjrB2U9X"/>
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Fleet of heavy-duty semi-trucks loaded with shipping containers" src="images/frieht.jpg"/>
 <div class="absolute top-4 right-4 bg-surface-container-lowest/90 backdrop-blur-sm p-2 rounded-lg border border-outline-variant">
 <span class="material-symbols-outlined text-primary text-2xl icon-fill" aria-hidden="true">local_shipping</span>
 </div>
@@ -797,7 +814,7 @@ textarea:focus-visible {
 <div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col group hover:shadow-[0_8px_24px_rgba(31,58,95,0.12)] transition-shadow duration-300 lg:col-span-2">
 <div class="flex flex-col md:flex-row h-full">
 <div class="w-full md:w-2/5 h-48 md:h-auto relative bg-surface-container-low overflow-hidden">
-<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Industrial project site with heavy machinery and logistics personnel coordinating supply chain operations" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHFJFJQ9UW8_mS4IRTLtRiLOzFDN63P8NjQ-h1CN1xdjpVSayTzyUr84RPhX2nBdSg_X0lRZuKj6Dv4dwhsl4I4OykcaAg3oSNrEJ2l8KTJgLUfL9D7a7iO5iPJpKDEEwKP31aC1MgPMrDL2_ZrliQeW-LuSBQ8YuXDsnjIIG568L8gdFIcSJixVEY4IdihTeQpyulCRz-6LhXSMfrDRexjU50nUSkaN0f_bT-0VxkS1_ZC3IVdrSP"/>
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Industrial project site with heavy machinery and logistics personnel coordinating supply chain operations" src="images/hero2.jpg"/>
 </div>
 <div class="w-full md:w-3/5 p-6 md:p-8 flex flex-col justify-center">
 <div class="flex items-center gap-3 mb-4">

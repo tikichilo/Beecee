@@ -121,6 +121,9 @@ tailwind.config = {
     setupHeaderScrollShadow();
     setupYear();
     setupHeroSlideshow();
+    if (window.BeeCeeFleet) {
+      window.BeeCeeFleet.renderFleetInto("[data-fleet-grid]", { compact: true, limit: 3 });
+    }
   }
 
   /**
@@ -475,6 +478,23 @@ h1, h2, h3, h4, h5, h6, .display-font {
 .site-logo--lg {
   height: 72px;
 }
+.site-wordmark {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.15;
+  color: #3B4A1E; /* primary */
+  letter-spacing: -0.01em;
+  display: none;
+}
+.site-wordmark br { display: none; }
+@media (min-width: 480px) {
+  .site-wordmark { display: block; }
+}
+@media (min-width: 480px) and (max-width: 767px) {
+  .site-wordmark br { display: inline; }
+  .site-wordmark { font-size: 15px; }
+}
 
 /* --------------------------------------------------------------------------
    Hero slideshow (index.html) — stacked, absolutely-positioned layers that
@@ -756,11 +776,30 @@ textarea:focus-visible {
   }
 }
 </style>
+<script src="js/fleet-render.js" defer></script>
+<style>
+.fleet-card__media { overflow: hidden; }
+.fleet-card__nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border-radius: 9999px; border: none;
+  background: rgba(25, 28, 29, 0.55); color: #fff; font-size: 12px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  opacity: 0; transition: opacity 0.15s ease;
+}
+.fleet-card__media:hover .fleet-card__nav { opacity: 1; }
+.fleet-card__nav--prev { left: 8px; }
+.fleet-card__nav--next { right: 8px; }
+.fleet-card__count {
+  position: absolute; bottom: 8px; right: 8px;
+  background: rgba(25, 28, 29, 0.55); color: #fff; font-size: 11px;
+  padding: 2px 8px; border-radius: 9999px;
+}
+</style>
 </head>
 <body class="bg-background text-on-background font-body-md text-body-md overflow-x-hidden pt-20">
 <!-- TopNavBar -->
 <header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface border-b border-outline-variant" data-site-header>
-<a class="flex items-center gap-4" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" class="site-logo"/></a>
+<a class="flex items-center gap-3 site-brand" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" class="site-logo"/><span class="site-wordmark">Bee Cee<br/>Logistics Ltd</span></a>
 <nav class="hidden md:flex gap-6" aria-label="Primary">
 <a class="font-body-md text-body-md nav-link--inactive" data-page="services.html" href="services.html">Services</a>
 <a class="font-body-md text-body-md nav-link--inactive" data-page="fleet.html" href="fleet.html">Fleet</a>
@@ -828,49 +867,10 @@ textarea:focus-visible {
 <h2 class="font-headline-md text-headline-md text-primary mb-4">Our Fleet</h2>
 <p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Reliable vehicles for every logistical challenge.</p>
 </div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-<!-- Card 1 -->
-<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
-<div class="relative h-48 w-full bg-surface-container-high">
-<div class="w-full h-full bg-cover bg-center" role="img" aria-label="Modern silver executive saloon car for corporate transfers" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDdTr1bA-7ARXf7jnaU2T-4lRCsIFdkr_LDDXOkdxqVHMh8c6qTENfVRRr6Uos64VdMdVYpWTClsKcg0RpHA9WZgiq4Kai1F_XX-LdbfJIFornD81mG3FaXBh8ae7aRDEgtpDehrjKgOcMrTcco5DB6vXS_0oF_PJ9updF0P10IYWpe7hGKIA-mj8__lp-ujgLURa_EeG-xWTAD7L8F0ZL6s52J2yodirJax3b410GnUVu0QWOJIttb')"></div>
-<span class="absolute top-4 right-4 bg-success text-white font-label-sm text-label-sm px-2 py-1 rounded-full">Available</span>
-</div>
-<div class="p-6 flex-1 flex flex-col justify-between">
-<div>
-<h3 class="font-body-lg text-body-lg font-bold text-primary mb-2">Executive Saloon</h3>
-<p class="font-body-md text-body-md text-on-surface-variant mb-4">Ideal for corporate transfers and urban travel.</p>
-</div>
-<a class="link-arrow" href="fleet.html">View Specs <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
-</div>
-</div>
-<!-- Card 2 -->
-<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
-<div class="relative h-48 w-full bg-surface-container-high">
-<div class="w-full h-full bg-cover bg-center" role="img" aria-label="Rugged white 4x4 vehicle built for off-road terrain" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAG3Tat3pUGc0CWwB1g8X4dsQWawxe1fKaOPD2PeMq0pJbIreZsnjDBXFShdmWNnKZH1be_olw6D43rpKrm_s9LP_PhB7oH1E8qnXz66Ax0pYHUBuS_Rskv6Of76F0rIc0aUo-FnBj_ouP45tb-UL8rCNFpkn_EpaFVplPPQiKvA0L0Hx1hJilPRWSc9KDMF72Sdj9kAYvjaL4jM9TNbF3q4rzJZPeDUFuGCDmDLI4Osh16CpYeyBIU')"></div>
-<span class="absolute top-4 right-4 bg-success text-white font-label-sm text-label-sm px-2 py-1 rounded-full">Available</span>
-</div>
-<div class="p-6 flex-1 flex flex-col justify-between">
-<div>
-<h3 class="font-body-lg text-body-lg font-bold text-primary mb-2">Heavy-Duty 4x4</h3>
-<p class="font-body-md text-body-md text-on-surface-variant mb-4">Built for challenging terrains and remote site access.</p>
-</div>
-<a class="link-arrow" href="fleet.html">View Specs <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
-</div>
-</div>
-<!-- Card 3 -->
-<div class="bg-surface-container-lowest border border-outline-variant rounded-xl overflow-hidden flex flex-col">
-<div class="relative h-48 w-full bg-surface-container-high">
-<div class="w-full h-full bg-cover bg-center" role="img" aria-label="Large commercial freight truck in a logistics yard" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBTHLDFkMqUAUUvBlI6Roa3qm6pB7U1SLfyeaN4ad4GWIS1OXQ72-wbws28OOFYC4GxgvD98-FYVjF3JU_kkum1acygGtBoDepMSYpQRTfJs5EyDRxIG0y0CR8pQijme8idwekLnkQhN3eJG8P80C3ZmUqnyRFhtXXIYoY90isNrGgjl5igO2i4H9HNBfdecGnXJJJ8OQDbzoZ_2ZkyCnbRnvGlqeRr7FolKPvB40r3UoEIpBEGz3wA')"></div>
-<span class="absolute top-4 right-4 bg-success text-white font-label-sm text-label-sm px-2 py-1 rounded-full">Available</span>
-</div>
-<div class="p-6 flex-1 flex flex-col justify-between">
-<div>
-<h3 class="font-body-lg text-body-lg font-bold text-primary mb-2">Freight Truck</h3>
-<p class="font-body-md text-body-md text-on-surface-variant mb-4">High-capacity transport for regional logistics.</p>
-</div>
-<a class="link-arrow" href="fleet.html">View Specs <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
-</div>
-</div>
+<!-- Populated live from the fleet dashboard via /api/fleet (3 most recent) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter" data-fleet-grid></div>
+<div class="text-center mt-8">
+<a class="link-arrow" href="fleet.html">View Full Fleet <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
 </div>
 </div>
 </section>

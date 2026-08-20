@@ -1,15 +1,20 @@
 {
-  "name": "bee-cee-logistics-site",
+  "name": "bee-cee-logistics",
   "version": "1.0.0",
-  "description": "Static site server for Bee Cee Logistics",
+  "private": true,
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
-  },
-  "engines": {
-    "node": ">=18"
+    "start": "node server.js",
+    "create-admin": "node scripts/createAdmin.js"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "bcryptjs": "^2.4.3",
+    "connect-mongo": "^5.1.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "mongoose": "^8.5.0",
+    "multer": "^1.4.5-lts.1",
+    "uuid": "^14.0.2"
   }
 }

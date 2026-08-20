@@ -214,8 +214,18 @@ tailwind.config = {
 
   function init() {
     setupFleetFilters();
+    loadFleet("all");
     setupFormValidation("[data-contact-form]", contactFormFields);
     setupFormValidation("[data-quote-form]", quoteFormFields);
+  }
+
+  /* ------------------------------------------------------------------------
+     Live fleet grid (fleet.html) — cards come from /api/fleet, not markup
+     ------------------------------------------------------------------------ */
+  function loadFleet(category) {
+    if (window.BeeCeeFleet) {
+      window.BeeCeeFleet.renderFleetInto("[data-fleet-grid]", { category });
+    }
   }
 
   /* ------------------------------------------------------------------------
@@ -242,12 +252,13 @@ tailwind.config = {
   }
 
   /* ------------------------------------------------------------------------
-     Fleet filters (fleet.html)
+     Fleet filters (fleet.html) — re-fetches the matching category from the
+     API instead of hiding/showing pre-rendered cards, since cards are now
+     loaded dynamically.
      ------------------------------------------------------------------------ */
   function setupFleetFilters() {
     const filterBar = document.querySelector("[data-fleet-filters]");
-    const cards = document.querySelectorAll("[data-fleet-card]");
-    if (!filterBar || !cards.length) return;
+    if (!filterBar) return;
 
     const buttons = filterBar.querySelectorAll("[data-filter]");
 
@@ -255,13 +266,7 @@ tailwind.config = {
       btn.addEventListener("click", () => {
         buttons.forEach((b) => b.setAttribute("aria-pressed", "false"));
         btn.setAttribute("aria-pressed", "true");
-
-        const filter = btn.getAttribute("data-filter");
-        cards.forEach((card) => {
-          const category = card.getAttribute("data-category");
-          const show = filter === "all" || category === filter;
-          card.hidden = !show;
-        });
+        loadFleet(btn.getAttribute("data-filter"));
       });
     });
   }
@@ -443,6 +448,23 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 .site-logo--lg {
   height: 72px;
+}
+.site-wordmark {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.15;
+  color: #3B4A1E; /* primary */
+  letter-spacing: -0.01em;
+  display: none;
+}
+.site-wordmark br { display: none; }
+@media (min-width: 480px) {
+  .site-wordmark { display: block; }
+}
+@media (min-width: 480px) and (max-width: 767px) {
+  .site-wordmark br { display: inline; }
+  .site-wordmark { font-size: 15px; }
 }
 
 /* Mobile nav drawer, shared across every page */
@@ -651,6 +673,22 @@ h1, h2, h3, h4, h5, h6, .display-font {
   border-color: #3B4A1E;
   color: #3B4A1E;
 }
+.fleet-card__media { overflow: hidden; }
+.fleet-card__nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border-radius: 9999px; border: none;
+  background: rgba(25, 28, 29, 0.55); color: #fff; font-size: 12px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  opacity: 0; transition: opacity 0.15s ease;
+}
+.fleet-card__media:hover .fleet-card__nav { opacity: 1; }
+.fleet-card__nav--prev { left: 8px; }
+.fleet-card__nav--next { right: 8px; }
+.fleet-card__count {
+  position: absolute; bottom: 8px; right: 8px;
+  background: rgba(25, 28, 29, 0.55); color: #fff; font-size: 11px;
+  padding: 2px 8px; border-radius: 9999px;
+}
 .fleet-filter[aria-pressed="true"] {
   background: #3B4A1E; /* primary */
   color: #ffffff;
@@ -681,11 +719,12 @@ textarea:focus-visible {
   }
 }
 </style>
+<script src="js/fleet-render.js" defer></script>
 </head>
 <body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col pt-20">
 <!-- TopNavBar -->
 <header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface border-b border-outline-variant" data-site-header>
-<a class="flex items-center gap-4" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" class="site-logo"/></a>
+<a class="flex items-center gap-3 site-brand" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" class="site-logo"/><span class="site-wordmark">Bee Cee<br/>Logistics Ltd</span></a>
 <nav class="hidden md:flex gap-6" aria-label="Primary">
 <a class="font-body-md text-body-md nav-link--inactive" data-page="services.html" href="services.html">Services</a>
 <a class="font-body-md text-body-md nav-link--inactive" data-page="fleet.html" href="fleet.html">Fleet</a>
@@ -724,93 +763,8 @@ textarea:focus-visible {
 <button class="fleet-filter" data-filter="truck" aria-pressed="false">Trucks</button>
 </div>
 </section>
-<!-- Fleet Grid -->
-<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
-<!-- Card 1 -->
-<article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card="" data-category="4x4">
-<div class="h-48 relative">
-<img class="w-full h-full object-cover" alt="Toyota Land Cruiser Prado parked outside a corporate office building" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAneVpa1rZfe1lGEupamQQJjI3kVDM1QmC0ToiCngotCVk9sQFlPbs21EeD5JCbhysVhoHPCL1ve9FSNX07MUFO-JVCCiEW7bJ_L9tteUrGzMOm3JmwH7JeimTzGwt3STCSWV4wprGGQB0Quz-5dAPYCWfoy76Doo8Uclmo56PjO1ivsMNuZ-zpPaUmL2MBrkvUv_zEMemu0-Co7XB-OBjdftg-WpNLG3F1wevepRLWNBB5iziNf6aV"/>
-<span class="absolute top-2 right-2 bg-success text-white font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">Available</span>
-</div>
-<div class="p-4 flex-grow flex flex-col justify-between">
-<div>
-<h3 class="font-headline-md text-headline-md text-primary mb-1">Toyota Land Cruiser Prado</h3>
-<p class="font-body-md text-body-md text-on-surface-variant mb-4">4x4 &amp; SUV</p>
-</div>
-<a class="btn btn-primary btn-block btn-sm" href="request.html">Book Now</a>
-</div>
-</article>
-<!-- Card 2 -->
-<article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card="" data-category="saloon">
-<div class="h-48 relative">
-<img class="w-full h-full object-cover" alt="Black Mercedes-Benz E-Class sedan waiting at a business district curb" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8FUPj2-Gougy8ytxd57l-ZKEyP6SLGBBPS-Q9jEnlsMDLwj2Y9r2srZ1I__dYw66l3s1G_E-kzmSKydZZS-EcRl_wAbxM_snBshU6VaSv5Sq0k8rWho6MLojHLFPbSy3VkAc9UoHr3aQXH-1FX4llTIq8NXaWTOpHuuFJQJ_TLOuBR-NAIX1K1yMtyqwZ0nBTrX8BX39-7adbVZrAU8LFo03nUeqKvlWZ2c8_Tb4DTua0CtjLSua3"/>
-<span class="absolute top-2 right-2 bg-error text-on-error font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">Booked</span>
-</div>
-<div class="p-4 flex-grow flex flex-col justify-between">
-<div>
-<h3 class="font-headline-md text-headline-md text-primary mb-1">Mercedes-Benz E-Class</h3>
-<p class="font-body-md text-body-md text-on-surface-variant mb-4">Saloon Car</p>
-</div>
-<button class="btn btn-outline btn-block btn-sm" disabled="" aria-disabled="true">Currently Booked</button>
-</div>
-</article>
-<!-- Card 3 -->
-<article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card="" data-category="truck">
-<div class="h-48 relative">
-<img class="w-full h-full object-cover" alt="Scania freight truck with a branded Bee Cee Logistics trailer" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPLtPNyvZ_TFxqoYWGX3wIm8-AAGuDd3oM0Wf0tziKBRfaonBkMJVa10flL6yZXMa7qQi3gbJmGRynL0fV0thIWz7lfF8nQOHj1emakue1TcUQEGZuSswTs8fDT_Fz0qhIYbqU3N8NkbL0aJrIaFsxIYciD48AEAY5hYwNwxL_kn-vaZOHdLThMCAPJJ_ha8zpyjYfz0PsfxJCObjmXbc_EfTVYTwmXEMiGmqCN5JtgE2M-PLimgxE"/>
-<span class="absolute top-2 right-2 bg-success text-white font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">Available</span>
-</div>
-<div class="p-4 flex-grow flex flex-col justify-between">
-<div>
-<h3 class="font-headline-md text-headline-md text-primary mb-1">Scania R450 Truck</h3>
-<p class="font-body-md text-body-md text-on-surface-variant mb-4">Trucks</p>
-</div>
-<a class="btn btn-primary btn-block btn-sm" href="request.html">Book Now</a>
-</div>
-</article>
-<!-- Card 4 -->
-<article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card="" data-category="bus">
-<div class="h-48 relative">
-<img class="w-full h-full object-cover" alt="White Toyota Coaster bus parked in a paved transport yard" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl6A1R7snXZwuq8J-oq3K_oFO-xPaDnauSKLAvgBHXYaKchPM3woRZFCH-y2pufjKRjVui3v_1KKZfiMfWJ8BKY0QsbDsgUDgJLnx2mRXqJPAT-NU530kGik8Z2LZFe_CJTF-MAtb7ucaeDc3BudN5y6xQlleV6MHgHpNL8SA9IyGmfa3ULUvdWdT0w_LMbodAtF07j_JcfR6Xj-HecrfH8o9JdF81FVx98nrW65fcoqvmPkcJCcI3"/>
-<span class="absolute top-2 right-2 bg-success text-white font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">Available</span>
-</div>
-<div class="p-4 flex-grow flex flex-col justify-between">
-<div>
-<h3 class="font-headline-md text-headline-md text-primary mb-1">Toyota Coaster Bus</h3>
-<p class="font-body-md text-body-md text-on-surface-variant mb-4">Buses</p>
-</div>
-<a class="btn btn-primary btn-block btn-sm" href="request.html">Book Now</a>
-</div>
-</article>
-<!-- Card 5 -->
-<article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card="" data-category="4x4">
-<div class="h-48 relative">
-<img class="w-full h-full object-cover" alt="Ford Ranger double-cab pickup truck near a mining site perimeter" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4gtgGkVg4cf5U5ZXbAXG6iDYK2hq76n7d2qY2-n35P-tFD_WtLehVwz74-bRBP4vzyJzOKXWDGW_P5AU7alsRwV4gz4wKUb2DTRijcG07mZqc_5oHilpJHIzj3EDu5i4Iv4b7ZQj8S85PY_u0AEij3QjYK9Ft0ag9HpYTKR6SY7y1kmYR3fxj2yR19Rf0_huBdRpOvIMLlRMkQFWESAGGKDeI-74L4fZTNO0ZKrU0qqRjzxbqPkmg"/>
-<span class="absolute top-2 right-2 bg-success text-white font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">Available</span>
-</div>
-<div class="p-4 flex-grow flex flex-col justify-between">
-<div>
-<h3 class="font-headline-md text-headline-md text-primary mb-1">Ford Ranger Double Cab</h3>
-<p class="font-body-md text-body-md text-on-surface-variant mb-4">4x4 &amp; SUV</p>
-</div>
-<a class="btn btn-primary btn-block btn-sm" href="request.html">Book Now</a>
-</div>
-</article>
-<!-- Card 6 -->
-<article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card="" data-category="truck">
-<div class="h-48 relative">
-<img class="w-full h-full object-cover" alt="Isuzu NQR box truck parked at a loading dock" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB6tZqCRvl9bplSXrJBePgvwowRBBtoRysnPNLT0fniq5ftLL0Nsipp8JEM-VlJj_n_iShTBi2xotGh8GrNqcfrn2JJ3oIIcRPG6WW6sD90WryMnRnj7D9CAdEUi5iSr44UDv29FFFodr2wou-TI2izDUho0Lh7VsgWwNXIRWVgGLRraj1KJ_5MGEUzVXm2B9Ii9nrtbs4Ekl23M9BDtZ6k7aAUZQe5Oqxgo9jNtBpKQcUwiqHeauOk"/>
-<span class="absolute top-2 right-2 bg-error text-on-error font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">Booked</span>
-</div>
-<div class="p-4 flex-grow flex flex-col justify-between">
-<div>
-<h3 class="font-headline-md text-headline-md text-primary mb-1">Isuzu NQR Box Truck</h3>
-<p class="font-body-md text-body-md text-on-surface-variant mb-4">Trucks</p>
-</div>
-<button class="btn btn-outline btn-block btn-sm" disabled="" aria-disabled="true">Currently Booked</button>
-</div>
-</article>
-</section>
+<!-- Fleet Grid — populated live from the fleet dashboard via /api/fleet -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter" data-fleet-grid></section>
 </main>
 <!-- Footer -->
 <footer class="w-full py-margin-desktop px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-4 gap-gutter bg-primary border-t border-primary-container mt-auto text-on-primary font-label-sm text-label-sm">

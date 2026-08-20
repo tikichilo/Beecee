@@ -444,6 +444,23 @@ h1, h2, h3, h4, h5, h6, .display-font {
 .site-logo--lg {
   height: 72px;
 }
+.site-wordmark {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.15;
+  color: #3B4A1E; /* primary */
+  letter-spacing: -0.01em;
+  display: none;
+}
+.site-wordmark br { display: none; }
+@media (min-width: 480px) {
+  .site-wordmark { display: block; }
+}
+@media (min-width: 480px) and (max-width: 767px) {
+  .site-wordmark br { display: inline; }
+  .site-wordmark { font-size: 15px; }
+}
 
 /* Mobile nav drawer, shared across every page */
 [data-mobile-menu] {
@@ -685,7 +702,7 @@ textarea:focus-visible {
 <body class="bg-background text-on-background font-body-md text-body-md min-h-screen flex flex-col pt-20">
 <!-- TopNavBar -->
 <header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface border-b border-outline-variant" data-site-header>
-<a class="flex items-center gap-4" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" class="site-logo"/></a>
+<a class="flex items-center gap-3 site-brand" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" class="site-logo"/><span class="site-wordmark">Bee Cee<br/>Logistics Ltd</span></a>
 <nav class="hidden md:flex gap-6" aria-label="Primary">
 <a class="font-body-md text-body-md nav-link--inactive" data-page="services.html" href="services.html">Services</a>
 <a class="font-body-md text-body-md nav-link--inactive" data-page="fleet.html" href="fleet.html">Fleet</a>
