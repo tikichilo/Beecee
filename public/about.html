@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>About Us - Bee Cee Logistics Ltd | Freight, Car Hire &amp; Customs Clearing in Zambia</title>
+<meta name="description" content="Bee Cee Logistics Ltd is a Zambian-owned logistics company with 28+ years of combined experience in car hire, customs clearing, removals &amp; relocation, and general supply across all 10 provinces of Zambia."/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+/* ==========================================================================
+   Bee Cee Logistics — bee.js
+   Design-system config (Tailwind theme tokens) + site-wide UI reactivity.
+   Page-specific business logic (forms, filters, dashboards) lives in cee.js.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Tailwind design tokens (single source of truth for every page)
+   -------------------------------------------------------------------------- */
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "surface-bright": "#f8f9fa",
+        "on-background": "#191c1d",
+        "secondary": "#7b5800",
+        "tertiary-fixed-dim": "#ffb783",
+        "outline": "#74777f",
+        "secondary-fixed-dim": "#f7bd48",
+        "primary-fixed": "#E4EAC9",
+        "inverse-primary": "#C2CE93",
+        "on-tertiary-container": "#f2882c",
+        "on-tertiary-fixed": "#301400",
+        "surface-container-lowest": "#ffffff",
+        "tertiary": "#3c1b00",
+        "primary": "#3B4A1E",
+        "on-error": "#ffffff",
+        "primary-container": "#4E5A26",
+        "surface": "#f8f9fa",
+        "secondary-container": "#fdc34d",
+        "on-surface": "#191c1d",
+        "surface-tint": "#596A32",
+        "on-primary": "#ffffff",
+        "on-secondary-fixed-variant": "#5d4200",
+        "secondary-fixed": "#ffdea6",
+        "tertiary-container": "#5d2c00",
+        "error": "#ba1a1a",
+        "on-surface-variant": "#43474e",
+        "on-tertiary": "#ffffff",
+        "on-secondary-container": "#715000",
+        "surface-container-low": "#f3f4f5",
+        "error-container": "#ffdad6",
+        "inverse-surface": "#2e3132",
+        "surface-variant": "#e1e3e4",
+        "primary-fixed-dim": "#C2CE93",
+        "outline-variant": "#c4c6cf",
+        "inverse-on-surface": "#f0f1f2",
+        "surface-container-high": "#e7e8e9",
+        "on-primary-container": "#B6C58C",
+        "tertiary-fixed": "#ffdcc5",
+        "on-error-container": "#93000a",
+        "background": "#f8f9fa",
+        "on-tertiary-fixed-variant": "#713700",
+        "surface-container": "#edeeef",
+        "on-secondary": "#ffffff",
+        "surface-dim": "#d9dadb",
+        "on-primary-fixed": "#16210C",
+        "surface-container-highest": "#e1e3e4",
+        "on-primary-fixed-variant": "#4A5426",
+        "on-secondary-fixed": "#271900",
+        "success": "#146c2e",
+        "success-container": "#d1f4e0",
+        "on-success-container": "#0e613b"
+      },
+      borderRadius: {
+        DEFAULT: "0.125rem",
+        lg: "0.25rem",
+        xl: "0.5rem",
+        full: "0.75rem"
+      },
+      spacing: {
+        "container-max": "1280px",
+        unit: "8px",
+        "margin-mobile": "16px",
+        "margin-desktop": "40px",
+        gutter: "24px"
+      },
+      fontFamily: {
+        "body-lg": ["Inter"],
+        "display-lg": ["Montserrat"],
+        "label-sm": ["Inter"],
+        "body-md": ["Inter"],
+        "display-lg-mobile": ["Montserrat"],
+        "headline-md": ["Montserrat"],
+        "data-mono": ["Inter"]
+      },
+      fontSize: {
+        "body-lg": ["18px", { lineHeight: "1.6", fontWeight: "400" }],
+        "display-lg": ["48px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "label-sm": ["12px", { lineHeight: "1", letterSpacing: "0.05em", fontWeight: "600" }],
+        "body-md": ["16px", { lineHeight: "1.5", fontWeight: "400" }],
+        "display-lg-mobile": ["32px", { lineHeight: "1.2", fontWeight: "700" }],
+        "headline-md": ["24px", { lineHeight: "1.3", fontWeight: "600" }],
+        "data-mono": ["14px", { lineHeight: "1.4", fontWeight: "500" }]
+      }
+    }
+  }
+};
+
+/* --------------------------------------------------------------------------
+   2. Site-wide reactivity
+   -------------------------------------------------------------------------- */
+(function () {
+  "use strict";
+
+  document.addEventListener("DOMContentLoaded", init);
+
+  function init() {
+    highlightActiveNavLink();
+    setupMobileMenu();
+    setupHeaderScrollShadow();
+    setupYear();
+  }
+
+  /**
+   * Every nav link carries data-page="services" etc. We compare that against
+   * the current file name so the same nav markup can be reused, byte for
+   * byte, on every page instead of hand-editing "active" classes per page.
+   */
+  function highlightActiveNavLink() {
+    const current = (location.pathname.split("/").pop() || "index.html") || "index.html";
+
+    document.querySelectorAll("[data-page]").forEach((link) => {
+      const isActive = link.getAttribute("data-page") === current;
+      link.classList.toggle("nav-link--active", isActive);
+      link.classList.toggle("nav-link--inactive", !isActive);
+      if (isActive) {
+        link.setAttribute("aria-current", "page");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    });
+  }
+
+  /**
+   * Hamburger toggle shared by every page that has a mobile nav drawer.
+   * Markup contract:
+   *   <button data-menu-toggle aria-controls="mobile-menu" aria-expanded="false">
+   *   <div id="mobile-menu" data-mobile-menu hidden> ... </div>
+   */
+  function setupMobileMenu() {
+    const toggle = document.querySelector("[data-menu-toggle]");
+    const menu = document.querySelector("[data-mobile-menu]");
+    if (!toggle || !menu) return;
+
+    const openIcon = toggle.querySelector("[data-icon-open]");
+    const closeIcon = toggle.querySelector("[data-icon-close]");
+
+    function setState(isOpen) {
+      toggle.setAttribute("aria-expanded", String(isOpen));
+      menu.hidden = !isOpen;
+      menu.classList.toggle("mobile-menu--open", isOpen);
+      if (openIcon && closeIcon) {
+        openIcon.classList.toggle("hidden", isOpen);
+        closeIcon.classList.toggle("hidden", !isOpen);
+      }
+    }
+
+    toggle.addEventListener("click", () => {
+      setState(menu.hidden);
+    });
+
+    menu.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => setState(false));
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !menu.hidden) setState(false);
+    });
+  }
+
+  /** Adds a subtle shadow to the fixed header once the page has scrolled. */
+  function setupHeaderScrollShadow() {
+    const header = document.querySelector("[data-site-header]");
+    if (!header) return;
+
+    function update() {
+      header.classList.toggle("site-header--scrolled", window.scrollY > 8);
+    }
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+  }
+
+  /** Keeps every footer's © year correct without hand-editing each page. */
+  function setupYear() {
+    document.querySelectorAll("[data-current-year]").forEach((el) => {
+      el.textContent = new Date().getFullYear();
+    });
+  }
+})();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+/* ==========================================================================
+   Bee Cee Logistics — bee.css
+   All hand-written CSS for the site. Tailwind (loaded via CDN, configured in
+   bee.js) supplies the utility classes used throughout the markup; this file
+   only holds things Tailwind utilities can't express cleanly: base type
+   rules, the Material Symbols fill defaults, small named components (nav,
+   footer, mobile menu) and one-off decorative patterns.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+body {
+  font-family: "Inter", sans-serif;
+  background-color: #f8f9fa; /* background */
+  color: #191c1d; /* on-background */
+}
+
+h1, h2, h3, h4, h5, h6, .display-font {
+  font-family: "Montserrat", sans-serif;
+}
+
+/* Material Symbols: unfilled by default, filled where data-weight="fill"
+   or the .icon-fill helper is used. Keeps every page consistent instead of
+   each one re-declaring its own variation settings. */
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+.material-symbols-outlined[data-weight="fill"],
+.material-symbols-outlined.icon-fill {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* --------------------------------------------------------------------------
+   Site header / navigation
+   -------------------------------------------------------------------------- */
+.site-header--scrolled {
+  box-shadow: 0 4px 12px rgba(31, 58, 95, 0.08);
+}
+
+.nav-link--active {
+  color: #3B4A1E; /* primary */
+  font-weight: 700;
+  border-bottom: 2px solid #3B4A1E;
+  padding-bottom: 4px;
+}
+
+.nav-link--inactive {
+  color: #43474e; /* on-surface-variant */
+  transition: color 0.2s ease;
+}
+.nav-link--inactive:hover {
+  color: #3B4A1E; /* primary */
+}
+
+/* Site logo — sized up and given a soft shadow so it reads clearly
+   against the light header background. */
+.site-logo {
+  height: 62px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(59, 74, 30, 0.25));
+  transition: transform 0.2s ease;
+}
+.site-logo:hover {
+  transform: scale(1.05);
+}
+.site-wordmark {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.15;
+  color: #3B4A1E; /* primary */
+  letter-spacing: -0.01em;
+  display: none;
+}
+.site-wordmark br { display: none; }
+@media (min-width: 480px) {
+  .site-wordmark { display: block; }
+}
+@media (min-width: 480px) and (max-width: 767px) {
+  .site-wordmark br { display: inline; }
+  .site-wordmark { font-size: 15px; }
+}
+
+/* Mobile nav drawer, shared across every page */
+[data-mobile-menu] {
+  position: fixed;
+  top: 80px;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: #ffffff; /* surface-container-lowest */
+  border-bottom: 1px solid #c4c6cf; /* outline-variant */
+  box-shadow: 0 12px 24px rgba(31, 58, 95, 0.12);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+[data-mobile-menu][hidden] {
+  display: none;
+}
+
+[data-mobile-menu] a {
+  padding: 12px 8px;
+  border-radius: 0.25rem;
+  color: #191c1d;
+  font-weight: 500;
+}
+
+[data-mobile-menu] a.nav-link--active {
+  background: #fdc34d; /* secondary-container */
+  color: #715000; /* on-secondary-container */
+  border-bottom: none;
+}
+
+[data-mobile-menu] .mobile-menu__cta {
+  margin-top: 8px;
+  padding: 14px 24px;
+}
+
+/* --------------------------------------------------------------------------
+   Buttons — ONE set of CTA styles reused on every page.
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: 0.5rem;
+  padding: 14px 24px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+}
+.btn-sm { padding: 8px 16px; }
+.btn-block { width: 100%; }
+.btn-primary {
+  background-color: #fdc34d; /* secondary-container */
+  color: #715000; /* on-secondary-container */
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-outline {
+  background-color: transparent;
+  border-color: #3B4A1E;
+  color: #3B4A1E;
+}
+.btn-outline:hover {
+  background-color: #3B4A1E;
+  color: #ffffff;
+}
+.btn-outline-invert {
+  background-color: transparent;
+  border-color: #ffffff;
+  color: #ffffff;
+}
+.btn-outline-invert:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #7b5800; /* secondary */
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.link-arrow:hover {
+  color: #3B4A1E;
+  text-decoration: underline;
+}
+.link-arrow .material-symbols-outlined {
+  font-size: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   Accessibility
+   -------------------------------------------------------------------------- */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid #3B4A1E;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+  }
+}
+</style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md overflow-x-hidden pt-20">
+<!-- TopNavBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface border-b border-outline-variant" data-site-header>
+<a class="flex items-center gap-3 site-brand" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" class="site-logo"/><span class="site-wordmark">Bee Cee<br/>Logistics Ltd</span></a>
+<nav class="hidden md:flex gap-6" aria-label="Primary">
+<a class="font-body-md text-body-md nav-link--inactive" data-page="services.html" href="services.html">Services</a>
+<a class="font-body-md text-body-md nav-link--inactive" data-page="fleet.html" href="fleet.html">Fleet</a>
+<a class="font-body-md text-body-md nav-link--inactive" data-page="client.html" href="client.html">Clients</a>
+<a class="font-body-md text-body-md nav-link--inactive" data-page="contact.html" href="contact.html">Contact</a>
+</nav>
+<div class="flex items-center gap-4">
+<a class="btn btn-primary btn-sm hidden md:inline-flex" href="request.html">Request a Quote</a>
+<button class="md:hidden text-primary p-2" data-menu-toggle aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation menu">
+<span class="material-symbols-outlined" data-icon-open="">menu</span>
+<span class="material-symbols-outlined hidden" data-icon-close="">close</span>
+</button>
+</div>
+</header>
+<!-- Mobile Nav Drawer -->
+<div id="mobile-menu" data-mobile-menu="" hidden="">
+<a data-page="index.html" href="index.html">Home</a>
+<a data-page="services.html" href="services.html">Services</a>
+<a data-page="fleet.html" href="fleet.html">Fleet</a>
+<a data-page="client.html" href="client.html">Clients</a>
+<a data-page="contact.html" href="contact.html">Contact</a>
+<a class="btn btn-primary btn-block mobile-menu__cta" href="request.html">Request a Quote</a>
+</div>
+
+<!-- Page Hero -->
+<section class="relative w-full min-h-[380px] flex items-center justify-center bg-primary text-on-primary overflow-hidden">
+<div class="absolute inset-0 z-0 bg-cover bg-center" style="background-image: url('/images/about-hero.jpg');" aria-hidden="true"></div>
+<div class="absolute inset-0 z-0 bg-primary opacity-60 mix-blend-multiply" aria-hidden="true"></div>
+<div class="relative z-10 text-center max-w-3xl px-margin-mobile md:px-margin-desktop py-16 flex flex-col items-center gap-4">
+<span class="font-label-sm text-label-sm text-secondary-fixed uppercase tracking-wider">Company Profile</span>
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-on-primary">About Bee Cee Logistics</h1>
+<p class="font-body-lg text-body-lg text-primary-fixed max-w-2xl">Car Hire, Customs Clearing, Freight Forwarding, Removals &amp; Relocation, and General Supply — Logistics Our Game.</p>
+</div>
+</section>
+
+<!-- Snapshot Stats -->
+<section class="py-12 bg-surface-container border-b border-outline-variant">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+<div>
+<span class="block font-display-lg-mobile text-display-lg-mobile text-primary">28+</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Years Combined Experience</span>
+</div>
+<div>
+<span class="block font-display-lg-mobile text-display-lg-mobile text-primary">10</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Provinces Served</span>
+</div>
+<div>
+<span class="block font-display-lg-mobile text-display-lg-mobile text-primary">68</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Vehicles in Fleet</span>
+</div>
+<div>
+<span class="block font-display-lg-mobile text-display-lg-mobile text-primary">22+</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Institutional Clients</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Who We Are -->
+<section class="py-20 bg-surface">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter items-center">
+<div class="flex flex-col gap-4">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Who We Are</span>
+<h2 class="font-headline-md text-headline-md text-primary">Zambian-Owned. Built On 28+ Years in Transport.</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Bee Cee Logistics Ltd is a Zambian-registered company providing car hire, customs clearing, removals, relocation, general supply, and project logistics consultancy. We're owned by Zambian professionals who've spent more than 28 years in the transport industry, working to a standard that meets international expectations.</p>
+<p class="font-body-md text-body-md text-on-surface-variant">We develop comprehensive travel and tour, logistics consultancy, and relocation services tailored to each customer — starting by learning their exact internal and external requirements, then structuring the job around them. That's how we've stayed one of the most consistent car hire and logistics providers operating in Zambia.</p>
+</div>
+<div class="w-full aspect-[4/3] bg-surface-container border border-dashed border-outline-variant rounded-lg flex flex-col items-center justify-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined text-4xl opacity-50" aria-hidden="true">photo_camera</span>
+<span class="font-label-sm text-label-sm opacity-70 text-center px-4">Photo: office, yard, or a vehicle handover</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Service Coverage -->
+<section class="py-20 bg-surface-container-low border-y border-outline-variant">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="text-center mb-12">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Reach</span>
+<h2 class="font-headline-md text-headline-md text-primary mt-2 mb-4">Every Province. One Standard.</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">We provide our services throughout Zambia — all 10 provinces, one point of contact.</p>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+<div class="flex flex-col items-center justify-center gap-1 p-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-center">
+<span class="material-symbols-outlined text-2xl text-primary icon-fill" aria-hidden="true">location_on</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">Northern</span>
+</div>
+<div class="flex flex-col items-center justify-center gap-1 p-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-center">
+<span class="material-symbols-outlined text-2xl text-primary icon-fill" aria-hidden="true">location_on</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">Copperbelt</span>
+</div>
+<div class="flex flex-col items-center justify-center gap-1 p-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-center">
+<span class="material-symbols-outlined text-2xl text-primary icon-fill" aria-hidden="true">location_on</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">Luapula</span>
+</div>
+<div class="flex flex-col items-center justify-center gap-1 p-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-center">
+<span class="material-symbols-outlined text-2xl text-primary icon-fill" aria-hidden="true">location_on</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">Muchinga</span>
+</div>
+<div class="flex flex-col items-center justify-center gap-1 p-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-center">
+<span class="material-symbols-outlined text-2xl text-primary icon-fill" aria-hidden="true">location_on</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">Southern</span>
+</div>
+<div class="flex flex-col items-center justify-center gap-1 p-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-center">
+<span class="material-symbols-outlined text-2xl text-primary icon-fill" aria-hidden="true">location_on</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">Lusaka</span>
+</div>
+<div class="flex flex-col items-center justify-center gap-1 p-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-center">
+<span class="material-symbols-outlined text-2xl text-primary icon-fill" aria-hidden="true">location_on</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">Central</span>
+</div>
+<div class="flex flex-col items-center justify-center gap-1 p-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-center">
+<span class="material-symbols-outlined text-2xl text-primary icon-fill" aria-hidden="true">location_on</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">N/Western</span>
+</div>
+<div class="flex flex-col items-center justify-center gap-1 p-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-center">
+<span class="material-symbols-outlined text-2xl text-primary icon-fill" aria-hidden="true">location_on</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">Western</span>
+</div>
+<div class="flex flex-col items-center justify-center gap-1 p-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-center">
+<span class="material-symbols-outlined text-2xl text-primary icon-fill" aria-hidden="true">location_on</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">Eastern</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Market Position -->
+<section class="py-20 bg-surface">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter items-center">
+<div class="w-full aspect-[4/3] bg-surface-container border border-dashed border-outline-variant rounded-lg flex flex-col items-center justify-center gap-2 text-on-surface-variant order-2 lg:order-1">
+<span class="material-symbols-outlined text-4xl opacity-50" aria-hidden="true">photo_camera</span>
+<span class="font-label-sm text-label-sm opacity-70 text-center px-4">Photo: fleet lineup or a chauffeur with a client vehicle</span>
+</div>
+<div class="flex flex-col gap-4 order-1 lg:order-2">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Market Position</span>
+<h2 class="font-headline-md text-headline-md text-primary">One of Zambia's Leading Independent Providers.</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Since establishment, Bee Cee Logistics Ltd has been recognized as one of the most successful independent providers of car hire and tour, removals, relocation, construction, freight forwarding, customs clearing, and general supply in Zambia. We offer both self-drive and chauffeur-driven car hire, plus a fleet of buses for day or night staff shift movements, school pickups, and school tours.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Mission & Vision -->
+<section class="py-20 bg-surface-container-low border-y border-outline-variant">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="text-center mb-12">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Direction</span>
+<h2 class="font-headline-md text-headline-md text-primary mt-2">Mission &amp; Vision</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-8 flex flex-col gap-3">
+<span class="material-symbols-outlined text-3xl text-primary icon-fill" aria-hidden="true">flag</span>
+<h3 class="font-headline-md text-headline-md text-primary">Our Vision</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">To promote total quality service management and maintain our success through steady investment in service expansion and innovation — promoting safe movement for our clients with good drivers and well-maintained vehicles throughout our organization.</p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-8 flex flex-col gap-3">
+<span class="material-symbols-outlined text-3xl text-primary icon-fill" aria-hidden="true">target</span>
+<h3 class="font-headline-md text-headline-md text-primary">Our Mission</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">To always provide the best car hire customer service team in our profession. We strive to develop and maintain first-class infrastructure that ensures employee satisfaction, which drives customer loyalty, sustained growth, and improved company value.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- What We Do -->
+<section class="py-20 bg-surface">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="text-center mb-12">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">What We Do</span>
+<h2 class="font-headline-md text-headline-md text-primary mt-2">Four Ways We Move Zambia.</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex flex-col gap-2">
+<span class="material-symbols-outlined text-3xl text-primary icon-fill" aria-hidden="true">directions_car</span>
+<h3 class="font-body-lg text-body-lg font-bold text-on-surface">Car Hire</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Self-drive and chauffeur-driven hire, plus buses for staff shift movements and school pickups or tours.</p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex flex-col gap-2">
+<span class="material-symbols-outlined text-3xl text-primary icon-fill" aria-hidden="true">fact_check</span>
+<h3 class="font-body-lg text-body-lg font-bold text-on-surface">Customs Clearing</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">One of Zambia's leading customs brokers, with offices at every border town and international airport. Documentation is prepared well ahead of import/export to avoid delays and storage charges.</p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex flex-col gap-2">
+<span class="material-symbols-outlined text-3xl text-primary icon-fill" aria-hidden="true">local_shipping</span>
+<h3 class="font-body-lg text-body-lg font-bold text-on-surface">Removals &amp; Relocation</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">A single source for local and worldwide moves — household goods, office furniture, pets, artwork, pianos — with pre-move survey, packing/crating, and freight forwarding by sea, road, or air.</p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex flex-col gap-2">
+<span class="material-symbols-outlined text-3xl text-primary icon-fill" aria-hidden="true">inventory_2</span>
+<h3 class="font-body-lg text-body-lg font-bold text-on-surface">General Supply &amp; Project Logistics</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Consultancy built around each client's exact internal and external requirements — cost-effective, reliable solutions that help clients reach their goals.</p>
+</div>
+</div>
+<div class="text-center mt-10">
+<a class="link-arrow" href="services.html">Explore All Services <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
+</div>
+</div>
+</section>
+
+<!-- Fleet at a Glance -->
+<section class="py-20 bg-primary text-on-primary">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter items-center">
+<div class="flex flex-col gap-4">
+<span class="font-label-sm text-label-sm text-secondary-fixed uppercase tracking-wider">Investment</span>
+<h2 class="font-headline-md text-headline-md text-on-primary">A Fleet Built for Every Job.</h2>
+<p class="font-body-md text-body-md text-primary-fixed">We keep buses, saloon cars, 2x4s, 4x4s, and trucks on hand — 68 vehicles across 14 vehicle types, from Land Cruiser Prados to 30-ton trucks. Whatever the job calls for, we have a vehicle suited to it.</p>
+<div>
+<a class="btn btn-outline-invert" href="fleet.html">View Full Fleet</a>
+</div>
+</div>
+<div class="w-full aspect-[4/3] bg-primary-container border border-dashed border-primary-fixed rounded-lg flex flex-col items-center justify-center gap-2 text-primary-fixed">
+<span class="material-symbols-outlined text-4xl opacity-70" aria-hidden="true">photo_camera</span>
+<span class="font-label-sm text-label-sm opacity-80 text-center px-4">Photo: fleet yard, buses, or trucks</span>
+</div>
+</div>
+<div class="mt-12 pt-12 border-t border-primary-container/40">
+<span class="font-label-sm text-label-sm text-secondary-fixed uppercase tracking-wider">Fleet Inventory</span>
+<h3 class="font-headline-md text-headline-md text-on-primary mt-2 mb-6">14 Vehicle Types, 68 Vehicles Total.</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">16</span>
+<span class="font-body-md text-body-md text-primary-fixed">4x4 Land Cruiser Prado</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">5</span>
+<span class="font-body-md text-body-md text-primary-fixed">4x4 Double Cab Toyota Hilux</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">3</span>
+<span class="font-body-md text-body-md text-primary-fixed">29-Seater Toyota Coaster Bus</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">4</span>
+<span class="font-body-md text-body-md text-primary-fixed">Toyota Quantum Bus</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">5</span>
+<span class="font-body-md text-body-md text-primary-fixed">Toyota Allion Saloon</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">2</span>
+<span class="font-body-md text-body-md text-primary-fixed">29-Seater Mitsubishi Rosa Bus</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">7</span>
+<span class="font-body-md text-body-md text-primary-fixed">Toyota Fortuner</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">4</span>
+<span class="font-body-md text-body-md text-primary-fixed">Toyota Belta Saloon</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">10</span>
+<span class="font-body-md text-body-md text-primary-fixed">Mitsubishi Pajero</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">5</span>
+<span class="font-body-md text-body-md text-primary-fixed">Ford Ranger Pickup</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">2</span>
+<span class="font-body-md text-body-md text-primary-fixed">3-Ton Truck</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">2</span>
+<span class="font-body-md text-body-md text-primary-fixed">10-Ton Truck</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">1</span>
+<span class="font-body-md text-body-md text-primary-fixed">30-Ton Truck</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-primary-container/40 border border-primary-container rounded-lg">
+<span class="font-data-mono text-data-mono text-on-primary bg-primary-container text-center rounded min-w-[2.5rem] px-2 py-1">2</span>
+<span class="font-body-md text-body-md text-primary-fixed">5-Ton Truck</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Quality Statement -->
+<section class="py-16 bg-surface-container-low border-b border-outline-variant">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop max-w-3xl text-center">
+<span class="material-symbols-outlined text-3xl text-primary icon-fill mb-3" aria-hidden="true">workspace_premium</span>
+<h2 class="font-headline-md text-headline-md text-primary mb-4">Quality Isn't Optional.</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">We treat quality as a requirement, not a nice-to-have. Every job is planned to get it right the first time — catching a problem early is always cheaper than fixing it after it reaches a client. When something does go wrong, we trace it to its root cause and eliminate it, rather than patching the symptom.</p>
+</div>
+</section>
+
+<!-- Leadership -->
+<section class="py-20 bg-surface">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="text-center mb-12">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Leadership</span>
+<h2 class="font-headline-md text-headline-md text-primary mt-2">Run By People Who Know the Industry.</h2>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter max-w-2xl mx-auto">
+<div class="flex flex-col items-center text-center gap-3 bg-surface-container-lowest border border-outline-variant rounded-lg p-8">
+<div class="w-24 h-24 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant opacity-50" aria-hidden="true">person</span>
+</div>
+<span class="font-body-lg text-body-lg font-bold text-on-surface">Bellion Chola</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Chief Executive Officer</span>
+</div>
+<div class="flex flex-col items-center text-center gap-3 bg-surface-container-lowest border border-outline-variant rounded-lg p-8">
+<div class="w-24 h-24 rounded-full bg-surface-container border border-outline-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant opacity-50" aria-hidden="true">person</span>
+</div>
+<span class="font-body-lg text-body-lg font-bold text-on-surface">Songwe Chola</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Marketing Executive</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-center max-w-2xl mx-auto mt-10">Supported by our own offices and associates, we've built a team of professional drivers and logistics officers who make us one of the most reliable companies on the market — an inspired, people-driven operation from top to bottom.</p>
+</div>
+</section>
+
+<!-- Trusted By / Clients -->
+<section class="py-20 bg-surface-container-low border-y border-outline-variant">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
+<div class="text-center mb-12">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Some of Our Clients</span>
+<h2 class="font-headline-md text-headline-md text-primary mt-2">Trusted By Institutions Across Zambia.</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto mt-4">Plus individual local and international tourists — we have vehicles on hire for passengers, goods, and staff shift movements to suit every occasion and location.</p>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">National Assembly</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Energy Management Services</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">CIHEB Zambia</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Ministry of Works &amp; Supply</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Build It International</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">GIZ Zambia</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Churches Health Association of Zambia</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Stanbic Bank</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Maryland Initiative Corporation</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">PricewaterhouseCoopers</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Centre for Trade Policy &amp; Development</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Care Cooperative Society</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Planned Parenthood Association of Zambia</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">ZCCM Investments Holdings</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Zambia Institute for Policy Analysis &amp; Research</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">TIKO</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Catholic Relief Services</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Management Systems International</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Electoral Institute for Sustainable Democracy in Africa</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">PATH</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Advocacy Against Child Abuse &amp; GBV</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">ICAP</span></div>
+<div class="flex items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg text-center min-h-[72px]"><span class="font-label-sm text-label-sm text-on-surface font-bold">Oxfam</span></div>
+</div>
+</div>
+</section>
+
+<!-- Compliance -->
+<section class="py-16 bg-surface border-b border-outline-variant">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop text-center">
+<h2 class="font-headline-md text-headline-md text-primary mb-8">Certified Reliability</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+<div class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg">
+<span class="material-symbols-outlined text-4xl text-primary mb-2 icon-fill" aria-hidden="true">verified</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold text-center">ZPPA Certified</span>
+</div>
+<div class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg">
+<span class="material-symbols-outlined text-4xl text-primary mb-2 icon-fill" aria-hidden="true">receipt_long</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold text-center">ZRA Tax Cleared</span>
+</div>
+<div class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg">
+<span class="material-symbols-outlined text-4xl text-primary mb-2 icon-fill" aria-hidden="true">shield</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold text-center">NAPSA Compliant</span>
+</div>
+<div class="flex flex-col items-center justify-center p-4 bg-surface-container-lowest border border-outline-variant rounded-lg">
+<span class="material-symbols-outlined text-4xl text-primary mb-2 icon-fill" aria-hidden="true">corporate_fare</span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold text-center">PACRA Incorporated</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- CTA -->
+<section class="py-20 bg-surface-container-low">
+<div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex flex-col items-center text-center gap-6">
+<h2 class="font-headline-md text-headline-md text-primary">Ready to Work With Us?</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xl">Visit us at Plot No. 110/3, Suite 1, Musonda Ngosa Road, Villa Elizabetha, Lusaka — or reach out below.</p>
+<div class="flex flex-col sm:flex-row gap-4">
+<a class="btn btn-primary" href="request.html">Request a Quote</a>
+<a class="btn btn-outline" href="contact.html">Contact Us</a>
+</div>
+</div>
+</section>
+
+<!-- Footer -->
+<footer class="w-full py-margin-desktop px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-4 gap-gutter bg-primary border-t border-primary-container mt-auto text-on-primary font-label-sm text-label-sm">
+<div class="flex flex-col gap-4 md:col-span-1">
+<span class="font-headline-md text-headline-md font-bold text-on-primary">Bee Cee Logistics</span>
+<p class="text-on-primary-container">28+ years of combined experience in freight, car hire, and customs clearing across Zambia.</p>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="text-on-primary font-bold mb-2">Company</h4>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="index.html">Home</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="services.html">Services</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="fleet.html">Fleet</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="client.html">Our Clients</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="contact.html">Contact</a>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="text-on-primary font-bold mb-2">Get Started</h4>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="request.html">Request a Quote</a>
+<a class="text-on-primary-container hover:text-on-primary transition-colors" href="clientarea.html">Client Portal</a>
+</div>
+<div class="flex flex-col gap-2">
+<h4 class="text-on-primary font-bold mb-2">Compliance</h4>
+<div class="flex flex-wrap gap-2">
+<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZPPA Certified</span>
+<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZRA Compliant</span>
+<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">NAPSA Registered</span>
+<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">PACRA Verified</span>
+</div>
+</div>
+<div class="col-span-1 md:col-span-4 mt-4 pt-4 border-t border-primary-container/40 text-on-primary-container">
+            © <span data-current-year="">2024</span> Bee Cee Logistics Ltd. All rights reserved. <span class="opacity-70">· Site by <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="https://tikichilo.github.io/tiki-portfolio/experience.html" target="_blank" rel="noopener">Tiki Chilomo</a> · <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="/admin">Staff Login</a></span>
+        </div>
+</footer>
+</body>
+</html>

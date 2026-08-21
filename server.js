@@ -30,6 +30,22 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
+// Without these, a dropped connection to Atlas (common on flaky
+// networks) fires an unhandled error event that crashes the whole
+// Node process — not just the DB call that triggered it. Logging it
+// here instead lets Mongoose's own reconnect logic keep retrying in
+// the background while the rest of the server (static pages, etc.)
+// stays up.
+mongoose.connection.on("error", (err) => {
+  console.error("MongoDB connection error (post-connect):", err.message);
+});
+mongoose.connection.on("disconnected", () => {
+  console.warn("MongoDB disconnected — Mongoose will attempt to reconnect automatically.");
+});
+mongoose.connection.on("reconnected", () => {
+  console.log("MongoDB reconnected.");
+});
+
 // --------------------------------------------------------------------
 // Core middleware
 // --------------------------------------------------------------------
@@ -70,6 +86,10 @@ const PAGES = {
   "/clientarea": "clientarea.html",
   "/admin": "admin/login.html",
   "/admin/fleet": "admin/fleet.html",
+  "/admin/access": "admin/access.html",
+  "/admin/signup": "admin/signup.html",
+  "/admin/forgot-password": "admin/forgot-password.html",
+  "/admin/reset-password": "admin/reset-password.html",
 };
 
 Object.entries(PAGES).forEach(([route, file]) => {

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Create Admin Account - Bee Cee Logistics</title>
+<meta name="robots" content="noindex, nofollow"/>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --bg-0:#0A0D08; --bg-1:#12160E; --bg-2:#191F13; --border:#2B341F;
+    --green:#3B4A1E; --green-bright:#8CB33E; --amber:#E8A33D; --amber-dim:#7A5A26;
+    --red:#D14B3F; --text-0:#EDEAE0; --text-1:#8F977E;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:radial-gradient(ellipse 900px 500px at 50% -10%, rgba(59,74,30,0.35), transparent 60%), var(--bg-0);
+    color:var(--text-0); font-family:"Inter",sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+    position:relative; overflow-x:hidden;
+  }
+  body::before{
+    content:""; position:fixed; inset:0;
+    background-image:linear-gradient(rgba(140,179,62,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(140,179,62,0.05) 1px, transparent 1px);
+    background-size:42px 42px;
+    mask-image:radial-gradient(ellipse 70% 60% at 50% 30%, black, transparent 80%);
+    pointer-events:none;
+  }
+  body::after{ content:""; position:fixed; inset:0; box-shadow:inset 0 0 180px 40px rgba(0,0,0,0.65); pointer-events:none; }
+
+  .panel{
+    position:relative; z-index:1; width:100%; max-width:440px;
+    background:linear-gradient(180deg, var(--bg-1), var(--bg-2));
+    border:1px solid var(--border); border-radius:6px; padding:0 0 32px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.4);
+    overflow:hidden;
+  }
+  .panel__stripe{ height:8px; width:100%; background:repeating-linear-gradient(135deg, var(--amber) 0 10px, #14170D 10px 20px); }
+  .panel__header{ display:flex; align-items:center; justify-content:space-between; padding:20px 28px 0; }
+  .panel__brand{ font-family:"JetBrains Mono", monospace; font-size:11px; font-weight:700; letter-spacing:0.18em; color:var(--text-1); }
+  .panel__tag{
+    display:inline-flex; align-items:center; gap:6px; font-family:"JetBrains Mono", monospace; font-size:10px;
+    letter-spacing:0.1em; color:var(--amber); border:1px solid var(--amber-dim); background:rgba(232,163,61,0.08);
+    padding:3px 8px; border-radius:100px;
+  }
+  .dot{ width:6px;height:6px;border-radius:50%; background:var(--green-bright); box-shadow:0 0 8px var(--green-bright); }
+
+  .panel__title{
+    font-family:"Big Shoulders Display", sans-serif; font-weight:800; font-size:38px; line-height:0.92;
+    text-transform:uppercase; color:var(--text-0); margin:16px 28px 6px;
+  }
+  .panel__title span{ color:var(--amber); }
+  .panel__sub{ margin:0 28px 18px; font-size:13.5px; line-height:1.55; color:var(--text-1); }
+
+  /* live badge preview */
+  .badge-wrap{ margin:0 28px 22px; perspective:800px; }
+  .badge{
+    position:relative;
+    background:linear-gradient(160deg, var(--green) 0%, #2E3A17 100%);
+    border:1px solid #4C5E27; border-radius:10px; padding:16px 18px;
+    transition:box-shadow 0.3s ease, transform 0.3s ease;
+  }
+  .badge.is-issued{ box-shadow:0 0 0 2px var(--green-bright), 0 0 24px rgba(140,179,62,0.35); }
+  .badge.is-rejected{ box-shadow:0 0 0 2px var(--red), 0 0 24px rgba(209,75,63,0.3); animation:shake 0.4s ease; }
+  @keyframes shake{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-5px);} 75%{transform:translateX(5px);} }
+  .badge__top{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .badge__brand{ font-family:"JetBrains Mono", monospace; font-size:9px; letter-spacing:0.14em; color:rgba(237,234,224,0.7); }
+  .badge__id{ font-family:"JetBrains Mono", monospace; font-size:9px; letter-spacing:0.1em; color:rgba(237,234,224,0.5); }
+  .badge__mid{ display:flex; align-items:center; gap:12px; margin-top:14px; }
+  .badge__photo{
+    width:44px; height:44px; border-radius:6px; background:rgba(10,13,8,0.5);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .badge__photo svg{ width:22px; height:22px; }
+  .badge__name{ font-family:"Big Shoulders Display", sans-serif; font-size:20px; font-weight:800; letter-spacing:0.03em; text-transform:uppercase; color:var(--text-0); line-height:1; }
+  .badge__role{ font-family:"JetBrains Mono", monospace; font-size:9px; letter-spacing:0.1em; color:var(--amber); margin-top:4px; }
+  .badge__stripe{
+    margin-top:14px; height:8px; border-radius:2px;
+    background:repeating-linear-gradient(90deg, rgba(10,13,8,0.7) 0 2px, transparent 2px 5px);
+  }
+  .badge__stamp{
+    position:absolute; top:12px; right:14px; font-family:"Big Shoulders Display", sans-serif; font-weight:800;
+    font-size:12px; letter-spacing:0.08em; color:var(--green-bright); border:2px solid var(--green-bright);
+    border-radius:4px; padding:2px 6px; transform:rotate(-8deg) scale(0.6); opacity:0; transition:all 0.3s ease;
+  }
+  .badge__stamp.is-visible{ opacity:1; transform:rotate(-8deg) scale(1); }
+
+  .panel__form{ margin:0 28px; display:flex; flex-direction:column; gap:14px; }
+  .panel__label{ font-family:"JetBrains Mono", monospace; font-size:11px; font-weight:500; letter-spacing:0.12em; color:var(--text-1); }
+  .panel__input{
+    width:100%; background:var(--bg-0); border:1px solid var(--border); border-radius:4px; padding:13px 14px;
+    font-family:"Inter", sans-serif; font-size:15px; color:var(--text-0); outline:none;
+  }
+  .panel__input:focus-visible{ border-color:var(--green-bright); box-shadow:0 0 0 3px rgba(140,179,62,0.18); }
+  .panel__hint{ font-size:11.5px; color:var(--text-1); margin:6px 2px 0; }
+
+  .panel__btn{
+    display:flex; align-items:center; justify-content:center; gap:8px; background:var(--green); color:var(--text-0);
+    border:1px solid #4C5E27; border-radius:4px; padding:13px 16px; font-family:"Inter", sans-serif;
+    font-size:14px; font-weight:600; cursor:pointer; transition:background 0.2s ease, transform 0.1s ease;
+  }
+  .panel__btn:hover:not(:disabled){ background:#4A5D25; }
+  .panel__btn:active:not(:disabled){ transform:scale(0.98); }
+  .panel__btn:disabled{ opacity:0.65; cursor:default; }
+
+  .panel__status{ font-family:"JetBrains Mono", monospace; font-size:11px; letter-spacing:0.08em; color:var(--text-1); margin:8px 0 0; min-height:14px; }
+  .panel__status.is-denied{ color:var(--red); }
+  .panel__status.is-granted{ color:var(--green-bright); }
+
+  .panel__footer{ margin:22px 28px 0; font-size:13px; color:var(--text-1); text-align:center; }
+  .panel__footer a{ color:var(--amber); font-weight:600; text-decoration:none; }
+  .panel__footer a:hover{ text-decoration:underline; }
+
+  @media (max-width:480px){ .panel__title{ font-size:32px; } }
+  @media (prefers-reduced-motion: reduce){ .badge, .badge__stamp{ animation:none !important; transition:none !important; } }
+</style>
+</head>
+<body>
+
+<main class="panel">
+  <div class="panel__stripe" aria-hidden="true"></div>
+  <div class="panel__header">
+    <span class="panel__brand">BEE CEE LOGISTICS</span>
+    <span class="panel__tag"><span class="dot"></span>CLEARANCE VERIFIED</span>
+  </div>
+
+  <h1 class="panel__title">Issue<br/><span>Your Badge</span></h1>
+  <p class="panel__sub">Clearance confirmed. Fill in your details to generate dashboard credentials.</p>
+
+  <div class="badge-wrap">
+    <div class="badge" id="badge">
+      <span class="badge__stamp" id="badgeStamp">ISSUED</span>
+      <div class="badge__top">
+        <span class="badge__brand">BEE CEE LOGISTICS</span>
+        <span class="badge__id" id="badgeId">ID: PENDING</span>
+      </div>
+      <div class="badge__mid">
+        <div class="badge__photo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#8F977E" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+        </div>
+        <div>
+          <div class="badge__name" id="badgeName">— — — —</div>
+          <div class="badge__role">CLEARANCE: ADMIN</div>
+        </div>
+      </div>
+      <div class="badge__stripe"></div>
+    </div>
+  </div>
+
+  <form id="signupForm" class="panel__form" novalidate>
+    <div>
+      <label class="panel__label" for="username">USERNAME</label>
+      <input id="username" name="username" type="text" required autocomplete="username" class="panel__input"/>
+    </div>
+    <div>
+      <label class="panel__label" for="email">EMAIL</label>
+      <input id="email" name="email" type="email" required autocomplete="email" class="panel__input"/>
+      <p class="panel__hint">Used only for password resets.</p>
+    </div>
+    <div>
+      <label class="panel__label" for="password">PASSWORD</label>
+      <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password" class="panel__input"/>
+      <p class="panel__hint">At least 8 characters.</p>
+    </div>
+    <button type="submit" class="panel__btn" id="submitBtn">
+      <span id="btnLabel">Issue Badge</span>
+    </button>
+    <p class="panel__status" id="statusMsg">STATUS: AWAITING DETAILS</p>
+  </form>
+
+  <p class="panel__footer">Already have an account? <a href="/admin">Log in</a></p>
+</main>
+
+<script>
+  const inviteCode = sessionStorage.getItem("beecee_invite_code");
+  if (!inviteCode) {
+    // Didn't come through the access gate — send them there first.
+    window.location.href = "/admin/access";
+  }
+
+  const form = document.getElementById("signupForm");
+  const btn = document.getElementById("submitBtn");
+  const btnLabel = document.getElementById("btnLabel");
+  const statusMsg = document.getElementById("statusMsg");
+  const badge = document.getElementById("badge");
+  const badgeName = document.getElementById("badgeName");
+  const badgeId = document.getElementById("badgeId");
+  const badgeStamp = document.getElementById("badgeStamp");
+  const usernameInput = document.getElementById("username");
+
+  usernameInput.addEventListener("input", () => {
+    const val = usernameInput.value.trim();
+    badgeName.textContent = val ? val.toUpperCase() : "— — — —";
+    badgeId.textContent = val ? `ID: ${val.toUpperCase()}` : "ID: PENDING";
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const username = usernameInput.value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    btn.disabled = true;
+    btnLabel.textContent = "Printing…";
+    statusMsg.className = "panel__status";
+    statusMsg.textContent = "STATUS: GENERATING CREDENTIALS…";
+
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password, inviteCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Signup failed.");
+
+      badge.classList.add("is-issued");
+      badgeStamp.classList.add("is-visible");
+      statusMsg.className = "panel__status is-granted";
+      statusMsg.textContent = "STATUS: ISSUED — REDIRECTING";
+      btnLabel.textContent = "Issued";
+
+      sessionStorage.removeItem("beecee_invite_code");
+      setTimeout(() => { window.location.href = "/admin/fleet"; }, 800);
+    } catch (err) {
+      badge.classList.add("is-rejected");
+      setTimeout(() => badge.classList.remove("is-rejected"), 450);
+      statusMsg.className = "panel__status is-denied";
+      statusMsg.textContent = `STATUS: REJECTED — ${err.message.toUpperCase()}`;
+      btnLabel.textContent = "Issue Badge";
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
