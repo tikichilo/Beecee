@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quote Requests - Bee Cee Logistics Admin</title>
+<meta name="robots" content="noindex, nofollow"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="/admin/admin-shared.css" rel="stylesheet"/>
+<style>
+  .filter-tab{
+    padding:8px 14px; border-radius:100px; font-size:13px; font-weight:600;
+    border:1px solid #e5e7eb; color:#4b5563; background:#fff; cursor:pointer;
+  }
+  .filter-tab[aria-pressed="true"]{ background:#3B4A1E; color:#fff; border-color:#3B4A1E; }
+  .status-pill{
+    font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:100px;
+    text-transform:capitalize; display:inline-block;
+  }
+  .status-pill--new{ background:#fdc34d33; color:#7b5800; }
+  .status-pill--contacted{ background:#3B4A1E1a; color:#3B4A1E; }
+  .status-pill--closed{ background:#e5e7eb; color:#6b7280; }
+  table.quotes-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.quotes-table th{
+    text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:0.04em;
+    color:#6b7280; font-weight:600; padding:10px 12px; border-bottom:1px solid #e5e7eb;
+  }
+  table.quotes-table td{ padding:12px; border-bottom:1px solid #f1f2f3; vertical-align:top; }
+  table.quotes-table tr:last-child td{ border-bottom:none; }
+  .quote-detail{ font-size:12px; color:#6b7280; margin-top:2px; }
+</style>
+</head>
+<body class="admin-body">
+
+<div id="adminSidebarRoot"></div>
+
+<div class="admin-main">
+  <header class="admin-topbar">
+    <div>
+      <h1 class="admin-topbar__title">Quote Requests</h1>
+      <p class="admin-topbar__subtitle">Submissions from the public "Request a Quote" form.</p>
+    </div>
+    <div class="admin-topbar__meta" id="whoami"></div>
+  </header>
+
+  <main class="admin-content">
+    <div class="flex flex-wrap gap-2 mb-5" id="filterTabs">
+      <button type="button" class="filter-tab" data-filter="all" aria-pressed="true">All</button>
+      <button type="button" class="filter-tab" data-filter="new" aria-pressed="false">New</button>
+      <button type="button" class="filter-tab" data-filter="contacted" aria-pressed="false">Contacted</button>
+      <button type="button" class="filter-tab" data-filter="closed" aria-pressed="false">Closed</button>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="quotes-table">
+          <thead>
+            <tr>
+              <th>Contact</th>
+              <th>Service</th>
+              <th>Details</th>
+              <th>Received</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="quotesBody">
+            <tr><td colspan="6" class="text-center text-gray-500 py-8">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/admin/admin-shared.js"></script>
+<script>
+  AdminShell.init("/admin/quotes");
+</script>
+<script>
+(function () {
+  "use strict";
+
+  const SERVICE_LABEL = {
+    "freight": "Freight Transport",
+    "car-hire": "Corporate Car Hire",
+    "clearing": "Customs Clearing",
+    "removals": "Removals & Relocation",
+    "warehousing": "Warehousing",
+  };
+
+  const body = document.getElementById("quotesBody");
+  const filterTabs = document.getElementById("filterTabs");
+  let currentFilter = "all";
+  let quotes = [];
+
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  function render() {
+    const visible = currentFilter === "all" ? quotes : quotes.filter((q) => q.status === currentFilter);
+
+    if (!visible.length) {
+      body.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-8">No quote requests here yet.</td></tr>`;
+      return;
+    }
+
+    body.innerHTML = visible.map((q) => `
+      <tr>
+        <td>
+          <p class="font-semibold">${escapeHtml(q.fullName)}</p>
+          ${q.company ? `<p class="quote-detail">${escapeHtml(q.company)}</p>` : ""}
+          <p class="quote-detail">${escapeHtml(q.email)} · ${escapeHtml(q.phone)}</p>
+        </td>
+        <td>${SERVICE_LABEL[q.serviceType] || escapeHtml(q.serviceType)}</td>
+        <td>
+          ${q.dateRange ? `<p class="quote-detail">Dates: ${escapeHtml(q.dateRange)}</p>` : ""}
+          ${q.route ? `<p class="quote-detail">Route: ${escapeHtml(q.route)}</p>` : ""}
+          ${q.cargoDetails ? `<p class="quote-detail" style="max-width:260px">${escapeHtml(q.cargoDetails)}</p>` : ""}
+        </td>
+        <td>${fmtDate(q.createdAt)}</td>
+        <td><span class="status-pill status-pill--${q.status}">${q.status}</span></td>
+        <td>
+          <select data-status-select="${q._id}" class="border border-gray-300 rounded px-2 py-1 text-xs">
+            <option value="new"${q.status === "new" ? " selected" : ""}>New</option>
+            <option value="contacted"${q.status === "contacted" ? " selected" : ""}>Contacted</option>
+            <option value="closed"${q.status === "closed" ? " selected" : ""}>Closed</option>
+          </select>
+        </td>
+      </tr>
+    `).join("");
+
+    body.querySelectorAll("[data-status-select]").forEach((select) => {
+      select.addEventListener("change", () => updateStatus(select.dataset.statusSelect, select.value));
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str == null ? "" : String(str);
+    return div.innerHTML;
+  }
+
+  async function loadQuotes() {
+    try {
+      const res = await fetch("/api/quote-requests");
+      quotes = await res.json();
+      render();
+    } catch (err) {
+      body.innerHTML = `<tr><td colspan="6" class="text-center text-red-600 py-8">Could not load quote requests.</td></tr>`;
+    }
+  }
+
+  async function updateStatus(id, status) {
+    try {
+      const res = await fetch(`/api/quote-requests/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error();
+      const updated = await res.json();
+      quotes = quotes.map((q) => (q._id === updated._id ? updated : q));
+      render();
+    } catch (err) {
+      loadQuotes(); // fall back to a clean reload if the patch failed
+    }
+  }
+
+  filterTabs.querySelectorAll("[data-filter]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      filterTabs.querySelectorAll("[data-filter]").forEach((b) => b.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+      currentFilter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  loadQuotes();
+})();
+</script>
+</body>
+</html>

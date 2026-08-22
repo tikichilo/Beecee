@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Receipts - Bee Cee Logistics Admin</title>
+<meta name="robots" content="noindex, nofollow"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="/admin/admin-shared.css" rel="stylesheet"/>
+<style>
+  .filter-tab{
+    padding:8px 14px; border-radius:100px; font-size:13px; font-weight:600;
+    border:1px solid #e5e7eb; color:#4b5563; background:#fff; cursor:pointer;
+  }
+  .filter-tab[aria-pressed="true"]{ background:#3B4A1E; color:#fff; border-color:#3B4A1E; }
+  table.receipts-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.receipts-table th{
+    text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:0.04em;
+    color:#6b7280; font-weight:600; padding:10px 12px; border-bottom:1px solid #e5e7eb;
+  }
+  table.receipts-table td{ padding:12px; border-bottom:1px solid #f1f2f3; vertical-align:top; }
+  table.receipts-table tr:last-child td{ border-bottom:none; }
+  .receipt-detail{ font-size:12px; color:#6b7280; margin-top:2px; }
+  .receipt-number{ font-family:monospace; font-size:12.5px; color:#3B4A1E; font-weight:700; }
+</style>
+</head>
+<body class="admin-body">
+
+<div id="adminSidebarRoot"></div>
+
+<div class="admin-main">
+  <header class="admin-topbar">
+    <div>
+      <h1 class="admin-topbar__title">Receipts</h1>
+      <p class="admin-topbar__subtitle">Payment receipts across all services — freight, car hire, clearing, removals, warehousing.</p>
+    </div>
+    <div class="admin-topbar__meta" id="whoami"></div>
+  </header>
+
+  <main class="admin-content flex flex-col gap-8">
+
+    <!-- Issue receipt form -->
+    <section class="bg-white border border-gray-200 rounded-lg p-6">
+      <h2 class="font-bold text-lg text-[#3B4A1E] mb-4" style="font-family:'Montserrat',sans-serif">Issue a Receipt</h2>
+      <form id="receiptForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Service Type</label>
+          <select id="serviceType" required class="w-full border border-gray-300 rounded px-3 py-2">
+            <option value="" disabled selected>Select a service</option>
+            <option value="freight">Freight Transport</option>
+            <option value="car-hire">Corporate Car Hire</option>
+            <option value="clearing">Customs Clearing</option>
+            <option value="removals">Removals & Relocation</option>
+            <option value="warehousing">Warehousing</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Amount (ZMW)</label>
+          <input id="amount" type="number" min="0" step="0.01" required class="w-full border border-gray-300 rounded px-3 py-2"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Client Name</label>
+          <input id="clientName" required class="w-full border border-gray-300 rounded px-3 py-2"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Client Phone — optional</label>
+          <input id="clientPhone" class="w-full border border-gray-300 rounded px-3 py-2"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Client Email — optional</label>
+          <input id="clientEmail" type="email" class="w-full border border-gray-300 rounded px-3 py-2"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Issued Date</label>
+          <input id="issuedDate" type="date" class="w-full border border-gray-300 rounded px-3 py-2"/>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium mb-1">Description — optional</label>
+          <textarea id="description" rows="2" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="What this payment was for"></textarea>
+        </div>
+
+        <p id="formError" class="md:col-span-2 text-sm text-red-600 hidden"></p>
+
+        <div class="md:col-span-2">
+          <button type="submit" class="bg-[#3B4A1E] text-white font-semibold rounded px-5 py-2 hover:opacity-90 transition">
+            <span id="submitLabel">Issue Receipt</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Receipt list -->
+    <section class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div class="p-6 pb-0">
+        <h2 class="font-bold text-lg text-[#3B4A1E] mb-4" style="font-family:'Montserrat',sans-serif">All Receipts</h2>
+        <div class="flex flex-wrap gap-2 mb-5" id="filterTabs">
+          <button type="button" class="filter-tab" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" class="filter-tab" data-filter="freight" aria-pressed="false">Freight</button>
+          <button type="button" class="filter-tab" data-filter="car-hire" aria-pressed="false">Car Hire</button>
+          <button type="button" class="filter-tab" data-filter="clearing" aria-pressed="false">Clearing</button>
+          <button type="button" class="filter-tab" data-filter="removals" aria-pressed="false">Removals</button>
+          <button type="button" class="filter-tab" data-filter="warehousing" aria-pressed="false">Warehousing</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="receipts-table">
+          <thead>
+            <tr>
+              <th>Receipt #</th>
+              <th>Client</th>
+              <th>Service</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="receiptsBody">
+            <tr><td colspan="6" class="text-center text-gray-500 py-8">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/admin/admin-shared.js"></script>
+<script>
+  AdminShell.init("/admin/receipts");
+</script>
+<script>
+(function () {
+  "use strict";
+
+  const SERVICE_LABEL = {
+    "freight": "Freight Transport",
+    "car-hire": "Corporate Car Hire",
+    "clearing": "Customs Clearing",
+    "removals": "Removals & Relocation",
+    "warehousing": "Warehousing",
+  };
+
+  const form = document.getElementById("receiptForm");
+  const formError = document.getElementById("formError");
+  const body = document.getElementById("receiptsBody");
+  const filterTabs = document.getElementById("filterTabs");
+
+  let receipts = [];
+  let currentFilter = "all";
+
+  // Default the issued-date field to today.
+  document.getElementById("issuedDate").value = new Date().toISOString().slice(0, 10);
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str == null ? "" : String(str);
+    return div.innerHTML;
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  function fmtAmount(receipt) {
+    return `${receipt.currency || "ZMW"} ${Number(receipt.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  }
+
+  function render() {
+    const visible = currentFilter === "all" ? receipts : receipts.filter((r) => r.serviceType === currentFilter);
+
+    if (!visible.length) {
+      body.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-8">No receipts issued yet.</td></tr>`;
+      return;
+    }
+
+    body.innerHTML = visible.map((r) => `
+      <tr>
+        <td><span class="receipt-number">${escapeHtml(r.receiptNumber)}</span></td>
+        <td>
+          <p class="font-semibold">${escapeHtml(r.clientName)}</p>
+          ${r.clientPhone || r.clientEmail ? `<p class="receipt-detail">${escapeHtml(r.clientPhone || "")}${r.clientPhone && r.clientEmail ? " · " : ""}${escapeHtml(r.clientEmail || "")}</p>` : ""}
+        </td>
+        <td>${SERVICE_LABEL[r.serviceType] || escapeHtml(r.serviceType)}</td>
+        <td class="font-semibold">${fmtAmount(r)}</td>
+        <td>${fmtDate(r.issuedDate)}</td>
+        <td>
+          <button data-delete="${r._id}" class="text-sm px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50">Delete</button>
+        </td>
+      </tr>
+    `).join("");
+
+    body.querySelectorAll("[data-delete]").forEach((btn) => {
+      btn.addEventListener("click", () => deleteReceipt(btn.dataset.delete));
+    });
+  }
+
+  async function loadReceipts() {
+    try {
+      receipts = await fetch("/api/receipts").then((r) => r.json());
+      render();
+    } catch (err) {
+      body.innerHTML = `<tr><td colspan="6" class="text-center text-red-600 py-8">Could not load receipts.</td></tr>`;
+    }
+  }
+
+  async function deleteReceipt(id) {
+    if (!confirm("Delete this receipt? This can't be undone.")) return;
+    const res = await fetch(`/api/receipts/${id}`, { method: "DELETE" });
+    if (res.ok) loadReceipts();
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    formError.classList.add("hidden");
+
+    const payload = {
+      serviceType: document.getElementById("serviceType").value,
+      amount: document.getElementById("amount").value,
+      clientName: document.getElementById("clientName").value,
+      clientPhone: document.getElementById("clientPhone").value,
+      clientEmail: document.getElementById("clientEmail").value,
+      issuedDate: document.getElementById("issuedDate").value,
+      description: document.getElementById("description").value,
+    };
+
+    try {
+      const res = await fetch("/api/receipts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      form.reset();
+      document.getElementById("issuedDate").value = new Date().toISOString().slice(0, 10);
+      loadReceipts();
+    } catch (err) {
+      formError.textContent = err.message;
+      formError.classList.remove("hidden");
+    }
+  });
+
+  filterTabs.querySelectorAll("[data-filter]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      filterTabs.querySelectorAll("[data-filter]").forEach((b) => b.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+      currentFilter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  loadReceipts();
+})();
+</script>
+</body>
+</html>

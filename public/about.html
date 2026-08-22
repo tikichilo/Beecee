@@ -437,7 +437,7 @@ button:focus-visible {
 
 <!-- Page Hero -->
 <section class="relative w-full min-h-[380px] flex items-center justify-center bg-primary text-on-primary overflow-hidden">
-<div class="absolute inset-0 z-0 bg-cover bg-center" style="background-image: url('/images/about-hero.jpg');" aria-hidden="true"></div>
+<div class="absolute inset-0 z-0 bg-cover bg-center" style="background-image: url('/images/hero1.jpg');" aria-hidden="true"></div>
 <div class="absolute inset-0 z-0 bg-primary opacity-60 mix-blend-multiply" aria-hidden="true"></div>
 <div class="relative z-10 text-center max-w-3xl px-margin-mobile md:px-margin-desktop py-16 flex flex-col items-center gap-4">
 <span class="font-label-sm text-label-sm text-secondary-fixed uppercase tracking-wider">Company Profile</span>
@@ -545,9 +545,8 @@ button:focus-visible {
 <section class="py-20 bg-surface">
 <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter items-center">
-<div class="w-full aspect-[4/3] bg-surface-container border border-dashed border-outline-variant rounded-lg flex flex-col items-center justify-center gap-2 text-on-surface-variant order-2 lg:order-1">
-<span class="material-symbols-outlined text-4xl opacity-50" aria-hidden="true">photo_camera</span>
-<span class="font-label-sm text-label-sm opacity-70 text-center px-4">Photo: fleet lineup or a chauffeur with a client vehicle</span>
+<div class="w-full aspect-[4/3] bg-surface-container border border-outline-variant rounded-lg overflow-hidden order-2 lg:order-1">
+<img class="w-full h-full object-cover" src="/images/fleet.jpg" alt="Bee Cee Logistics fleet lineup"/>
 </div>
 <div class="flex flex-col gap-4 order-1 lg:order-2">
 <span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Market Position</span>
@@ -627,9 +626,10 @@ button:focus-visible {
 <a class="btn btn-outline-invert" href="fleet.html">View Full Fleet</a>
 </div>
 </div>
-<div class="w-full aspect-[4/3] bg-primary-container border border-dashed border-primary-fixed rounded-lg flex flex-col items-center justify-center gap-2 text-primary-fixed">
-<span class="material-symbols-outlined text-4xl opacity-70" aria-hidden="true">photo_camera</span>
-<span class="font-label-sm text-label-sm opacity-80 text-center px-4">Photo: fleet yard, buses, or trucks</span>
+<div class="w-full aspect-[4/3] bg-primary-container border border-primary-fixed rounded-lg overflow-hidden">
+<video class="w-full h-full object-cover" src="/videos/yard.mp4" controls playsinline muted loop preload="metadata">
+Your browser does not support the video tag.
+</video>
 </div>
 </div>
 <div class="mt-12 pt-12 border-t border-primary-container/40">

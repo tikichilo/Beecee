@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bookings - Bee Cee Logistics Admin</title>
+<meta name="robots" content="noindex, nofollow"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="/admin/admin-shared.css" rel="stylesheet"/>
+<style>
+  .filter-tab{
+    padding:8px 14px; border-radius:100px; font-size:13px; font-weight:600;
+    border:1px solid #e5e7eb; color:#4b5563; background:#fff; cursor:pointer;
+  }
+  .filter-tab[aria-pressed="true"]{ background:#3B4A1E; color:#fff; border-color:#3B4A1E; }
+  .status-pill{ font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:100px; text-transform:capitalize; display:inline-block; }
+  .status-pill--out{ background:#3B4A1E1a; color:#3B4A1E; }
+  .status-pill--overdue{ background:#ba1a1a1a; color:#ba1a1a; }
+  .status-pill--returned{ background:#e5e7eb; color:#6b7280; }
+  table.bookings-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.bookings-table th{
+    text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:0.04em;
+    color:#6b7280; font-weight:600; padding:10px 12px; border-bottom:1px solid #e5e7eb;
+  }
+  table.bookings-table td{ padding:12px; border-bottom:1px solid #f1f2f3; vertical-align:top; }
+  table.bookings-table tr:last-child td{ border-bottom:none; }
+  .booking-detail{ font-size:12px; color:#6b7280; margin-top:2px; }
+</style>
+</head>
+<body class="admin-body">
+
+<div id="adminSidebarRoot"></div>
+
+<div class="admin-main">
+  <header class="admin-topbar">
+    <div>
+      <h1 class="admin-topbar__title">Bookings</h1>
+      <p class="admin-topbar__subtitle">Track which vehicles are out, due back, or overdue.</p>
+    </div>
+    <div class="admin-topbar__meta" id="whoami"></div>
+  </header>
+
+  <main class="admin-content flex flex-col gap-8">
+
+    <!-- New booking form -->
+    <section class="bg-white border border-gray-200 rounded-lg p-6">
+      <h2 class="font-bold text-lg text-[#3B4A1E] mb-4" style="font-family:'Montserrat',sans-serif">New Booking</h2>
+      <form id="bookingForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium mb-1">Vehicle</label>
+          <select id="vehicleSelect" required class="w-full border border-gray-300 rounded px-3 py-2">
+            <option value="" disabled selected>Loading vehicles…</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium mb-1">Renter Name</label>
+          <input id="renterName" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Jane Mwansa"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Renter Phone</label>
+          <input id="renterPhone" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="+260 97 0000000"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Renter Email — optional</label>
+          <input id="renterEmail" type="email" class="w-full border border-gray-300 rounded px-3 py-2"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Daily Rate (ZMW) — optional</label>
+          <input id="dailyRate" type="number" min="0" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Auto-filled from vehicle"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Pickup Date</label>
+          <input id="pickupDate" type="date" required class="w-full border border-gray-300 rounded px-3 py-2"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Expected Return Date</label>
+          <input id="expectedReturnDate" type="date" required class="w-full border border-gray-300 rounded px-3 py-2"/>
+        </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium mb-1">Notes — optional</label>
+          <textarea id="notes" rows="2" class="w-full border border-gray-300 rounded px-3 py-2"></textarea>
+        </div>
+
+        <p id="formError" class="md:col-span-2 text-sm text-red-600 hidden"></p>
+
+        <div class="md:col-span-2">
+          <button type="submit" class="bg-[#3B4A1E] text-white font-semibold rounded px-5 py-2 hover:opacity-90 transition">
+            <span id="submitLabel">Create Booking</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Booking list -->
+    <section class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+      <div class="p-6 pb-0">
+        <h2 class="font-bold text-lg text-[#3B4A1E] mb-4" style="font-family:'Montserrat',sans-serif">All Bookings</h2>
+        <div class="flex flex-wrap gap-2 mb-5" id="filterTabs">
+          <button type="button" class="filter-tab" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" class="filter-tab" data-filter="out" aria-pressed="false">Out</button>
+          <button type="button" class="filter-tab" data-filter="overdue" aria-pressed="false">Overdue</button>
+          <button type="button" class="filter-tab" data-filter="returned" aria-pressed="false">Returned</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="bookings-table">
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Renter</th>
+              <th>Pickup</th>
+              <th>Expected Return</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="bookingsBody">
+            <tr><td colspan="6" class="text-center text-gray-500 py-8">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/admin/admin-shared.js"></script>
+<script>
+  AdminShell.init("/admin/bookings");
+</script>
+<script>
+(function () {
+  "use strict";
+
+  const form = document.getElementById("bookingForm");
+  const formError = document.getElementById("formError");
+  const vehicleSelect = document.getElementById("vehicleSelect");
+  const dailyRateInput = document.getElementById("dailyRate");
+  const body = document.getElementById("bookingsBody");
+  const filterTabs = document.getElementById("filterTabs");
+
+  let vehicles = [];
+  let bookings = [];
+  let currentFilter = "all";
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str == null ? "" : String(str);
+    return div.innerHTML;
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  // ---- Load vehicles for the dropdown ----
+  async function loadVehicles() {
+    try {
+      vehicles = await fetch("/api/fleet").then((r) => r.json());
+      if (!vehicles.length) {
+        vehicleSelect.innerHTML = `<option value="" disabled selected>No vehicles in fleet yet</option>`;
+        return;
+      }
+      vehicleSelect.innerHTML = `<option value="" disabled selected>Select a vehicle</option>` +
+        vehicles.map((v) => `<option value="${v._id}" data-name="${escapeHtml(v.name)}" data-fee="${v.bookingFee || ""}">${escapeHtml(v.name)} — ${escapeHtml(v.location)}</option>`).join("");
+    } catch (err) {
+      vehicleSelect.innerHTML = `<option value="" disabled selected>Could not load vehicles</option>`;
+    }
+  }
+
+  vehicleSelect.addEventListener("change", () => {
+    const opt = vehicleSelect.selectedOptions[0];
+    if (opt && opt.dataset.fee && !dailyRateInput.value) {
+      dailyRateInput.value = opt.dataset.fee;
+    }
+  });
+
+  // ---- Load + render bookings ----
+  function render() {
+    const visible = currentFilter === "all" ? bookings : bookings.filter((b) => b.computedStatus === currentFilter);
+
+    if (!visible.length) {
+      body.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-8">No bookings here yet.</td></tr>`;
+      return;
+    }
+
+    body.innerHTML = visible.map((b) => `
+      <tr>
+        <td>
+          <p class="font-semibold">${escapeHtml(b.vehicleName)}</p>
+          ${b.dailyRate ? `<p class="booking-detail">K${b.dailyRate}/day</p>` : ""}
+        </td>
+        <td>
+          <p class="font-semibold">${escapeHtml(b.renterName)}</p>
+          <p class="booking-detail">${escapeHtml(b.renterPhone)}${b.renterEmail ? " · " + escapeHtml(b.renterEmail) : ""}</p>
+        </td>
+        <td>${fmtDate(b.pickupDate)}</td>
+        <td>${fmtDate(b.expectedReturnDate)}</td>
+        <td><span class="status-pill status-pill--${b.computedStatus}">${b.computedStatus}</span></td>
+        <td>
+          ${b.computedStatus !== "returned"
+            ? `<button data-return="${b._id}" class="text-sm px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50">Mark Returned</button>`
+            : `<span class="booking-detail">Returned ${fmtDate(b.actualReturnDate)}</span>`
+          }
+        </td>
+      </tr>
+    `).join("");
+
+    body.querySelectorAll("[data-return]").forEach((btn) => {
+      btn.addEventListener("click", () => markReturned(btn.dataset.return));
+    });
+  }
+
+  async function loadBookings() {
+    try {
+      bookings = await fetch("/api/bookings").then((r) => r.json());
+      render();
+    } catch (err) {
+      body.innerHTML = `<tr><td colspan="6" class="text-center text-red-600 py-8">Could not load bookings.</td></tr>`;
+    }
+  }
+
+  async function markReturned(id) {
+    try {
+      const res = await fetch(`/api/bookings/${id}/return`, { method: "PATCH" });
+      if (!res.ok) throw new Error();
+      loadBookings();
+    } catch (err) {
+      alert("Could not mark this booking as returned. Please try again.");
+    }
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    formError.classList.add("hidden");
+
+    const opt = vehicleSelect.selectedOptions[0];
+    const payload = {
+      vehicleId: vehicleSelect.value,
+      vehicleName: opt ? opt.dataset.name : "",
+      renterName: document.getElementById("renterName").value,
+      renterPhone: document.getElementById("renterPhone").value,
+      renterEmail: document.getElementById("renterEmail").value,
+      dailyRate: dailyRateInput.value || undefined,
+      pickupDate: document.getElementById("pickupDate").value,
+      expectedReturnDate: document.getElementById("expectedReturnDate").value,
+      notes: document.getElementById("notes").value,
+    };
+
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      form.reset();
+      loadBookings();
+    } catch (err) {
+      formError.textContent = err.message;
+      formError.classList.remove("hidden");
+    }
+  });
+
+  filterTabs.querySelectorAll("[data-filter]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      filterTabs.querySelectorAll("[data-filter]").forEach((b) => b.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+      currentFilter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  loadVehicles();
+  loadBookings();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard - Bee Cee Logistics Admin</title>
+<meta name="robots" content="noindex, nofollow"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="/admin/admin-shared.css" rel="stylesheet"/>
+</head>
+<body class="admin-body">
+
+<div id="adminSidebarRoot"></div>
+
+<div class="admin-main">
+  <header class="admin-topbar">
+    <div>
+      <h1 class="admin-topbar__title">Dashboard</h1>
+      <p class="admin-topbar__subtitle">An overview of what's happening across the business.</p>
+    </div>
+    <div class="admin-topbar__meta" id="whoami"></div>
+  </header>
+
+  <main class="admin-content">
+    <div class="admin-stat-grid" id="statGrid">
+      <div class="admin-stat-card">
+        <span class="admin-stat-card__label">Vehicles in Fleet</span>
+        <span class="admin-stat-card__value" id="statFleet">—</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-card__label">New Quote Requests</span>
+        <span class="admin-stat-card__value" id="statQuotes">—</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-card__label">Bookings Out</span>
+        <span class="admin-stat-card__value" id="statBookingsOut">—</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-card__label">Overdue Bookings</span>
+        <span class="admin-stat-card__value" id="statOverdue">—</span>
+      </div>
+      <div class="admin-stat-card">
+        <span class="admin-stat-card__label">Receipts Issued</span>
+        <span class="admin-stat-card__value" id="statReceipts">—</span>
+      </div>
+    </div>
+
+    <div class="admin-empty-state" id="emptyState" style="display:none">
+      <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>
+      <h3>Nothing here yet</h3>
+      <p>Once quotes, bookings, and receipts start coming in, this dashboard will reflect them live.</p>
+    </div>
+  </main>
+</div>
+
+<script src="/admin/admin-shared.js"></script>
+<script>
+  AdminShell.init("/admin/dashboard");
+
+  fetch("/api/fleet")
+    .then((r) => r.json())
+    .then((vehicles) => { document.getElementById("statFleet").textContent = vehicles.length; })
+    .catch(() => { document.getElementById("statFleet").textContent = "—"; });
+
+  fetch("/api/quote-requests?status=new")
+    .then((r) => r.json())
+    .then((quotes) => { document.getElementById("statQuotes").textContent = Array.isArray(quotes) ? quotes.length : "—"; })
+    .catch(() => { document.getElementById("statQuotes").textContent = "—"; });
+
+  fetch("/api/bookings?status=out")
+    .then((r) => r.json())
+    .then((bookings) => { document.getElementById("statBookingsOut").textContent = Array.isArray(bookings) ? bookings.length : "—"; })
+    .catch(() => { document.getElementById("statBookingsOut").textContent = "—"; });
+
+  fetch("/api/bookings?status=overdue")
+    .then((r) => r.json())
+    .then((bookings) => { document.getElementById("statOverdue").textContent = Array.isArray(bookings) ? bookings.length : "—"; })
+    .catch(() => { document.getElementById("statOverdue").textContent = "—"; });
+
+  fetch("/api/receipts")
+    .then((r) => r.json())
+    .then((receipts) => { document.getElementById("statReceipts").textContent = Array.isArray(receipts) ? receipts.length : "—"; })
+    .catch(() => { document.getElementById("statReceipts").textContent = "—"; });
+</script>
+</body>
+</html>

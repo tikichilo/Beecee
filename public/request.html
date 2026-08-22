@@ -215,7 +215,7 @@ tailwind.config = {
   function init() {
     setupFleetFilters();
     setupFormValidation("[data-contact-form]", contactFormFields);
-    setupFormValidation("[data-quote-form]", quoteFormFields);
+    setupFormValidation("[data-quote-form]", quoteFormFields, "/api/quote-requests");
   }
 
   /* ------------------------------------------------------------------------
@@ -283,13 +283,13 @@ tailwind.config = {
     serviceType: { required: true, label: "Service type" }
   };
 
-  function setupFormValidation(selector, fieldMap) {
+  function setupFormValidation(selector, fieldMap, submitUrl) {
     const form = document.querySelector(selector);
     if (!form) return;
 
     form.setAttribute("novalidate", "");
 
-    form.addEventListener("submit", (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const errors = validate(form, fieldMap);
       if (errors.length) {
@@ -305,8 +305,34 @@ tailwind.config = {
         submitBtn.disabled = true;
         submitBtn.textContent = "Sending…";
       }
-      // Placeholder for a real backend call — swap this for a fetch() to
-      // your quote/contact API endpoint when one is available.
+
+      if (submitUrl) {
+        // Real backend call.
+        try {
+          const payload = Object.fromEntries(new FormData(form).entries());
+          const res = await fetch(submitUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "Something went wrong. Please try again.");
+
+          showToast("Thanks — we've received your request and will be in touch shortly.");
+          form.reset();
+          clearFieldErrors(form, fieldMap);
+        } catch (err) {
+          showToast(err.message, "error");
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalLabel;
+          }
+        }
+        return;
+      }
+
+      // Placeholder mock for forms without a real endpoint yet (e.g. contact form).
       window.setTimeout(() => {
         showToast("Thanks — we've received your message and will be in touch shortly.");
         form.reset();

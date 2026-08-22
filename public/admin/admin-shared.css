@@ -1,0 +1,304 @@
+/* ============================================================
+   Bee Cee Logistics — Shared Admin Shell
+   Used by every admin page except fleet.html (which has its own
+   self-contained header). Provides the left sidebar nav, topbar,
+   and a few common content patterns (stat cards, empty state).
+   ============================================================ */
+
+:root {
+  --admin-green: #3B4A1E;
+  --admin-green-dark: #2E3A17;
+  --admin-green-bright: #8CB33E;
+  --admin-amber: #E8A33D;
+  --admin-border: #e5e7eb;
+  --admin-text: #1f2421;
+  --admin-text-muted: #6b7280;
+  --admin-bg: #f8f9fa;
+  --admin-sidebar-width: 232px;
+}
+
+* { box-sizing: border-box; }
+
+html, body.admin-body {
+  margin: 0;
+  padding: 0;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  font-family: "Inter", sans-serif;
+}
+
+body.admin-body {
+  display: flex;
+  min-height: 100vh;
+  align-items: stretch;
+}
+
+/* ---------------- Sidebar ---------------- */
+
+.admin-sidebar {
+  width: var(--admin-sidebar-width);
+  flex-shrink: 0;
+  background: linear-gradient(180deg, var(--admin-green) 0%, var(--admin-green-dark) 100%);
+  color: #EDEAE0;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 40;
+}
+
+.admin-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid rgba(237, 234, 224, 0.12);
+}
+
+.admin-sidebar__brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  background: var(--admin-amber);
+  color: var(--admin-green-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.admin-sidebar__brand-text {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.admin-sidebar__nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 12px;
+  overflow-y: auto;
+}
+
+.admin-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: rgba(237, 234, 224, 0.75);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-sidebar__link .material-symbols-outlined {
+  font-size: 19px;
+}
+
+.admin-sidebar__link:hover {
+  background: rgba(237, 234, 224, 0.08);
+  color: #EDEAE0;
+}
+
+.admin-sidebar__link.is-active {
+  background: rgba(140, 179, 62, 0.18);
+  color: #fff;
+  font-weight: 600;
+}
+
+.admin-sidebar__link.is-active .material-symbols-outlined {
+  color: var(--admin-green-bright);
+}
+
+.admin-sidebar__footer {
+  padding: 14px 12px 18px;
+  border-top: 1px solid rgba(237, 234, 224, 0.12);
+}
+
+.admin-sidebar__logout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  background: rgba(237, 234, 224, 0.08);
+  border: 1px solid rgba(237, 234, 224, 0.16);
+  color: #EDEAE0;
+  border-radius: 6px;
+  padding: 9px 10px;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.admin-sidebar__logout:hover { background: rgba(237, 234, 224, 0.16); }
+
+/* Mobile menu toggle button (shown only on small screens) */
+.admin-sidebar__toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
+  background: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.admin-sidebar__scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 13, 8, 0.45);
+  z-index: 30;
+}
+
+/* ---------------- Main column ---------------- */
+
+.admin-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: #fff;
+  border-bottom: 1px solid var(--admin-border);
+  padding: 22px 28px;
+}
+
+.admin-topbar__heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-topbar__title {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 21px;
+  color: var(--admin-green);
+  margin: 0;
+}
+
+.admin-topbar__subtitle {
+  font-size: 13.5px;
+  color: var(--admin-text-muted);
+  margin: 4px 0 0;
+}
+
+.admin-topbar__meta {
+  font-size: 13px;
+  color: var(--admin-text-muted);
+  white-space: nowrap;
+  padding-top: 4px;
+}
+
+.admin-content {
+  padding: 28px;
+  flex: 1;
+}
+
+/* ---------------- Stat cards (dashboard) ---------------- */
+
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.admin-stat-card {
+  background: #fff;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-stat-card__label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--admin-text-muted);
+  font-weight: 600;
+}
+
+.admin-stat-card__value {
+  font-family: "Montserrat", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--admin-green);
+  line-height: 1;
+}
+
+/* ---------------- Empty state ---------------- */
+
+.admin-empty-state {
+  text-align: center;
+  padding: 64px 20px;
+  color: var(--admin-text-muted);
+}
+
+.admin-empty-state .material-symbols-outlined {
+  font-size: 46px;
+  color: #cdd2c3;
+}
+
+.admin-empty-state h3 {
+  font-family: "Montserrat", sans-serif;
+  color: var(--admin-text);
+  margin: 10px 0 4px;
+  font-size: 16px;
+}
+
+.admin-empty-state p {
+  font-size: 13.5px;
+  margin: 0;
+}
+
+/* ---------------- Responsive ---------------- */
+
+@media (max-width: 880px) {
+  .admin-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    box-shadow: 0 0 40px rgba(0,0,0,0.35);
+  }
+  .admin-sidebar.is-open { transform: translateX(0); }
+  .admin-sidebar__scrim.is-visible { display: block; }
+  .admin-sidebar__toggle { display: inline-flex; }
+  .admin-topbar { padding: 16px 16px; }
+  .admin-content { padding: 18px; }
+  .admin-topbar__title { font-size: 18px; }
+}
+
+@media (max-width: 480px) {
+  .admin-stat-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .admin-stat-card__value { font-size: 22px; }
+}

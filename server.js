@@ -8,6 +8,9 @@ const MongoStore = require("connect-mongo");
 
 const authRoutes = require("./routes/auth");
 const fleetRoutes = require("./routes/fleet");
+const quoteRoutes = require("./routes/quote");
+const bookingRoutes = require("./routes/booking"); // <-- added
+const receiptRoutes = require("./routes/receipt"); // <-- added
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,12 +33,6 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-// Without these, a dropped connection to Atlas (common on flaky
-// networks) fires an unhandled error event that crashes the whole
-// Node process — not just the DB call that triggered it. Logging it
-// here instead lets Mongoose's own reconnect logic keep retrying in
-// the background while the rest of the server (static pages, etc.)
-// stays up.
 mongoose.connection.on("error", (err) => {
   console.error("MongoDB connection error (post-connect):", err.message);
 });
@@ -72,6 +69,9 @@ app.use(express.static(SITE_DIR));
 // --------------------------------------------------------------------
 app.use("/api/auth", authRoutes);
 app.use("/api/fleet", fleetRoutes);
+app.use("/api/quote-requests", quoteRoutes);
+app.use("/api/bookings", bookingRoutes); // <-- added
+app.use("/api/receipts", receiptRoutes); // <-- added
 
 // --------------------------------------------------------------------
 // Clean-URL routes for each page (Phase 1 — public site, per sitemap)
@@ -85,7 +85,11 @@ const PAGES = {
   "/request": "request.html",
   "/clientarea": "clientarea.html",
   "/admin": "admin/login.html",
+  "/admin/dashboard": "admin/dashboard.html",
   "/admin/fleet": "admin/fleet.html",
+  "/admin/quotes": "admin/quotes.html",
+  "/admin/bookings": "admin/bookings.html",
+  "/admin/receipts": "admin/receipts.html",
   "/admin/access": "admin/access.html",
   "/admin/signup": "admin/signup.html",
   "/admin/forgot-password": "admin/forgot-password.html",

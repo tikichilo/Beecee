@@ -192,7 +192,7 @@
       setState("granted", "STATUS: GRANTED — WELCOME");
       btnLabel.textContent = "Granted";
       keycard.classList.remove("is-swiping");
-      setTimeout(() => { window.location.href = "/admin/fleet"; }, 700);
+      setTimeout(() => { window.location.href = "/admin/dashboard"; }, 700);
     } catch (err) {
       keycard.classList.remove("is-swiping");
       keycard.classList.add("is-denied");
@@ -207,7 +207,7 @@
   setState("processing", "STATUS: CHECKING SESSION…");
   fetch("/api/auth/me").then((r) => r.json()).then((d) => {
     if (d.loggedIn) {
-      window.location.href = "/admin/fleet";
+      window.location.href = "/admin/dashboard";
     } else {
       setState(null, "STATUS: STANDBY");
     }

@@ -224,7 +224,7 @@
       btnLabel.textContent = "Issued";
 
       sessionStorage.removeItem("beecee_invite_code");
-      setTimeout(() => { window.location.href = "/admin/fleet"; }, 800);
+      setTimeout(() => { window.location.href = "/admin/dashboard"; }, 800);
     } catch (err) {
       badge.classList.add("is-rejected");
       setTimeout(() => badge.classList.remove("is-rejected"), 450);
