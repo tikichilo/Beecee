@@ -46,6 +46,14 @@ mongoose.connection.on("reconnected", () => {
 // --------------------------------------------------------------------
 // Core middleware
 // --------------------------------------------------------------------
+// Render (and most PaaS hosts) terminate HTTPS at a proxy in front of
+// this app, so Express never sees the connection as secure on its own.
+// Without this, secure session cookies don't reliably survive between
+// requests, which is what was causing the login -> dashboard -> login
+// bounce: the cookie from /api/auth/login wasn't sticking, so
+// /api/auth/me on the dashboard came back loggedIn:false.
+app.set("trust proxy", 1);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -58,6 +66,7 @@ app.use(
       maxAge: 1000 * 60 * 60 * 8, // 8 hours
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
     },
   })
 );
