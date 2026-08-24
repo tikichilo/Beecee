@@ -126,24 +126,29 @@ router.post("/reset-password", async (req, res) => {
 
 // POST /api/auth/login
 router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.status(400).json({ error: "Username and password are required." });
-  }
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username and password are required." });
+    }
 
-  const admin = await Admin.findOne({ username: username.toLowerCase().trim() });
-  if (!admin) {
-    return res.status(401).json({ error: "Invalid username or password." });
-  }
+    const admin = await Admin.findOne({ username: username.toLowerCase().trim() });
+    if (!admin) {
+      return res.status(401).json({ error: "Invalid username or password." });
+    }
 
-  const ok = await admin.checkPassword(password);
-  if (!ok) {
-    return res.status(401).json({ error: "Invalid username or password." });
-  }
+    const ok = await admin.checkPassword(password);
+    if (!ok) {
+      return res.status(401).json({ error: "Invalid username or password." });
+    }
 
-  req.session.adminId = admin._id.toString();
-  req.session.username = admin.username;
-  res.json({ ok: true, username: admin.username });
+    req.session.adminId = admin._id.toString();
+    req.session.username = admin.username;
+    res.json({ ok: true, username: admin.username });
+  } catch (err) {
+    console.error("POST /api/auth/login:", err);
+    res.status(500).json({ error: "Server error." });
+  }
 });
 
 // POST /api/auth/logout
