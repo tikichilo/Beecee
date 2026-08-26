@@ -216,6 +216,7 @@ tailwind.config = {
     setupFleetFilters();
     setupFormValidation("[data-contact-form]", contactFormFields);
     setupFormValidation("[data-quote-form]", quoteFormFields, "/api/quote-requests");
+    setupVehicleBooking();
   }
 
   /* ------------------------------------------------------------------------
@@ -263,6 +264,125 @@ tailwind.config = {
           card.hidden = !show;
         });
       });
+    });
+  }
+
+  /* ------------------------------------------------------------------------
+     Vehicle booking (request.html?vehicle=<id>) — "Book Now" on a fleet
+     card sends people here. When a vehicle id is present we swap the
+     generic quote form out for a dedicated booking form, prefill the
+     vehicle, and post straight to /api/bookings so it shows up for the
+     admin under Bookings. With no ?vehicle= param the page behaves exactly
+     as before (general quote request).
+     ------------------------------------------------------------------------ */
+  function setupVehicleBooking() {
+    const bookingMode = document.querySelector("[data-booking-mode]");
+    const quoteMode = document.querySelector("[data-quote-mode]");
+    if (!bookingMode || !quoteMode) return;
+
+    const vehicleId = new URLSearchParams(window.location.search).get("vehicle");
+    if (!vehicleId) return; // stay in normal quote-request mode
+
+    quoteMode.hidden = true;
+    bookingMode.hidden = false;
+
+    const form = bookingMode.querySelector("[data-booking-form]");
+    const nameEl = bookingMode.querySelector("[data-booking-vehicle-name]");
+    const feeEl = bookingMode.querySelector("[data-booking-vehicle-fee]");
+    const vehicleIdField = form.elements.namedItem("vehicleId");
+    const vehicleNameField = form.elements.namedItem("vehicleName");
+    const dailyRateField = form.elements.namedItem("dailyRate");
+
+    fetch(`/api/fleet/${vehicleId}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Vehicle not found");
+        return r.json();
+      })
+      .then((vehicle) => {
+        nameEl.textContent = vehicle.name;
+        feeEl.textContent = vehicle.bookingFee ? `K${Number(vehicle.bookingFee).toLocaleString()} / day` : "";
+        vehicleIdField.value = vehicle._id;
+        vehicleNameField.value = vehicle.name;
+        dailyRateField.value = vehicle.bookingFee || "";
+      })
+      .catch(() => {
+        nameEl.textContent = "Selected vehicle";
+        showToast("We couldn't load that vehicle's details, but you can still submit the booking.", "error");
+      });
+
+    const bookingFormFields = {
+      renterName: { required: true, label: "Full name" },
+      renterEmail: { required: false, label: "Email address", type: "email" },
+      renterPhone: { required: true, label: "Phone number" },
+      pickupDate: { required: true, label: "Pickup date" },
+      expectedReturnDate: { required: true, label: "Expected return date" },
+    };
+
+    form.setAttribute("novalidate", "");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errors = validate(form, bookingFormFields);
+
+      const pickupField = form.elements.namedItem("pickupDate");
+      const returnField = form.elements.namedItem("expectedReturnDate");
+      if (pickupField.value && returnField.value && returnField.value < pickupField.value) {
+        setFieldError(returnField, true, "Return date can't be before the pickup date.");
+        errors.push("expectedReturnDate");
+      }
+
+      if (errors.length) {
+        showToast(
+          "Please fix " + errors.length + " field" + (errors.length > 1 ? "s" : "") + " before submitting.",
+          "error"
+        );
+        return;
+      }
+
+      const submitBtn = form.querySelector('[type="submit"]');
+      const originalLabel = submitBtn ? submitBtn.textContent : "";
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending…";
+      }
+
+      try {
+        const payload = Object.fromEntries(new FormData(form).entries());
+        const res = await fetch("/api/bookings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Something went wrong. Please try again.");
+
+        showToast("Thanks — your booking request has been received. We'll confirm shortly.");
+        form.reset();
+        // form.reset() clears the hidden vehicle fields too (they have no
+        // default value) — restore them so a second booking on the same
+        // page still carries the right vehicle.
+        vehicleIdField.value = payload.vehicleId;
+        vehicleNameField.value = payload.vehicleName;
+        dailyRateField.value = payload.dailyRate || "";
+        Object.keys(bookingFormFields).forEach((name) => {
+          const field = form.elements.namedItem(name);
+          if (field) setFieldError(field, false);
+        });
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalLabel;
+        }
+      }
+    });
+
+    Object.keys(bookingFormFields).forEach((name) => {
+      const field = form.elements.namedItem(name);
+      if (!field) return;
+      field.addEventListener("input", () => setFieldError(field, false));
+      field.addEventListener("change", () => setFieldError(field, false));
     });
   }
 
@@ -756,6 +876,7 @@ textarea:focus-visible {
 <main class="flex-grow px-margin-mobile md:px-margin-desktop py-margin-desktop max-w-container-max mx-auto w-full relative">
 <!-- Background Pattern -->
 <div class="absolute inset-0 map-bg -z-10 opacity-50 pointer-events-none" aria-hidden="true"></div>
+<div data-quote-mode>
 <div class="text-center mb-12">
 <h1 class="font-display-lg text-display-lg text-primary mb-4">Request a Quote</h1>
 <p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">Provide details about your logistics needs, and our team will get back to you with a customized, competitive quote tailored to your business.</p>
@@ -821,6 +942,58 @@ textarea:focus-visible {
                     </button>
 </div>
 </form>
+</div>
+</div>
+<!-- Vehicle booking mode — shown instead of the quote form when arriving via
+     "Book Now" on a fleet card (request.html?vehicle=<id>). -->
+<div data-booking-mode hidden>
+<div class="text-center mb-12">
+<h1 class="font-display-lg text-display-lg text-primary mb-4">Book a Vehicle</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">You're booking <span class="font-semibold text-primary" data-booking-vehicle-name>this vehicle</span>. Fill in your details below and our team will confirm availability and next steps.</p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-[0px_4px_12px_rgba(31,58,95,0.08)] overflow-hidden">
+<form class="p-margin-mobile md:p-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter" data-booking-form="">
+<input type="hidden" name="vehicleId"/>
+<input type="hidden" name="vehicleName"/>
+<input type="hidden" name="dailyRate"/>
+<div class="col-span-1 md:col-span-2 border-b border-surface-variant pb-4 mb-4 flex items-center justify-between flex-wrap gap-2">
+<h2 class="font-headline-md text-headline-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" aria-hidden="true">directions_car</span>
+<span data-booking-vehicle-name>Selected vehicle</span>
+</h2>
+<span class="font-data-mono text-data-mono text-on-surface-variant" data-booking-vehicle-fee></span>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="renterName">Full Name *</label>
+<input class="form-field font-body-md text-body-md" id="renterName" name="renterName" placeholder="John Doe" required="" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="renterPhone">Phone Number *</label>
+<input class="form-field font-body-md text-body-md" id="renterPhone" name="renterPhone" placeholder="+260 97 0000000" required="" type="tel"/>
+</div>
+<div class="flex flex-col gap-2 col-span-1 md:col-span-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="renterEmail">Email Address</label>
+<input class="form-field font-body-md text-body-md" id="renterEmail" name="renterEmail" placeholder="john@example.com" type="email"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="pickupDate">Pickup Date *</label>
+<input class="form-field font-body-md text-body-md" id="pickupDate" name="pickupDate" required="" type="date"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="expectedReturnDate">Expected Return Date *</label>
+<input class="form-field font-body-md text-body-md" id="expectedReturnDate" name="expectedReturnDate" required="" type="date"/>
+</div>
+<div class="flex flex-col gap-2 col-span-1 md:col-span-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="notes">Notes</label>
+<textarea class="form-field font-body-md text-body-md resize-none" id="notes" name="notes" placeholder="Anything else we should know about this booking..." rows="3"></textarea>
+</div>
+<div class="col-span-1 md:col-span-2 mt-6 flex justify-end">
+<button class="btn btn-primary w-full md:w-auto" type="submit">
+                        Confirm Booking
+                    </button>
+</div>
+</form>
+</div>
 </div>
 </main>
 <!-- Footer -->

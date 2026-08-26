@@ -680,6 +680,25 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 
 /* --------------------------------------------------------------------------
+   Contact logo tile — replaces a photo with a simple phone icon that links
+   straight to the Contact page. Reused wherever a case-study image was
+   swapped out for a direct "call us" affordance.
+   -------------------------------------------------------------------------- */
+.contact-logo-tile {
+  background-color: #3B4A1E; /* primary */
+}
+.contact-logo-link {
+  color: #ffffff;
+  text-decoration: none;
+}
+.contact-logo-link .material-symbols-outlined {
+  font-size: 56px;
+}
+.contact-logo-link:hover {
+  opacity: 0.9;
+}
+
+/* --------------------------------------------------------------------------
    Accessibility
    -------------------------------------------------------------------------- */
 a:focus-visible,
@@ -786,8 +805,11 @@ textarea:focus-visible {
 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[minmax(250px,auto)]">
 <!-- Case Study 1 (Spans 8 cols) -->
 <div class="md:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden flex flex-col md:flex-row">
-<div class="md:w-1/2 h-48 md:h-full relative">
-<img class="absolute inset-0 w-full h-full object-cover" alt="Fleet management operations center with live tracking maps on large monitors" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBly_ruU8KUgVCl0mUTy4Z6YhsvnNFchC1ntQZ0tpVlxKavNH8bL-1PFhzPNp7DDMOgO4LtB5tW9NtO72wMQaVjjMkUJrnK7ljatWGvZ_FOlqbk8u3FoEnziWRChcEdCGSaQU06JgerkO8cSbhsHmZspXrqovcBqi6DCoLY1a1em8olr4bCNhoNqMaglrc6ray87H-jyW_Vz5hUequKexKDBhXLW3zZRFaKrA1JTGS1PMnuRNzFxmPv"/>
+<div class="md:w-1/2 h-48 md:h-full relative contact-logo-tile flex items-center justify-center">
+<a class="contact-logo-link flex flex-col items-center gap-2" href="contact.html" aria-label="Contact Bee Cee Logistics">
+<span class="material-symbols-outlined icon-fill" aria-hidden="true">call</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wide">Contact Us</span>
+</a>
 </div>
 <div class="p-8 md:w-1/2 flex flex-col justify-center bg-surface-container-lowest">
 <div class="text-secondary font-label-sm text-label-sm mb-2 uppercase tracking-wide">Nationwide Fleet Management</div>
