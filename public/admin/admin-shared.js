@@ -26,8 +26,13 @@
     const root = document.getElementById("adminSidebarRoot");
     if (!root) return null;
 
+    // Fall back to the current path if the page didn't pass one in,
+    // and match by prefix so a future nested route (e.g.
+    // /admin/fleet/123) still highlights its parent nav item.
+    const currentPath = activePath || window.location.pathname;
+
     const linksHtml = NAV_ITEMS.map((item) => {
-      const isActive = item.href === activePath;
+      const isActive = currentPath === item.href || currentPath.startsWith(item.href + "/");
       return `
         <a href="${item.href}" class="admin-sidebar__link${isActive ? " is-active" : ""}"${isActive ? ' aria-current="page"' : ""}>
           <span class="material-symbols-outlined" aria-hidden="true">${item.icon}</span>
@@ -39,7 +44,8 @@
       <div class="admin-sidebar__scrim" id="adminSidebarScrim"></div>
       <nav class="admin-sidebar" id="adminSidebar" aria-label="Admin navigation">
         <div class="admin-sidebar__brand">
-          <span class="admin-sidebar__brand-mark" aria-hidden="true">BC</span>
+          <img src="/admin/logo.png" alt="Bee Cee Logistics" class="admin-sidebar__brand-logo" id="adminSidebarLogo"/>
+          <span class="admin-sidebar__brand-mark" aria-hidden="true" id="adminSidebarBrandFallback" hidden>BC</span>
           <span class="admin-sidebar__brand-text">Bee Cee<br/>Logistics</span>
         </div>
         <div class="admin-sidebar__nav">${linksHtml}</div>
@@ -50,6 +56,17 @@
           </button>
         </div>
       </nav>`;
+
+    // If logo.png is ever missing or fails to load, fall back to the
+    // "BC" letter mark instead of showing a broken image icon.
+    const logoImg = document.getElementById("adminSidebarLogo");
+    const brandFallback = document.getElementById("adminSidebarBrandFallback");
+    if (logoImg && brandFallback) {
+      logoImg.addEventListener("error", () => {
+        logoImg.hidden = true;
+        brandFallback.hidden = false;
+      });
+    }
 
     return {
       sidebar: document.getElementById("adminSidebar"),
@@ -67,6 +84,7 @@
     btn.id = "adminSidebarToggle";
     btn.className = "admin-sidebar__toggle";
     btn.setAttribute("aria-label", "Open navigation menu");
+    btn.setAttribute("aria-expanded", "false");
     btn.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">menu</span>';
 
     const heading = topbar.querySelector(":scope > div") || topbar.firstElementChild;
@@ -90,22 +108,34 @@
     function open() {
       els.sidebar.classList.add("is-open");
       els.scrim.classList.add("is-visible");
+      toggleBtn.setAttribute("aria-expanded", "true");
     }
     function close() {
       els.sidebar.classList.remove("is-open");
       els.scrim.classList.remove("is-visible");
+      toggleBtn.setAttribute("aria-expanded", "false");
     }
 
-    toggleBtn.addEventListener("click", open);
+    toggleBtn.addEventListener("click", () => {
+      const isOpen = els.sidebar.classList.contains("is-open");
+      isOpen ? close() : open();
+    });
     els.scrim.addEventListener("click", close);
     els.sidebar.querySelectorAll(".admin-sidebar__link").forEach((link) => {
       link.addEventListener("click", close);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && els.sidebar.classList.contains("is-open")) close();
     });
   }
 
   async function guardAndLoadUser() {
     try {
       const res = await fetch("/api/auth/me");
+      if (!res.ok) {
+        window.location.href = "/admin";
+        return null;
+      }
       const data = await res.json();
       if (!data.loggedIn) {
         window.location.href = "/admin";
@@ -123,6 +153,8 @@
   function wireLogout(els) {
     if (!els || !els.logoutBtn) return;
     els.logoutBtn.addEventListener("click", async () => {
+      if (els.logoutBtn.disabled) return; // guard against double-click spam
+      els.logoutBtn.disabled = true;
       try {
         await fetch("/api/auth/logout", { method: "POST" });
       } finally {

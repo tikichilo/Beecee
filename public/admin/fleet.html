@@ -11,6 +11,15 @@
 <link href="/admin/admin-shared.css" rel="stylesheet"/>
 <style>
   .thumb { width:64px; height:64px; object-fit:cover; border-radius:4px; }
+  .thumb-lg { width:88px; height:88px; object-fit:cover; border-radius:6px; }
+  .preview-tile { position:relative; }
+  .preview-remove {
+    position:absolute; top:-8px; right:-8px; width:20px; height:20px;
+    background:#dc2626; color:#fff; border-radius:9999px; font-size:12px;
+    line-height:1; display:flex; align-items:center; justify-content:center;
+    border:2px solid #fff; cursor:pointer;
+  }
+  .field-hint { font-size:12px; color:#6b7280; margin-top:4px; }
 </style>
 </head>
 <body class="admin-body">
@@ -50,8 +59,11 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium mb-1">Seating Capacity</label>
-          <input id="seatingCapacity" type="number" min="1" required class="w-full border border-gray-300 rounded px-3 py-2"/>
+          <label class="block text-sm font-medium mb-1">
+            Seating Capacity <span id="seatingRequiredMark" class="text-red-500">*</span>
+          </label>
+          <input id="seatingCapacity" type="number" min="1" class="w-full border border-gray-300 rounded px-3 py-2"/>
+          <p id="seatingHint" class="field-hint"></p>
         </div>
 
         <div>
@@ -91,12 +103,14 @@
         <div class="md:col-span-2">
           <label class="block text-sm font-medium mb-1">Add Photos <span class="text-gray-400 font-normal">(1–10 total, JPG/PNG/WEBP)</span></label>
           <input id="imagesInput" type="file" accept="image/jpeg,image/png,image/webp" multiple class="w-full border border-gray-300 rounded px-3 py-2 bg-white"/>
+          <div id="newImagePreviews" class="flex flex-wrap gap-3 mt-3"></div>
+          <p id="photoCountHint" class="field-hint"></p>
         </div>
 
         <p id="formError" class="md:col-span-2 text-sm text-red-600 hidden"></p>
 
         <div class="md:col-span-2 flex gap-3">
-          <button type="submit" class="bg-[#3B4A1E] text-white font-semibold rounded px-5 py-2 hover:opacity-90 transition">
+          <button type="submit" id="submitBtn" class="bg-[#3B4A1E] text-white font-semibold rounded px-5 py-2 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed">
             <span id="submitLabel">Add Vehicle</span>
           </button>
           <button type="button" id="cancelEditBtn" class="border border-gray-300 rounded px-5 py-2 hidden">Cancel</button>
@@ -125,6 +139,7 @@
 
   const form = document.getElementById("vehicleForm");
   const formTitle = document.getElementById("formTitle");
+  const submitBtn = document.getElementById("submitBtn");
   const submitLabel = document.getElementById("submitLabel");
   const cancelEditBtn = document.getElementById("cancelEditBtn");
   const formError = document.getElementById("formError");
@@ -132,7 +147,100 @@
   const existingImagesWrap = document.getElementById("existingImagesWrap");
   const existingImagesDiv = document.getElementById("existingImages");
 
+  const categorySelect = document.getElementById("category");
+  const seatingInput = document.getElementById("seatingCapacity");
+  const seatingHint = document.getElementById("seatingHint");
+  const seatingRequiredMark = document.getElementById("seatingRequiredMark");
+
+  const imagesInput = document.getElementById("imagesInput");
+  const newImagePreviews = document.getElementById("newImagePreviews");
+  const photoCountHint = document.getElementById("photoCountHint");
+
   const fields = ["name", "category", "seatingCapacity", "loadLimitKg", "bookingFee", "location", "status", "description"];
+
+  // Cargo-only categories don't carry passengers, so seating capacity
+  // doesn't apply — a truck bed isn't measured in seats.
+  const CARGO_ONLY_CATEGORIES = ["truck"];
+
+  // New photos picked by the admin, held here (not on the <input>) so
+  // individual files can be previewed and removed before upload.
+  let selectedFiles = [];
+  let selectedFilePreviewUrls = [];
+
+  function escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
+  }
+
+  // ---- Seating capacity: optional for cargo-only categories ----
+  function updateSeatingRequirement() {
+    const isCargoOnly = CARGO_ONLY_CATEGORIES.includes(categorySelect.value);
+    seatingInput.required = !isCargoOnly;
+    seatingRequiredMark.style.display = isCargoOnly ? "none" : "inline";
+    seatingHint.textContent = isCargoOnly
+      ? "Optional for trucks — leave blank if it only carries cargo."
+      : "";
+  }
+  categorySelect.addEventListener("change", updateSeatingRequirement);
+
+  // ---- New-photo previews ----
+  function revokePreviewUrls() {
+    selectedFilePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+    selectedFilePreviewUrls = [];
+  }
+
+  function renderNewImagePreviews() {
+    revokePreviewUrls();
+
+    if (!selectedFiles.length) {
+      newImagePreviews.innerHTML = "";
+      updatePhotoCountHint();
+      return;
+    }
+
+    newImagePreviews.innerHTML = selectedFiles.map((file, i) => {
+      const url = URL.createObjectURL(file);
+      selectedFilePreviewUrls.push(url);
+      return `
+        <div class="preview-tile">
+          <img class="thumb-lg" src="${url}" alt="${escapeHtml(file.name)}"/>
+          <button type="button" data-remove-new="${i}" class="preview-remove" aria-label="Remove this photo">×</button>
+        </div>
+      `;
+    }).join("");
+
+    newImagePreviews.querySelectorAll("[data-remove-new]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectedFiles.splice(Number(btn.dataset.removeNew), 1);
+        renderNewImagePreviews();
+      });
+    });
+
+    updatePhotoCountHint();
+  }
+
+  function countKeptImages() {
+    return document.querySelectorAll(".keep-image:checked").length;
+  }
+
+  function updatePhotoCountHint() {
+    const total = countKeptImages() + selectedFiles.length;
+    photoCountHint.textContent = `${total} of 10 photo${total === 1 ? "" : "s"} selected (minimum 1 required).`;
+    photoCountHint.style.color = total < 1 || total > 10 ? "#dc2626" : "#6b7280";
+  }
+
+  imagesInput.addEventListener("change", () => {
+    const incoming = Array.from(imagesInput.files);
+    incoming.forEach((file) => {
+      const alreadyAdded = selectedFiles.some(
+        (f) => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
+      );
+      if (!alreadyAdded) selectedFiles.push(file);
+    });
+    imagesInput.value = ""; // reset so picking again fires "change" and lets them add more
+    renderNewImagePreviews();
+  });
 
   // ---- Load + render vehicle list ----
   async function loadVehicles() {
@@ -144,17 +252,20 @@
       return;
     }
 
-    list.innerHTML = vehicles.map((v) => `
+    list.innerHTML = vehicles.map((v) => {
+      const seating = v.seatingCapacity ? `${escapeHtml(v.seatingCapacity)} seats · ` : "";
+      return `
       <div class="flex items-center gap-4 py-3">
-        <img class="thumb" src="${v.images[0]}" alt="${v.name}"/>
+        <img class="thumb" src="${escapeHtml(v.images[0])}" alt="${escapeHtml(v.name)}"/>
         <div class="flex-1">
-          <p class="font-semibold">${v.name}</p>
-          <p class="text-sm text-gray-500">${v.category} · ${v.seatingCapacity} seats · K${v.bookingFee}/day · ${v.location} · ${v.status}</p>
+          <p class="font-semibold">${escapeHtml(v.name)}</p>
+          <p class="text-sm text-gray-500">${escapeHtml(v.category)} · ${seating}K${escapeHtml(v.bookingFee)}/day · ${escapeHtml(v.location)} · ${escapeHtml(v.status)}</p>
         </div>
         <button data-edit="${v._id}" class="text-sm px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50">Edit</button>
         <button data-delete="${v._id}" class="text-sm px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50">Delete</button>
       </div>
-    `).join("");
+    `;
+    }).join("");
 
     list.querySelectorAll("[data-edit]").forEach((btn) =>
       btn.addEventListener("click", () => startEdit(btn.dataset.edit))
@@ -175,20 +286,27 @@
     vehicleIdField.value = v._id;
     document.getElementById("name").value = v.name;
     document.getElementById("category").value = v.category;
-    document.getElementById("seatingCapacity").value = v.seatingCapacity;
+    document.getElementById("seatingCapacity").value = v.seatingCapacity || "";
     document.getElementById("loadLimitKg").value = v.loadLimitKg || "";
     document.getElementById("bookingFee").value = v.bookingFee;
     document.getElementById("location").value = v.location;
     document.getElementById("status").value = v.status;
     document.getElementById("description").value = v.description || "";
+    updateSeatingRequirement();
 
     existingImagesWrap.style.display = "";
     existingImagesDiv.innerHTML = v.images.map((img) => `
       <label class="flex flex-col items-center gap-1 text-xs">
-        <img class="thumb" src="${img}"/>
-        <span class="flex items-center gap-1"><input type="checkbox" checked value="${img}" class="keep-image"/> keep</span>
+        <img class="thumb" src="${escapeHtml(img)}"/>
+        <span class="flex items-center gap-1"><input type="checkbox" checked value="${escapeHtml(img)}" class="keep-image"/> keep</span>
       </label>
     `).join("");
+    existingImagesDiv.querySelectorAll(".keep-image").forEach((cb) =>
+      cb.addEventListener("change", updatePhotoCountHint)
+    );
+
+    selectedFiles = [];
+    renderNewImagePreviews();
 
     formTitle.textContent = "Edit Vehicle";
     submitLabel.textContent = "Save Changes";
@@ -203,6 +321,9 @@
     vehicleIdField.value = "";
     existingImagesWrap.style.display = "none";
     existingImagesDiv.innerHTML = "";
+    selectedFiles = [];
+    renderNewImagePreviews();
+    updateSeatingRequirement();
     formTitle.textContent = "Add a Vehicle";
     submitLabel.textContent = "Add Vehicle";
     cancelEditBtn.classList.add("hidden");
@@ -214,18 +335,30 @@
     formError.classList.add("hidden");
 
     const id = vehicleIdField.value;
-    const fd = new FormData();
-    fields.forEach((f) => fd.append(f, document.getElementById(f).value));
-
-    const files = document.getElementById("imagesInput").files;
-    for (const file of files) {
-      fd.append(id ? "newImages" : "images", file);
+    const totalPhotos = countKeptImages() + selectedFiles.length;
+    if (totalPhotos < 1 || totalPhotos > 10) {
+      formError.textContent = "A vehicle needs between 1 and 10 photos.";
+      formError.classList.remove("hidden");
+      return;
     }
+
+    const fd = new FormData();
+    fields.forEach((f) => {
+      const val = document.getElementById(f).value;
+      if (f === "seatingCapacity" && !val) return; // leave out entirely when not applicable
+      fd.append(f, val);
+    });
+
+    selectedFiles.forEach((file) => fd.append(id ? "newImages" : "images", file));
 
     if (id) {
       const kept = Array.from(document.querySelectorAll(".keep-image:checked")).map((cb) => cb.value);
       fd.append("keepImages", JSON.stringify(kept));
     }
+
+    submitBtn.disabled = true;
+    const originalLabel = submitLabel.textContent;
+    submitLabel.textContent = "Saving…";
 
     try {
       const res = await fetch(id ? `/api/fleet/${id}` : "/api/fleet", {
@@ -239,9 +372,14 @@
     } catch (err) {
       formError.textContent = err.message;
       formError.classList.remove("hidden");
+    } finally {
+      submitBtn.disabled = false;
+      submitLabel.textContent = originalLabel;
     }
   });
 
+  updateSeatingRequirement();
+  renderNewImagePreviews();
   loadVehicles();
 })();
 </script>
