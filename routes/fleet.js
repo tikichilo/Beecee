@@ -1,32 +1,16 @@
 const express = require("express");
-const path = require("path");
-const fs = require("fs");
-const multer = require("multer");
-const { v4: uuid } = require("uuid");
 const router = express.Router();
 
 const Vehicle = require("../models/Vehicle");
 const { requireAdmin } = require("../middleware/auth");
+const {
+  uploadFleetImages,
+  uploadImageBuffers,
+  deleteCloudinaryImage,
+  deleteCloudinaryImages,
+} = require("../utils/cloudinaryUpload");
 
-const UPLOAD_DIR = path.join(__dirname, "..", "public", "uploads", "fleet");
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || ".jpg";
-    cb(null, `${Date.now()}-${uuid()}${ext}`);
-  },
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024, files: 10 }, // 5MB each, 10 max
-  fileFilter: (req, file, cb) => {
-    const ok = /^image\/(jpe?g|png|webp)$/.test(file.mimetype);
-    cb(ok ? null : new Error("Only JPG, PNG, or WEBP images are allowed."), ok);
-  },
-});
+const CLOUDINARY_FOLDER = "bee-cee-logistics/fleet";
 
 // ------------------------------------------------------------------
 // PUBLIC — used by index.html and fleet.html to render live fleet cards
@@ -51,11 +35,19 @@ router.get("/:id", async (req, res) => {
 // ------------------------------------------------------------------
 // ADMIN — everything below requires a logged-in session
 // ------------------------------------------------------------------
-router.post("/", requireAdmin, upload.array("images", 10), async (req, res) => {
+router.post("/", requireAdmin, uploadFleetImages.array("images", 10), async (req, res) => {
+  let images = [];
   try {
-    const images = (req.files || []).map((f) => `/uploads/fleet/${f.filename}`);
-    if (images.length < 1) {
+    if (!req.files || !req.files.length) {
       return res.status(400).json({ error: "At least 1 image is required." });
+    }
+
+    console.log(`⬆️  Uploading ${req.files.length} fleet image(s) to Cloudinary...`);
+    images = await uploadImageBuffers(req.files, CLOUDINARY_FOLDER);
+    console.log(`✅ Uploaded ${images.length} image(s)`);
+
+    if (!images.length) {
+      return res.status(500).json({ error: "All image uploads failed — please try again" });
     }
 
     const vehicle = await Vehicle.create({
@@ -72,36 +64,43 @@ router.post("/", requireAdmin, upload.array("images", 10), async (req, res) => {
 
     res.status(201).json(vehicle);
   } catch (err) {
-    // Clean up any uploaded files if the DB save failed (e.g. bad category enum)
-    (req.files || []).forEach((f) => fs.unlink(f.path, () => {}));
+    // Clean up any images that already made it to Cloudinary if the
+    // DB save failed (e.g. bad category enum)
+    await deleteCloudinaryImages(images);
     res.status(400).json({ error: err.message });
   }
 });
 
-router.put("/:id", requireAdmin, upload.array("newImages", 10), async (req, res) => {
+router.put("/:id", requireAdmin, uploadFleetImages.array("newImages", 10), async (req, res) => {
+  let newImages = [];
   try {
     const vehicle = await Vehicle.findById(req.params.id);
     if (!vehicle) return res.status(404).json({ error: "Vehicle not found." });
 
-    // Images the admin chose to keep (sent back as JSON array of existing paths)
+    // Images the admin chose to keep (sent back as JSON array of existing URLs)
     let keptImages = vehicle.images;
     if (req.body.keepImages) {
       keptImages = JSON.parse(req.body.keepImages);
     }
-    const newImages = (req.files || []).map((f) => `/uploads/fleet/${f.filename}`);
+
+    if (req.files && req.files.length) {
+      console.log(`⬆️  Uploading ${req.files.length} new fleet image(s) to Cloudinary...`);
+      newImages = await uploadImageBuffers(req.files, CLOUDINARY_FOLDER);
+      console.log(`✅ Uploaded ${newImages.length} image(s)`);
+    }
+
     const finalImages = [...keptImages, ...newImages];
 
     if (finalImages.length < 1 || finalImages.length > 10) {
-      (req.files || []).forEach((f) => fs.unlink(f.path, () => {}));
+      await deleteCloudinaryImages(newImages);
       return res.status(400).json({ error: "A vehicle needs between 1 and 10 images." });
     }
 
-    // Delete any images that were removed from disk
+    // Remove from Cloudinary any images that were dropped by the admin
     const removed = vehicle.images.filter((img) => !keptImages.includes(img));
-    removed.forEach((img) => {
-      const filePath = path.join(__dirname, "..", "public", img);
-      fs.unlink(filePath, () => {});
-    });
+    for (const img of removed) {
+      await deleteCloudinaryImage(img);
+    }
 
     vehicle.name = req.body.name ?? vehicle.name;
     vehicle.category = req.body.category ?? vehicle.category;
@@ -116,7 +115,7 @@ router.put("/:id", requireAdmin, upload.array("newImages", 10), async (req, res)
     await vehicle.save();
     res.json(vehicle);
   } catch (err) {
-    (req.files || []).forEach((f) => fs.unlink(f.path, () => {}));
+    await deleteCloudinaryImages(newImages);
     res.status(400).json({ error: err.message });
   }
 });
@@ -125,10 +124,7 @@ router.delete("/:id", requireAdmin, async (req, res) => {
   const vehicle = await Vehicle.findById(req.params.id);
   if (!vehicle) return res.status(404).json({ error: "Vehicle not found." });
 
-  vehicle.images.forEach((img) => {
-    const filePath = path.join(__dirname, "..", "public", img);
-    fs.unlink(filePath, () => {});
-  });
+  await deleteCloudinaryImages(vehicle.images);
 
   await vehicle.deleteOne();
   res.json({ ok: true });

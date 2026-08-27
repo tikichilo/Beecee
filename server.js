@@ -6,6 +6,8 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 
+require("./utils/cloudinaryUpload"); // fail-fast Cloudinary env check + config
+
 const authRoutes = require("./routes/auth");
 const fleetRoutes = require("./routes/fleet");
 const quoteRoutes = require("./routes/quote");
@@ -124,6 +126,26 @@ app.use((req, res) => {
   } else {
     res.status(404).send("Page not found");
   }
+});
+
+// --------------------------------------------------------------------
+// Error handling — must be registered after all routes (catches
+// multer/Cloudinary upload errors bubbled up from routes/fleet.js)
+// --------------------------------------------------------------------
+app.use((err, req, res, next) => {
+  if (err && err.name === "MulterError") {
+    const messages = {
+      LIMIT_FILE_SIZE: "Image is too large — max 5MB per file.",
+      LIMIT_FILE_COUNT: "Too many images — max 10 per fleet listing.",
+      LIMIT_UNEXPECTED_FILE: "Too many images — max 10 per fleet listing.",
+    };
+    return res.status(400).json({ error: messages[err.code] || err.message });
+  }
+  if (err && err.message && err.message.includes("JPG, PNG, WEBP")) {
+    return res.status(400).json({ error: err.message });
+  }
+  console.error("Unhandled error:", err);
+  res.status(500).json({ error: "Server error" });
 });
 
 app.listen(PORT, () => {
