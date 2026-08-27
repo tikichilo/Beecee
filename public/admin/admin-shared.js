@@ -44,9 +44,8 @@
       <div class="admin-sidebar__scrim" id="adminSidebarScrim"></div>
       <nav class="admin-sidebar" id="adminSidebar" aria-label="Admin navigation">
         <div class="admin-sidebar__brand">
-          <img src="/admin/logo.png" alt="Bee Cee Logistics" class="admin-sidebar__brand-logo" id="adminSidebarLogo"/>
+          <img src="/logo.png" alt="Bee Cee Logistics" class="admin-sidebar__brand-logo" id="adminSidebarLogo"/>
           <span class="admin-sidebar__brand-mark" aria-hidden="true" id="adminSidebarBrandFallback" hidden>BC</span>
-          <span class="admin-sidebar__brand-text">Bee Cee<br/>Logistics</span>
         </div>
         <div class="admin-sidebar__nav">${linksHtml}</div>
         <div class="admin-sidebar__footer">

@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
 
+// Categories that don't carry passengers, so seating capacity doesn't
+// apply — mirrors CARGO_ONLY_CATEGORIES in admin/fleet.html.
+const CARGO_ONLY_CATEGORIES = ["truck"];
+
 const vehicleSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true }, // e.g. "Toyota Land Cruiser Prado"
@@ -17,7 +21,15 @@ const vehicleSchema = new mongoose.Schema(
       },
       required: true,
     },
-    seatingCapacity: { type: Number, required: true, min: 1 },
+    seatingCapacity: {
+      type: Number,
+      min: 1,
+      required: function () {
+        // "this" is the document being validated — not required for
+        // cargo-only categories like trucks.
+        return !CARGO_ONLY_CATEGORIES.includes(this.category);
+      },
+    },
     loadLimitKg: { type: Number, min: 0 }, // optional — not every saloon car needs this
     bookingFee: { type: Number, required: true, min: 0 }, // ZMW per day, kept numeric for sorting/filtering
     location: { type: String, required: true, trim: true }, // e.g. "Lusaka Depot"

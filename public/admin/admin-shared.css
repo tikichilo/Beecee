@@ -71,12 +71,18 @@ body.admin-body {
   flex-shrink: 0;
 }
 
-.admin-sidebar__brand-text {
-  font-family: "Montserrat", sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 1.2;
-  letter-spacing: 0.01em;
+.admin-sidebar__brand-mark[hidden] {
+  display: none;
+}
+
+.admin-sidebar__brand-logo {
+  width: 68px;
+  height: 68px;
+  border-radius: 7px;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: #fff;
+  padding: 6px;
 }
 
 .admin-sidebar__nav {

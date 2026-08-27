@@ -58,7 +58,7 @@
           </select>
         </div>
 
-        <div>
+        <div id="seatingCapacityWrap">
           <label class="block text-sm font-medium mb-1">
             Seating Capacity <span id="seatingRequiredMark" class="text-red-500">*</span>
           </label>
@@ -148,6 +148,7 @@
   const existingImagesDiv = document.getElementById("existingImages");
 
   const categorySelect = document.getElementById("category");
+  const seatingCapacityWrap = document.getElementById("seatingCapacityWrap");
   const seatingInput = document.getElementById("seatingCapacity");
   const seatingHint = document.getElementById("seatingHint");
   const seatingRequiredMark = document.getElementById("seatingRequiredMark");
@@ -173,14 +174,14 @@
     }[c]));
   }
 
-  // ---- Seating capacity: optional for cargo-only categories ----
+  // ---- Seating capacity: hidden entirely for cargo-only categories ----
   function updateSeatingRequirement() {
     const isCargoOnly = CARGO_ONLY_CATEGORIES.includes(categorySelect.value);
+    seatingCapacityWrap.style.display = isCargoOnly ? "none" : "";
     seatingInput.required = !isCargoOnly;
     seatingRequiredMark.style.display = isCargoOnly ? "none" : "inline";
-    seatingHint.textContent = isCargoOnly
-      ? "Optional for trucks — leave blank if it only carries cargo."
-      : "";
+    seatingHint.textContent = "";
+    if (isCargoOnly) seatingInput.value = "";
   }
   categorySelect.addEventListener("change", updateSeatingRequirement);
 
