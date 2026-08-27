@@ -8,6 +8,60 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link href="/admin/admin-shared.css" rel="stylesheet"/>
+<style>
+  .analytics-section {
+    margin-top: 8px;
+  }
+
+  .analytics-heading {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--admin-green);
+    margin: 28px 0 14px;
+  }
+
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .chart-card {
+    background: #fff;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .chart-card--wide {
+    grid-column: 1 / -1;
+  }
+
+  .chart-card--empty {
+    display: none;
+  }
+
+  .chart-card__title {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--admin-text);
+    margin: 0;
+  }
+
+  .chart-card__canvas-wrap {
+    position: relative;
+    height: 220px;
+  }
+
+  .chart-card--wide .chart-card__canvas-wrap {
+    height: 240px;
+  }
+</style>
 </head>
 <body class="admin-body">
 
@@ -46,6 +100,36 @@
       </div>
     </div>
 
+    <section class="analytics-section" id="analyticsSection">
+      <h2 class="analytics-heading">Analytics</h2>
+      <div class="chart-grid">
+        <div class="chart-card" id="cardFleetCategory">
+          <h3 class="chart-card__title">Fleet by Category</h3>
+          <div class="chart-card__canvas-wrap"><canvas id="chartFleetCategory"></canvas></div>
+        </div>
+
+        <div class="chart-card" id="cardFleetStatus">
+          <h3 class="chart-card__title">Fleet by Status</h3>
+          <div class="chart-card__canvas-wrap"><canvas id="chartFleetStatus"></canvas></div>
+        </div>
+
+        <div class="chart-card" id="cardBookingsStatus">
+          <h3 class="chart-card__title">Bookings by Status</h3>
+          <div class="chart-card__canvas-wrap"><canvas id="chartBookingsStatus"></canvas></div>
+        </div>
+
+        <div class="chart-card" id="cardQuotesStatus">
+          <h3 class="chart-card__title">Quote Requests by Status</h3>
+          <div class="chart-card__canvas-wrap"><canvas id="chartQuotesStatus"></canvas></div>
+        </div>
+
+        <div class="chart-card chart-card--wide" id="cardReceiptsTrend">
+          <h3 class="chart-card__title">Receipts Issued Over Time</h3>
+          <div class="chart-card__canvas-wrap"><canvas id="chartReceiptsTrend"></canvas></div>
+        </div>
+      </div>
+    </section>
+
     <div class="admin-empty-state" id="emptyState" style="display:none">
       <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>
       <h3>Nothing here yet</h3>
@@ -54,34 +138,219 @@
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="/admin/admin-shared.js"></script>
 <script>
   AdminShell.init("/admin/dashboard");
 
-  fetch("/api/fleet")
-    .then((r) => r.json())
-    .then((vehicles) => { document.getElementById("statFleet").textContent = vehicles.length; })
-    .catch(() => { document.getElementById("statFleet").textContent = "—"; });
+  // ------------------------------------------------------------
+  // Palette — green stays the anchor color in every chart; amber,
+  // slate, and a soft red step in only where they carry meaning
+  // (e.g. red for "overdue", amber for "booked").
+  // ------------------------------------------------------------
+  const KNOWN_COLORS = {
+    saloon: "#3B4A1E",
+    "4x4": "#8CB33E",
+    bus: "#E8A33D",
+    truck: "#6b7280",
+    available: "#8CB33E",
+    booked: "#E8A33D",
+    maintenance: "#D9534F",
+    out: "#3B4A1E",
+    overdue: "#D9534F",
+    new: "#8CB33E",
+  };
+  const PALETTE = ["#3B4A1E", "#8CB33E", "#E8A33D", "#6b7280", "#5C7A2E", "#C9D6AE"];
 
-  fetch("/api/quote-requests?status=new")
-    .then((r) => r.json())
-    .then((quotes) => { document.getElementById("statQuotes").textContent = Array.isArray(quotes) ? quotes.length : "—"; })
-    .catch(() => { document.getElementById("statQuotes").textContent = "—"; });
+  const CATEGORY_LABELS = { saloon: "Saloon Car", "4x4": "4x4 & SUV", bus: "Bus", truck: "Truck" };
 
-  fetch("/api/bookings?status=out")
-    .then((r) => r.json())
-    .then((bookings) => { document.getElementById("statBookingsOut").textContent = Array.isArray(bookings) ? bookings.length : "—"; })
-    .catch(() => { document.getElementById("statBookingsOut").textContent = "—"; });
+  function titleCase(str) {
+    return String(str || "Unknown")
+      .replace(/[_-]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
 
-  fetch("/api/bookings?status=overdue")
-    .then((r) => r.json())
-    .then((bookings) => { document.getElementById("statOverdue").textContent = Array.isArray(bookings) ? bookings.length : "—"; })
-    .catch(() => { document.getElementById("statOverdue").textContent = "—"; });
+  function countBy(arr, field) {
+    const counts = {};
+    arr.forEach((item) => {
+      const key = (item && item[field]) || "unknown";
+      counts[key] = (counts[key] || 0) + 1;
+    });
+    return counts;
+  }
 
-  fetch("/api/receipts")
-    .then((r) => r.json())
-    .then((receipts) => { document.getElementById("statReceipts").textContent = Array.isArray(receipts) ? receipts.length : "—"; })
-    .catch(() => { document.getElementById("statReceipts").textContent = "—"; });
+  function colorForKey(key, index) {
+    return KNOWN_COLORS[key] || PALETTE[index % PALETTE.length];
+  }
+
+  function labelForKey(key, labelMap) {
+    if (labelMap && labelMap[key]) return labelMap[key];
+    return titleCase(key);
+  }
+
+  function renderDistributionChart(canvasId, cardId, type, counts, labelMap) {
+    const card = document.getElementById(cardId);
+    const keys = Object.keys(counts);
+    if (!keys.length) {
+      card.classList.add("chart-card--empty");
+      return;
+    }
+    card.classList.remove("chart-card--empty");
+
+    const ctx = document.getElementById(canvasId).getContext("2d");
+    new Chart(ctx, {
+      type,
+      data: {
+        labels: keys.map((k) => labelForKey(k, labelMap)),
+        datasets: [
+          {
+            data: keys.map((k) => counts[k]),
+            backgroundColor: keys.map((k, i) => colorForKey(k, i)),
+            borderColor: type === "doughnut" ? "#fff" : "transparent",
+            borderWidth: type === "doughnut" ? 2 : 0,
+            borderRadius: type === "bar" ? 5 : 0,
+            maxBarThickness: 46,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: type === "doughnut" ? "62%" : undefined,
+        plugins: {
+          legend: {
+            display: type === "doughnut",
+            position: "bottom",
+            labels: { boxWidth: 11, font: { size: 11, family: "Inter" }, color: "#1f2421" },
+          },
+          tooltip: { titleFont: { family: "Inter" }, bodyFont: { family: "Inter" } },
+        },
+        scales:
+          type === "bar"
+            ? {
+                y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } }, grid: { color: "#f0f1ec" } },
+                x: { ticks: { font: { size: 11 } }, grid: { display: false } },
+              }
+            : undefined,
+      },
+    });
+  }
+
+  function renderReceiptsTrend(receipts) {
+    const card = document.getElementById("cardReceiptsTrend");
+
+    // Group by calendar month using createdAt if present. Not every
+    // receipts schema is guaranteed to carry this field, so if it's
+    // missing on every record we quietly hide the card instead of
+    // guessing at a shape that isn't there.
+    const monthMap = new Map(); // sortKey (year*12+month) -> { label, count }
+    receipts.forEach((r) => {
+      if (!r || !r.createdAt) return;
+      const d = new Date(r.createdAt);
+      if (isNaN(d)) return;
+      const sortKey = d.getFullYear() * 12 + d.getMonth();
+      const label = d.toLocaleDateString("en-GB", { month: "short", year: "2-digit" });
+      if (!monthMap.has(sortKey)) monthMap.set(sortKey, { label, count: 0 });
+      monthMap.get(sortKey).count += 1;
+    });
+
+    if (!monthMap.size) {
+      card.classList.add("chart-card--empty");
+      return;
+    }
+    card.classList.remove("chart-card--empty");
+
+    const sorted = Array.from(monthMap.entries()).sort((a, b) => a[0] - b[0]);
+    const labels = sorted.map(([, v]) => v.label);
+    const data = sorted.map(([, v]) => v.count);
+
+    const ctx = document.getElementById("chartReceiptsTrend").getContext("2d");
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Receipts",
+            data,
+            borderColor: "#3B4A1E",
+            backgroundColor: "rgba(140, 179, 62, 0.18)",
+            fill: true,
+            tension: 0.3,
+            pointBackgroundColor: "#8CB33E",
+            pointBorderColor: "#fff",
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { titleFont: { family: "Inter" }, bodyFont: { family: "Inter" } },
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } }, grid: { color: "#f0f1ec" } },
+          x: { ticks: { font: { size: 11 } }, grid: { display: false } },
+        },
+      },
+    });
+  }
+
+  async function fetchJsonSafe(url) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return { ok: false, data: [] };
+      const data = await res.json();
+      return { ok: true, data: Array.isArray(data) ? data : [] };
+    } catch (err) {
+      return { ok: false, data: [] };
+    }
+  }
+
+  async function loadDashboard() {
+    const [fleetRes, bookingsRes, quotesRes, receiptsRes] = await Promise.all([
+      fetchJsonSafe("/api/fleet"),
+      fetchJsonSafe("/api/bookings"),
+      fetchJsonSafe("/api/quote-requests"),
+      fetchJsonSafe("/api/receipts"),
+    ]);
+
+    document.getElementById("statFleet").textContent = fleetRes.ok ? fleetRes.data.length : "—";
+    document.getElementById("statQuotes").textContent = quotesRes.ok
+      ? quotesRes.data.filter((q) => q.status === "new").length
+      : "—";
+    document.getElementById("statBookingsOut").textContent = bookingsRes.ok
+      ? bookingsRes.data.filter((b) => b.status === "out").length
+      : "—";
+    document.getElementById("statOverdue").textContent = bookingsRes.ok
+      ? bookingsRes.data.filter((b) => b.status === "overdue").length
+      : "—";
+    document.getElementById("statReceipts").textContent = receiptsRes.ok ? receiptsRes.data.length : "—";
+
+    const fleetArr = fleetRes.data;
+    const bookingsArr = bookingsRes.data;
+    const quotesArr = quotesRes.data;
+    const receiptsArr = receiptsRes.data;
+
+    const hasAnyData = fleetArr.length || bookingsArr.length || quotesArr.length || receiptsArr.length;
+
+    document.getElementById("statGrid").style.display = hasAnyData ? "" : "none";
+    document.getElementById("analyticsSection").style.display = hasAnyData ? "" : "none";
+    document.getElementById("emptyState").style.display = hasAnyData ? "none" : "";
+
+    if (!hasAnyData) return;
+
+    renderDistributionChart("chartFleetCategory", "cardFleetCategory", "doughnut", countBy(fleetArr, "category"), CATEGORY_LABELS);
+    renderDistributionChart("chartFleetStatus", "cardFleetStatus", "bar", countBy(fleetArr, "status"));
+    renderDistributionChart("chartBookingsStatus", "cardBookingsStatus", "bar", countBy(bookingsArr, "status"));
+    renderDistributionChart("chartQuotesStatus", "cardQuotesStatus", "doughnut", countBy(quotesArr, "status"));
+    renderReceiptsTrend(receiptsArr);
+  }
+
+  loadDashboard();
 </script>
 </body>
 </html>

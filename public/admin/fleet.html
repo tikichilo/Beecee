@@ -120,7 +120,28 @@
 
     <!-- Vehicle list -->
     <section class="bg-white border border-gray-200 rounded-lg p-6">
-      <h2 class="font-bold text-[#3B4A1E] mb-4" style="font-family:'Montserrat',sans-serif">Current Fleet</h2>
+      <div class="flex items-center justify-between gap-4 mb-4 flex-wrap">
+        <h2 class="font-bold text-[#3B4A1E]" style="font-family:'Montserrat',sans-serif">Current Fleet</h2>
+        <div class="relative w-full sm:w-72">
+          <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" style="font-size:19px" aria-hidden="true">search</span>
+          <input
+            id="fleetSearch"
+            type="text"
+            placeholder="Search name, category, location, price, load limit…"
+            class="w-full border border-gray-300 rounded pl-9 pr-8 py-2 text-sm"
+            autocomplete="off"
+          />
+          <button
+            type="button"
+            id="fleetSearchClear"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+            aria-label="Clear search"
+          >
+            <span class="material-symbols-outlined" style="font-size:18px">close</span>
+          </button>
+        </div>
+      </div>
+      <p id="fleetSearchCount" class="text-xs text-gray-500 mb-2 hidden"></p>
       <div id="vehicleList" class="flex flex-col divide-y divide-gray-100">
         <p class="text-gray-500 text-sm py-4">Loading…</p>
       </div>
@@ -157,16 +178,33 @@
   const newImagePreviews = document.getElementById("newImagePreviews");
   const photoCountHint = document.getElementById("photoCountHint");
 
+  const fleetSearchInput = document.getElementById("fleetSearch");
+  const fleetSearchClear = document.getElementById("fleetSearchClear");
+  const fleetSearchCount = document.getElementById("fleetSearchCount");
+
   const fields = ["name", "category", "seatingCapacity", "loadLimitKg", "bookingFee", "location", "status", "description"];
 
   // Cargo-only categories don't carry passengers, so seating capacity
   // doesn't apply — a truck bed isn't measured in seats.
   const CARGO_ONLY_CATEGORIES = ["truck"];
 
+  // Friendly labels so a search for "suv" also hits the "4x4" category,
+  // matching what the admin reads on screen rather than just the enum.
+  const CATEGORY_LABELS = {
+    saloon: "Saloon Car",
+    "4x4": "4x4 & SUV",
+    bus: "Bus",
+    truck: "Truck",
+  };
+
   // New photos picked by the admin, held here (not on the <input>) so
   // individual files can be previewed and removed before upload.
   let selectedFiles = [];
   let selectedFilePreviewUrls = [];
+
+  // All vehicles as last loaded from the API — the search bar filters
+  // this in-memory rather than re-hitting the server on every keystroke.
+  let allVehicles = [];
 
   function escapeHtml(str) {
     return String(str ?? "").replace(/[&<>"']/g, (c) => ({
@@ -243,27 +281,78 @@
     renderNewImagePreviews();
   });
 
-  // ---- Load + render vehicle list ----
-  async function loadVehicles() {
+  // ---- Search: filter the already-loaded fleet by any field the
+  // admin might type — a name fragment, a category word, a location,
+  // a price, a load limit, or a seating count. ----
+  function vehicleMatchesSearch(v, term) {
+    if (!term) return true;
+
+    const haystacks = [
+      v.name,
+      v.category,
+      CATEGORY_LABELS[v.category],
+      v.location,
+      v.status,
+      v.description,
+      v.bookingFee != null ? String(v.bookingFee) : "",
+      v.seatingCapacity != null ? String(v.seatingCapacity) : "",
+      v.loadLimitKg != null ? String(v.loadLimitKg) : "",
+    ];
+
+    return haystacks.some((h) => h && String(h).toLowerCase().includes(term));
+  }
+
+  function applyFleetSearch() {
+    const raw = fleetSearchInput.value.trim();
+    const term = raw.toLowerCase();
+    fleetSearchClear.classList.toggle("hidden", !raw);
+
+    const filtered = term ? allVehicles.filter((v) => vehicleMatchesSearch(v, term)) : allVehicles;
+
+    if (term) {
+      fleetSearchCount.textContent = `${filtered.length} of ${allVehicles.length} vehicle${allVehicles.length === 1 ? "" : "s"} match "${raw}"`;
+      fleetSearchCount.classList.remove("hidden");
+    } else {
+      fleetSearchCount.classList.add("hidden");
+    }
+
+    renderVehicleList(filtered, { searchActive: !!term });
+  }
+
+  fleetSearchInput.addEventListener("input", applyFleetSearch);
+  fleetSearchClear.addEventListener("click", () => {
+    fleetSearchInput.value = "";
+    applyFleetSearch();
+    fleetSearchInput.focus();
+  });
+
+  // ---- Render vehicle list ----
+  function renderVehicleList(vehicles, opts) {
+    opts = opts || {};
     const list = document.getElementById("vehicleList");
-    const vehicles = await fetch("/api/fleet").then((r) => r.json());
 
     if (!vehicles.length) {
-      list.innerHTML = `<p class="text-gray-500 text-sm py-4">No vehicles added yet.</p>`;
+      list.innerHTML = opts.searchActive
+        ? `<p class="text-gray-500 text-sm py-4">No vehicles match your search.</p>`
+        : `<p class="text-gray-500 text-sm py-4">No vehicles added yet.</p>`;
       return;
     }
 
     list.innerHTML = vehicles.map((v) => {
       const seating = v.seatingCapacity ? `${escapeHtml(v.seatingCapacity)} seats · ` : "";
       return `
-      <div class="flex items-center gap-4 py-3">
-        <img class="thumb" src="${escapeHtml(v.images[0])}" alt="${escapeHtml(v.name)}"/>
-        <div class="flex-1">
-          <p class="font-semibold">${escapeHtml(v.name)}</p>
-          <p class="text-sm text-gray-500">${escapeHtml(v.category)} · ${seating}K${escapeHtml(v.bookingFee)}/day · ${escapeHtml(v.location)} · ${escapeHtml(v.status)}</p>
+      <div class="flex flex-col sm:flex-row sm:items-center gap-3 py-3">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          <img class="thumb flex-shrink-0" src="${escapeHtml(v.images[0])}" alt="${escapeHtml(v.name)}"/>
+          <div class="flex-1 min-w-0">
+            <p class="font-semibold truncate">${escapeHtml(v.name)}</p>
+            <p class="text-sm text-gray-500">${escapeHtml(v.category)} · ${seating}K${escapeHtml(v.bookingFee)}/day · ${escapeHtml(v.location)} · ${escapeHtml(v.status)}</p>
+          </div>
         </div>
-        <button data-edit="${v._id}" class="text-sm px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50">Edit</button>
-        <button data-delete="${v._id}" class="text-sm px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50">Delete</button>
+        <div class="flex gap-2 sm:flex-shrink-0">
+          <button data-edit="${v._id}" class="flex-1 sm:flex-none text-sm px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50">Edit</button>
+          <button data-delete="${v._id}" class="flex-1 sm:flex-none text-sm px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50">Delete</button>
+        </div>
       </div>
     `;
     }).join("");
@@ -274,6 +363,14 @@
     list.querySelectorAll("[data-delete]").forEach((btn) =>
       btn.addEventListener("click", () => deleteVehicle(btn.dataset.delete))
     );
+  }
+
+  // ---- Load vehicle list from the API ----
+  async function loadVehicles() {
+    const list = document.getElementById("vehicleList");
+    list.innerHTML = `<p class="text-gray-500 text-sm py-4">Loading…</p>`;
+    allVehicles = await fetch("/api/fleet").then((r) => r.json());
+    applyFleetSearch();
   }
 
   async function deleteVehicle(id) {
