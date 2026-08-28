@@ -16,9 +16,11 @@
   }
   .filter-tab[aria-pressed="true"]{ background:#3B4A1E; color:#fff; border-color:#3B4A1E; }
   .status-pill{ font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:100px; text-transform:capitalize; display:inline-block; }
+  .status-pill--requested{ background:#fdc34d33; color:#7b5800; }
   .status-pill--out{ background:#3B4A1E1a; color:#3B4A1E; }
   .status-pill--overdue{ background:#ba1a1a1a; color:#ba1a1a; }
   .status-pill--returned{ background:#e5e7eb; color:#6b7280; }
+  .status-pill--declined{ background:#ba1a1a1a; color:#6b7280; }
   table.bookings-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
   table.bookings-table th{
     text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:0.04em;
@@ -37,7 +39,7 @@
   <header class="admin-topbar">
     <div>
       <h1 class="admin-topbar__title">Bookings</h1>
-      <p class="admin-topbar__subtitle">Track which vehicles are out, due back, or overdue.</p>
+      <p class="admin-topbar__subtitle">Review incoming requests, then track which vehicles are out, due back, or overdue.</p>
     </div>
     <div class="admin-topbar__meta" id="whoami"></div>
   </header>
@@ -47,7 +49,7 @@
     <!-- New booking form -->
     <section class="bg-white border border-gray-200 rounded-lg p-6">
       <h2 class="font-bold text-lg text-[#3B4A1E] mb-4" style="font-family:'Montserrat',sans-serif">New Booking</h2>
-      <form id="bookingForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form id="bookingForm" class="grid grid-cols-1 md:grid-cols-2 gap-4" enctype="multipart/form-data">
         <div class="md:col-span-2">
           <label class="block text-sm font-medium mb-1">Vehicle</label>
           <select id="vehicleSelect" required class="w-full border border-gray-300 rounded px-3 py-2">
@@ -67,6 +69,47 @@
           <label class="block text-sm font-medium mb-1">Renter Email — optional</label>
           <input id="renterEmail" type="email" class="w-full border border-gray-300 rounded px-3 py-2"/>
         </div>
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium mb-1">Residential Address</label>
+          <input id="residentialAddress" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Plot / house number, street, area"/>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium mb-1">Who is driving?</label>
+          <div class="flex gap-6 items-center">
+            <label class="flex items-center gap-2 text-sm"><input type="radio" name="driverOption" value="self" required/> Self-drive</label>
+            <label class="flex items-center gap-2 text-sm"><input type="radio" name="driverOption" value="company-driver" required/> Company driver</label>
+          </div>
+        </div>
+
+        <div id="selfDriveFields" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-100 pt-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Next of Kin — Name</label>
+            <input id="nextOfKinName" class="w-full border border-gray-300 rounded px-3 py-2"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Next of Kin — Phone</label>
+            <input id="nextOfKinPhone" class="w-full border border-gray-300 rounded px-3 py-2"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Next of Kin — Relationship</label>
+            <input id="nextOfKinRelationship" class="w-full border border-gray-300 rounded px-3 py-2"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Driver's Licence Number</label>
+            <input id="driverLicenseNumber" class="w-full border border-gray-300 rounded px-3 py-2"/>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium mb-1">Photo of Driver's Licence</label>
+            <input id="driverLicenseImage" type="file" accept="image/*" class="w-full border border-gray-300 rounded px-3 py-2"/>
+          </div>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium mb-1">Photo of Proof of Residence</label>
+          <input id="proofOfResidenceImage" type="file" accept="image/*" required class="w-full border border-gray-300 rounded px-3 py-2"/>
+        </div>
+
         <div>
           <label class="block text-sm font-medium mb-1">Daily Rate (ZMW) — optional</label>
           <input id="dailyRate" type="number" min="0" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Auto-filled from vehicle"/>
@@ -99,10 +142,12 @@
       <div class="p-6 pb-0">
         <h2 class="font-bold text-lg text-[#3B4A1E] mb-4" style="font-family:'Montserrat',sans-serif">All Bookings</h2>
         <div class="flex flex-wrap gap-2 mb-5" id="filterTabs">
-          <button type="button" class="filter-tab" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" class="filter-tab" data-filter="requested" aria-pressed="true">Requested</button>
+          <button type="button" class="filter-tab" data-filter="all" aria-pressed="false">All</button>
           <button type="button" class="filter-tab" data-filter="out" aria-pressed="false">Out</button>
           <button type="button" class="filter-tab" data-filter="overdue" aria-pressed="false">Overdue</button>
           <button type="button" class="filter-tab" data-filter="returned" aria-pressed="false">Returned</button>
+          <button type="button" class="filter-tab" data-filter="declined" aria-pressed="false">Declined</button>
         </div>
       </div>
       <div class="overflow-x-auto">
@@ -144,7 +189,7 @@
 
   let vehicles = [];
   let bookings = [];
-  let currentFilter = "all";
+  let currentFilter = "requested";
 
   function escapeHtml(str) {
     const div = document.createElement("div");
@@ -179,6 +224,16 @@
     }
   });
 
+  // ---- Self-drive vs company-driver toggle ----
+  const selfDriveFields = document.getElementById("selfDriveFields");
+  const driverOptionInputs = form.querySelectorAll('input[name="driverOption"]');
+  driverOptionInputs.forEach((el) => {
+    el.addEventListener("change", () => {
+      const isCompanyDriver = el.value === "company-driver" && el.checked;
+      selfDriveFields.classList.toggle("hidden", isCompanyDriver);
+    });
+  });
+
   // ---- Load + render bookings ----
   function render() {
     const visible = currentFilter === "all" ? bookings : bookings.filter((b) => b.computedStatus === currentFilter);
@@ -197,14 +252,32 @@
         <td>
           <p class="font-semibold">${escapeHtml(b.renterName)}</p>
           <p class="booking-detail">${escapeHtml(b.renterPhone)}${b.renterEmail ? " · " + escapeHtml(b.renterEmail) : ""}</p>
+          <p class="booking-detail">${b.driverOption === "self" ? "Self-drive" : "Company driver"}${b.residentialAddress ? " · " + escapeHtml(b.residentialAddress) : ""}</p>
+          <p class="booking-detail">
+            ${b.proofOfResidenceUrl ? `<a href="${b.proofOfResidenceUrl}" target="_blank" rel="noopener" class="underline">Proof of residence</a>` : ""}
+            ${b.driverLicenseImageUrl ? ` · <a href="${b.driverLicenseImageUrl}" target="_blank" rel="noopener" class="underline">Licence photo</a>` : ""}
+          </p>
         </td>
         <td>${fmtDate(b.pickupDate)}</td>
         <td>${fmtDate(b.expectedReturnDate)}</td>
-        <td><span class="status-pill status-pill--${b.computedStatus}">${b.computedStatus}</span></td>
         <td>
-          ${b.computedStatus !== "returned"
+          <span class="status-pill status-pill--${b.computedStatus}">${b.computedStatus}</span>
+          ${b.requestStatus === "confirmed" ? `
+          <label class="flex items-center gap-1 booking-detail mt-2 cursor-pointer">
+            <input type="checkbox" data-contract="${b._id}" ${b.contractSigned ? "checked" : ""}/> Contract signed
+          </label>` : ""}
+        </td>
+        <td>
+          ${b.computedStatus === "requested"
+            ? `<div class="flex gap-2">
+                <button data-confirm="${b._id}" class="text-sm px-3 py-1.5 bg-[#3B4A1E] text-white rounded hover:opacity-90">Confirm</button>
+                <button data-decline="${b._id}" class="text-sm px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50">Decline</button>
+               </div>`
+            : b.computedStatus === "out" || b.computedStatus === "overdue"
             ? `<button data-return="${b._id}" class="text-sm px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50">Mark Returned</button>`
-            : `<span class="booking-detail">Returned ${fmtDate(b.actualReturnDate)}</span>`
+            : b.computedStatus === "returned"
+            ? `<span class="booking-detail">Returned ${fmtDate(b.actualReturnDate)}</span>`
+            : `<span class="booking-detail">Declined</span>`
           }
         </td>
       </tr>
@@ -212,6 +285,15 @@
 
     body.querySelectorAll("[data-return]").forEach((btn) => {
       btn.addEventListener("click", () => markReturned(btn.dataset.return));
+    });
+    body.querySelectorAll("[data-contract]").forEach((checkbox) => {
+      checkbox.addEventListener("change", () => toggleContractSigned(checkbox.dataset.contract, checkbox.checked));
+    });
+    body.querySelectorAll("[data-confirm]").forEach((btn) => {
+      btn.addEventListener("click", () => confirmBooking(btn.dataset.confirm));
+    });
+    body.querySelectorAll("[data-decline]").forEach((btn) => {
+      btn.addEventListener("click", () => declineBooking(btn.dataset.decline));
     });
   }
 
@@ -221,6 +303,27 @@
       render();
     } catch (err) {
       body.innerHTML = `<tr><td colspan="6" class="text-center text-red-600 py-8">Could not load bookings.</td></tr>`;
+    }
+  }
+
+  async function confirmBooking(id) {
+    try {
+      const res = await fetch(`/api/bookings/${id}/confirm`, { method: "PATCH" });
+      if (!res.ok) throw new Error();
+      loadBookings();
+    } catch (err) {
+      alert("Could not confirm this booking. Please try again.");
+    }
+  }
+
+  async function declineBooking(id) {
+    if (!confirm("Decline this booking request? The renter will not be notified automatically — let them know separately if needed.")) return;
+    try {
+      const res = await fetch(`/api/bookings/${id}/decline`, { method: "PATCH" });
+      if (!res.ok) throw new Error();
+      loadBookings();
+    } catch (err) {
+      alert("Could not decline this booking. Please try again.");
     }
   }
 
@@ -234,32 +337,59 @@
     }
   }
 
+  async function toggleContractSigned(id, contractSigned) {
+    try {
+      const res = await fetch(`/api/bookings/${id}/contract`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contractSigned }),
+      });
+      if (!res.ok) throw new Error();
+      loadBookings();
+    } catch (err) {
+      alert("Could not update contract status. Please try again.");
+    }
+  }
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     formError.classList.add("hidden");
 
     const opt = vehicleSelect.selectedOptions[0];
-    const payload = {
-      vehicleId: vehicleSelect.value,
-      vehicleName: opt ? opt.dataset.name : "",
-      renterName: document.getElementById("renterName").value,
-      renterPhone: document.getElementById("renterPhone").value,
-      renterEmail: document.getElementById("renterEmail").value,
-      dailyRate: dailyRateInput.value || undefined,
-      pickupDate: document.getElementById("pickupDate").value,
-      expectedReturnDate: document.getElementById("expectedReturnDate").value,
-      notes: document.getElementById("notes").value,
-    };
+    const formData = new FormData();
+    formData.append("vehicleId", vehicleSelect.value);
+    formData.append("vehicleName", opt ? opt.dataset.name : "");
+    formData.append("renterName", document.getElementById("renterName").value);
+    formData.append("renterPhone", document.getElementById("renterPhone").value);
+    formData.append("renterEmail", document.getElementById("renterEmail").value);
+    formData.append("residentialAddress", document.getElementById("residentialAddress").value);
+    formData.append("dailyRate", dailyRateInput.value || "");
+    formData.append("pickupDate", document.getElementById("pickupDate").value);
+    formData.append("expectedReturnDate", document.getElementById("expectedReturnDate").value);
+    formData.append("notes", document.getElementById("notes").value);
+
+    const driverOption = form.querySelector('input[name="driverOption"]:checked');
+    formData.append("driverOption", driverOption ? driverOption.value : "");
+    if (driverOption && driverOption.value === "self") {
+      formData.append("nextOfKinName", document.getElementById("nextOfKinName").value);
+      formData.append("nextOfKinPhone", document.getElementById("nextOfKinPhone").value);
+      formData.append("nextOfKinRelationship", document.getElementById("nextOfKinRelationship").value);
+      formData.append("driverLicenseNumber", document.getElementById("driverLicenseNumber").value);
+      const licenseFile = document.getElementById("driverLicenseImage").files[0];
+      if (licenseFile) formData.append("driverLicenseImage", licenseFile);
+    }
+    const residenceFile = document.getElementById("proofOfResidenceImage").files[0];
+    if (residenceFile) formData.append("proofOfResidenceImage", residenceFile);
 
     try {
       const res = await fetch("/api/bookings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: formData,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       form.reset();
+      selfDriveFields.classList.remove("hidden");
       loadBookings();
     } catch (err) {
       formError.textContent = err.message;

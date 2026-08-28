@@ -142,6 +142,19 @@ const uploadSingleImage = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
+// Booking KYC docs — a photo of the driver's licence and a photo of a
+// proof-of-residence document, each capped at one file. Kept as its own
+// multer instance (rather than reusing uploadSingleImage) because it needs
+// two distinct named fields at once via .fields(), not .single().
+const uploadBookingDocs = multer({
+  storage: memoryStorage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: 5 * 1024 * 1024, files: 2 },
+}).fields([
+  { name: "driverLicenseImage", maxCount: 1 },
+  { name: "proofOfResidenceImage", maxCount: 1 },
+]);
+
 module.exports = {
   cloudinary,
   uploadImageBuffer,
@@ -150,5 +163,6 @@ module.exports = {
   deleteCloudinaryImages,
   uploadFleetImages,
   uploadSingleImage,
+  uploadBookingDocs,
   IMAGE_FILTER_ERROR,
 };
