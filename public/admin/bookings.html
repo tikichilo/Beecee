@@ -6,29 +6,160 @@
 <title>Bookings - Bee Cee Logistics Admin</title>
 <meta name="robots" content="noindex, nofollow"/>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link href="/admin/admin-shared.css" rel="stylesheet"/>
 <style>
-  .filter-tab{
-    padding:8px 14px; border-radius:100px; font-size:13px; font-weight:600;
-    border:1px solid #e5e7eb; color:#4b5563; background:#fff; cursor:pointer;
+  /* ==========================================================================
+     Bookings page — scoped tokens. Reuses the site's actual brand colors
+     (olive primary / amber accent) rather than generic dashboard grays, so
+     this still reads as Bee Cee Logistics and not a templated admin kit.
+     ========================================================================== */
+  .bp{
+    --bp-primary:#3B4A1E;
+    --bp-primary-dark:#2C3717;
+    --bp-accent:#FDC34D;
+    --bp-accent-ink:#7B5800;
+    --bp-canvas:#F6F7F3;
+    --bp-surface:#FFFFFF;
+    --bp-border:#E3E6DC;
+    --bp-text:#191C1D;
+    --bp-muted:#667085;
+    --bp-danger:#BA1A1A;
+    --bp-success:#146C2E;
+    color:var(--bp-text);
   }
-  .filter-tab[aria-pressed="true"]{ background:#3B4A1E; color:#fff; border-color:#3B4A1E; }
-  .status-pill{ font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:100px; text-transform:capitalize; display:inline-block; }
-  .status-pill--requested{ background:#fdc34d33; color:#7b5800; }
-  .status-pill--out{ background:#3B4A1E1a; color:#3B4A1E; }
-  .status-pill--overdue{ background:#ba1a1a1a; color:#ba1a1a; }
-  .status-pill--returned{ background:#e5e7eb; color:#6b7280; }
-  .status-pill--declined{ background:#ba1a1a1a; color:#6b7280; }
+  .bp .material-symbols-outlined{ font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 20; font-size:20px; line-height:1; }
+
+  /* ---- Stat row ---- */
+  .stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  @media (max-width:800px){ .stat-grid{ grid-template-columns:repeat(2,1fr); } }
+  .stat-card{
+    background:var(--bp-surface); border:1px solid var(--bp-border); border-left:3px solid var(--bp-accent-color,var(--bp-muted));
+    border-radius:10px; padding:16px 18px; display:flex; flex-direction:column; gap:6px;
+  }
+  .stat-card__top{ display:flex; align-items:center; justify-content:space-between; }
+  .stat-card__label{ font-size:12.5px; font-weight:600; color:var(--bp-muted); }
+  .stat-card__value{ font-family:"Montserrat",sans-serif; font-size:30px; font-weight:700; line-height:1; color:var(--bp-text); }
+  .stat-card--requested{ --bp-accent-color:var(--bp-accent-ink); }
+  .stat-card--out{ --bp-accent-color:var(--bp-primary); }
+  .stat-card--overdue{ --bp-accent-color:var(--bp-danger); }
+  .stat-card--returned{ --bp-accent-color:var(--bp-muted); }
+  .stat-card__icon{ color:var(--bp-accent-color,var(--bp-muted)); }
+
+  /* ---- Panels ---- */
+  .panel{ background:var(--bp-surface); border:1px solid var(--bp-border); border-radius:10px; }
+  .panel__header{ display:flex; align-items:center; justify-content:space-between; padding:18px 20px; }
+  .panel__title{ font-family:"Montserrat",sans-serif; font-weight:700; font-size:16px; color:var(--bp-primary); display:flex; align-items:center; gap:8px; }
+
+  /* ---- New Booking disclosure ---- */
+  #newBookingToggle{
+    display:flex; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--bp-primary);
+    background:var(--bp-canvas); border:1px solid var(--bp-border); border-radius:8px; padding:8px 14px; cursor:pointer;
+    transition:background-color .15s ease;
+  }
+  #newBookingToggle:hover{ background:#EDEFE7; }
+  #newBookingToggle .material-symbols-outlined{ transition:transform .2s ease; }
+  #newBookingToggle[aria-expanded="true"] .material-symbols-outlined{ transform:rotate(45deg); }
+  #newBookingPanel{ border-top:1px solid var(--bp-border); padding:20px; }
+  #newBookingPanel[hidden]{ display:none; }
+
+  .field-section{ display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; letter-spacing:.03em; color:var(--bp-accent-ink); text-transform:uppercase; margin:22px 0 12px; }
+  .field-section:first-child{ margin-top:0; }
+  .field-section .material-symbols-outlined{ font-size:16px; color:var(--bp-primary); }
+
+  .bp label.field-label{ display:block; font-size:12.5px; font-weight:600; color:var(--bp-muted); margin-bottom:5px; }
+  .bp .field-input{
+    width:100%; border:1px solid var(--bp-border); border-radius:8px; padding:9px 12px; font-size:13.5px;
+    background:var(--bp-surface); transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .bp .field-input:focus{ outline:none; border-color:var(--bp-primary); box-shadow:0 0 0 3px #3B4A1E1a; }
+
+  .segmented{ display:inline-flex; border:1px solid var(--bp-border); border-radius:8px; overflow:hidden; }
+  .segmented label{ padding:9px 16px; font-size:13px; font-weight:600; color:var(--bp-muted); cursor:pointer; display:flex; align-items:center; gap:6px; }
+  .segmented label + label{ border-left:1px solid var(--bp-border); }
+  .segmented input{ display:none; }
+  .segmented input:checked + span{ color:var(--bp-primary); }
+  .segmented label:has(input:checked){ background:#3B4A1E14; }
+
+  .btn{ display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; border-radius:8px; padding:9px 16px; cursor:pointer; border:1px solid transparent; transition:opacity .15s ease, background-color .15s ease; }
+  .btn-primary{ background:var(--bp-primary); color:#fff; }
+  .btn-primary:hover{ opacity:.9; }
+  .btn-outline{ background:var(--bp-surface); border-color:var(--bp-border); color:var(--bp-text); }
+  .btn-outline:hover{ background:var(--bp-canvas); }
+  .btn-sm{ padding:6px 12px; font-size:12.5px; }
+  .btn-danger-outline{ background:var(--bp-surface); border-color:#f0c9c9; color:var(--bp-danger); }
+  .btn-danger-outline:hover{ background:#ba1a1a0d; }
+
+  /* ---- Bookings list toolbar ---- */
+  .toolbar{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:20px 20px 0; }
+  .search-box{ position:relative; }
+  .search-box .material-symbols-outlined{ position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--bp-muted); font-size:18px; }
+  .search-box input{ padding:8px 12px 8px 34px; border:1px solid var(--bp-border); border-radius:8px; font-size:13px; width:220px; background:var(--bp-surface); }
+  .search-box input:focus{ outline:none; border-color:var(--bp-primary); }
+
+  .filter-tab{
+    padding:7px 14px; border-radius:100px; font-size:12.5px; font-weight:600;
+    border:1px solid var(--bp-border); color:var(--bp-muted); background:var(--bp-surface); cursor:pointer;
+    transition:background-color .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .filter-tab[aria-pressed="true"]{ background:var(--bp-primary); color:#fff; border-color:var(--bp-primary); }
+  .filter-tab .count{ opacity:.75; margin-left:2px; }
+
+  /* ---- Status pill ---- */
+  .status-pill{ font-size:11.5px; font-weight:700; padding:4px 10px 4px 8px; border-radius:100px; text-transform:capitalize; display:inline-flex; align-items:center; gap:5px; }
+  .status-pill::before{ content:""; width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+  .status-pill--requested{ background:#fdc34d33; color:var(--bp-accent-ink); }
+  .status-pill--out{ background:#3B4A1E1a; color:var(--bp-primary); }
+  .status-pill--overdue{ background:#ba1a1a1a; color:var(--bp-danger); }
+  .status-pill--returned{ background:#e5e7eb; color:var(--bp-muted); }
+  .status-pill--declined{ background:#00000010; color:var(--bp-muted); text-decoration:line-through; }
+
+  .contract-toggle{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--bp-muted); margin-top:8px; cursor:pointer; }
+  .contract-toggle input{ accent-color:var(--bp-primary); width:14px; height:14px; }
+
+  /* ---- Table ---- */
   table.bookings-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
   table.bookings-table th{
-    text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:0.04em;
-    color:#6b7280; font-weight:600; padding:10px 12px; border-bottom:1px solid #e5e7eb;
+    text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.05em;
+    color:var(--bp-muted); font-weight:600; padding:11px 12px; border-bottom:1px solid var(--bp-border);
   }
-  table.bookings-table td{ padding:12px; border-bottom:1px solid #f1f2f3; vertical-align:top; }
+  table.bookings-table td{ padding:14px 12px; border-bottom:1px solid #F1F2ED; vertical-align:top; }
+  table.bookings-table tbody tr:hover{ background:var(--bp-canvas); }
   table.bookings-table tr:last-child td{ border-bottom:none; }
-  .booking-detail{ font-size:12px; color:#6b7280; margin-top:2px; }
+  table.bookings-table tr.is-overdue{ box-shadow:inset 3px 0 0 var(--bp-danger); }
+
+  .booking-detail{ font-size:12px; color:var(--bp-muted); margin-top:2px; }
+  .contact-line{ display:flex; flex-direction:column; gap:2px; }
+  .contact-link{
+    display:inline-flex; align-items:center; gap:4px; color:var(--bp-muted); text-decoration:none;
+    transition:color .15s ease;
+  }
+  .contact-link:hover{ color:var(--bp-primary); text-decoration:underline; }
+  .contact-link .material-symbols-outlined{ font-size:14px; }
+  .chip{ display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:2px 8px; border-radius:100px; background:var(--bp-canvas); color:var(--bp-text); border:1px solid var(--bp-border); margin-top:4px; }
+  .chip .material-symbols-outlined{ font-size:13px; }
+
+  .avatar{
+    width:32px; height:32px; border-radius:50%; background:var(--bp-primary); color:#fff; font-family:"Montserrat",sans-serif;
+    font-weight:700; font-size:12.5px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .renter-row{ display:flex; gap:10px; }
+
+  .doc-thumbs{ display:flex; gap:6px; margin-top:6px; }
+  .doc-thumb{
+    width:34px; height:34px; border-radius:6px; border:1px solid var(--bp-border); overflow:hidden; display:block;
+    background:var(--bp-canvas); position:relative;
+  }
+  .doc-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .doc-thumb__label{
+    position:absolute; bottom:0; left:0; right:0; font-size:8px; text-align:center; background:rgba(0,0,0,.55); color:#fff;
+    line-height:1.4; padding:0 1px;
+  }
+
+  .empty-state{ text-align:center; padding:48px 20px; color:var(--bp-muted); }
+  .empty-state .material-symbols-outlined{ font-size:32px; color:var(--bp-border); margin-bottom:8px; }
+  .empty-state p{ font-size:13.5px; }
 </style>
 </head>
 <body class="admin-body">
@@ -44,111 +175,166 @@
     <div class="admin-topbar__meta" id="whoami"></div>
   </header>
 
-  <main class="admin-content flex flex-col gap-8">
+  <main class="admin-content bp flex flex-col gap-6">
 
-    <!-- New booking form -->
-    <section class="bg-white border border-gray-200 rounded-lg p-6">
-      <h2 class="font-bold text-lg text-[#3B4A1E] mb-4" style="font-family:'Montserrat',sans-serif">New Booking</h2>
-      <form id="bookingForm" class="grid grid-cols-1 md:grid-cols-2 gap-4" enctype="multipart/form-data">
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium mb-1">Vehicle</label>
-          <select id="vehicleSelect" required class="w-full border border-gray-300 rounded px-3 py-2">
-            <option value="" disabled selected>Loading vehicles…</option>
-          </select>
+    <!-- Stat row -->
+    <div class="stat-grid">
+      <div class="stat-card stat-card--requested">
+        <div class="stat-card__top">
+          <span class="stat-card__label">Requested</span>
+          <span class="material-symbols-outlined stat-card__icon">inbox</span>
         </div>
+        <span class="stat-card__value" id="statRequested">–</span>
+      </div>
+      <div class="stat-card stat-card--out">
+        <div class="stat-card__top">
+          <span class="stat-card__label">Out</span>
+          <span class="material-symbols-outlined stat-card__icon">directions_car</span>
+        </div>
+        <span class="stat-card__value" id="statOut">–</span>
+      </div>
+      <div class="stat-card stat-card--overdue">
+        <div class="stat-card__top">
+          <span class="stat-card__label">Overdue</span>
+          <span class="material-symbols-outlined stat-card__icon">warning</span>
+        </div>
+        <span class="stat-card__value" id="statOverdue">–</span>
+      </div>
+      <div class="stat-card stat-card--returned">
+        <div class="stat-card__top">
+          <span class="stat-card__label">Returned</span>
+          <span class="material-symbols-outlined stat-card__icon">task_alt</span>
+        </div>
+        <span class="stat-card__value" id="statReturned">–</span>
+      </div>
+    </div>
 
-        <div>
-          <label class="block text-sm font-medium mb-1">Renter Name</label>
-          <input id="renterName" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Jane Mwansa"/>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Renter Phone</label>
-          <input id="renterPhone" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="+260 97 0000000"/>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Renter Email — optional</label>
-          <input id="renterEmail" type="email" class="w-full border border-gray-300 rounded px-3 py-2"/>
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium mb-1">Residential Address</label>
-          <input id="residentialAddress" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Plot / house number, street, area"/>
-        </div>
+    <!-- New booking (collapsed by default — reviewing requests is the default job here) -->
+    <section class="panel">
+      <div class="panel__header">
+        <span class="panel__title"><span class="material-symbols-outlined">directions_car</span>New Booking</span>
+        <button type="button" id="newBookingToggle" aria-expanded="false" aria-controls="newBookingPanel">
+          <span class="material-symbols-outlined">add</span>
+          <span id="newBookingToggleLabel">Add walk-in booking</span>
+        </button>
+      </div>
+      <div id="newBookingPanel" hidden>
+        <form id="bookingForm" enctype="multipart/form-data">
 
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium mb-1">Who is driving?</label>
-          <div class="flex gap-6 items-center">
-            <label class="flex items-center gap-2 text-sm"><input type="radio" name="driverOption" value="self" required/> Self-drive</label>
-            <label class="flex items-center gap-2 text-sm"><input type="radio" name="driverOption" value="company-driver" required/> Company driver</label>
+          <div class="field-section"><span class="material-symbols-outlined">person</span>Renter Details</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="field-label">Vehicle</label>
+              <select id="vehicleSelect" required class="field-input">
+                <option value="" disabled selected>Loading vehicles…</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Renter Name</label>
+              <input id="renterName" required class="field-input" placeholder="Jane Mwansa"/>
+            </div>
+            <div>
+              <label class="field-label">Renter Phone</label>
+              <input id="renterPhone" required class="field-input" placeholder="+260 97 0000000"/>
+            </div>
+            <div>
+              <label class="field-label">Renter Email — optional</label>
+              <input id="renterEmail" type="email" class="field-input"/>
+            </div>
+            <div>
+              <label class="field-label">Residential Address</label>
+              <input id="residentialAddress" required class="field-input" placeholder="Plot / house number, street, area"/>
+            </div>
           </div>
-        </div>
 
-        <div id="selfDriveFields" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-100 pt-4">
-          <div>
-            <label class="block text-sm font-medium mb-1">Next of Kin — Name</label>
-            <input id="nextOfKinName" class="w-full border border-gray-300 rounded px-3 py-2"/>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Next of Kin — Phone</label>
-            <input id="nextOfKinPhone" class="w-full border border-gray-300 rounded px-3 py-2"/>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Next of Kin — Relationship</label>
-            <input id="nextOfKinRelationship" class="w-full border border-gray-300 rounded px-3 py-2"/>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1">Driver's Licence Number</label>
-            <input id="driverLicenseNumber" class="w-full border border-gray-300 rounded px-3 py-2"/>
-          </div>
-          <div class="md:col-span-2">
-            <label class="block text-sm font-medium mb-1">Photo of Driver's Licence</label>
-            <input id="driverLicenseImage" type="file" accept="image/*" class="w-full border border-gray-300 rounded px-3 py-2"/>
-          </div>
-        </div>
+          <div class="field-section"><span class="material-symbols-outlined">badge</span>Driver &amp; Documents</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2">
+              <label class="field-label">Who is driving?</label>
+              <div class="segmented">
+                <label><input type="radio" name="driverOption" value="self" required/><span>Self-drive</span></label>
+                <label><input type="radio" name="driverOption" value="company-driver" required/><span>Company driver</span></label>
+              </div>
+            </div>
 
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium mb-1">Photo of Proof of Residence</label>
-          <input id="proofOfResidenceImage" type="file" accept="image/*" required class="w-full border border-gray-300 rounded px-3 py-2"/>
-        </div>
+            <div id="selfDriveFields" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="field-label">Next of Kin — Name</label>
+                <input id="nextOfKinName" class="field-input"/>
+              </div>
+              <div>
+                <label class="field-label">Next of Kin — Phone</label>
+                <input id="nextOfKinPhone" class="field-input"/>
+              </div>
+              <div>
+                <label class="field-label">Next of Kin — Relationship</label>
+                <input id="nextOfKinRelationship" class="field-input"/>
+              </div>
+              <div>
+                <label class="field-label">Driver's Licence Number</label>
+                <input id="driverLicenseNumber" class="field-input"/>
+              </div>
+              <div class="md:col-span-2">
+                <label class="field-label">Photo of Driver's Licence</label>
+                <input id="driverLicenseImage" type="file" accept="image/*" class="field-input"/>
+              </div>
+            </div>
 
-        <div>
-          <label class="block text-sm font-medium mb-1">Daily Rate (ZMW) — optional</label>
-          <input id="dailyRate" type="number" min="0" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Auto-filled from vehicle"/>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Pickup Date</label>
-          <input id="pickupDate" type="date" required class="w-full border border-gray-300 rounded px-3 py-2"/>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1">Expected Return Date</label>
-          <input id="expectedReturnDate" type="date" required class="w-full border border-gray-300 rounded px-3 py-2"/>
-        </div>
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium mb-1">Notes — optional</label>
-          <textarea id="notes" rows="2" class="w-full border border-gray-300 rounded px-3 py-2"></textarea>
-        </div>
+            <div class="md:col-span-2">
+              <label class="field-label">Photo of Proof of Residence</label>
+              <input id="proofOfResidenceImage" type="file" accept="image/*" required class="field-input"/>
+            </div>
+          </div>
 
-        <p id="formError" class="md:col-span-2 text-sm text-red-600 hidden"></p>
+          <div class="field-section"><span class="material-symbols-outlined">calendar_month</span>Schedule</div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="field-label">Daily Rate (ZMW) — optional</label>
+              <input id="dailyRate" type="number" min="0" class="field-input" placeholder="Auto-filled from vehicle"/>
+            </div>
+            <div></div>
+            <div>
+              <label class="field-label">Pickup Date</label>
+              <input id="pickupDate" type="date" required class="field-input"/>
+            </div>
+            <div>
+              <label class="field-label">Expected Return Date</label>
+              <input id="expectedReturnDate" type="date" required class="field-input"/>
+            </div>
+            <div class="md:col-span-2">
+              <label class="field-label">Notes — optional</label>
+              <textarea id="notes" rows="2" class="field-input"></textarea>
+            </div>
+          </div>
 
-        <div class="md:col-span-2">
-          <button type="submit" class="bg-[#3B4A1E] text-white font-semibold rounded px-5 py-2 hover:opacity-90 transition">
-            <span id="submitLabel">Create Booking</span>
-          </button>
-        </div>
-      </form>
+          <p id="formError" class="text-sm mt-4 hidden" style="color:var(--bp-danger)"></p>
+
+          <div class="mt-6">
+            <button type="submit" class="btn btn-primary">
+              <span class="material-symbols-outlined" style="font-size:16px">check</span>
+              <span id="submitLabel">Create Booking</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </section>
 
     <!-- Booking list -->
-    <section class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      <div class="p-6 pb-0">
-        <h2 class="font-bold text-lg text-[#3B4A1E] mb-4" style="font-family:'Montserrat',sans-serif">All Bookings</h2>
-        <div class="flex flex-wrap gap-2 mb-5" id="filterTabs">
-          <button type="button" class="filter-tab" data-filter="requested" aria-pressed="true">Requested</button>
-          <button type="button" class="filter-tab" data-filter="all" aria-pressed="false">All</button>
-          <button type="button" class="filter-tab" data-filter="out" aria-pressed="false">Out</button>
-          <button type="button" class="filter-tab" data-filter="overdue" aria-pressed="false">Overdue</button>
-          <button type="button" class="filter-tab" data-filter="returned" aria-pressed="false">Returned</button>
-          <button type="button" class="filter-tab" data-filter="declined" aria-pressed="false">Declined</button>
+    <section class="panel overflow-hidden">
+      <div class="toolbar">
+        <span class="panel__title"><span class="material-symbols-outlined">list_alt</span>Bookings</span>
+        <div class="search-box">
+          <span class="material-symbols-outlined">search</span>
+          <input type="text" id="renterSearch" placeholder="Search renter or phone…"/>
         </div>
+      </div>
+      <div class="flex flex-wrap gap-2" style="padding:14px 20px 18px" id="filterTabs">
+        <button type="button" class="filter-tab" data-filter="requested" aria-pressed="true">Requested <span class="count" id="countRequested"></span></button>
+        <button type="button" class="filter-tab" data-filter="all" aria-pressed="false">All</button>
+        <button type="button" class="filter-tab" data-filter="out" aria-pressed="false">Out <span class="count" id="countOut"></span></button>
+        <button type="button" class="filter-tab" data-filter="overdue" aria-pressed="false">Overdue <span class="count" id="countOverdue"></span></button>
+        <button type="button" class="filter-tab" data-filter="returned" aria-pressed="false">Returned</button>
+        <button type="button" class="filter-tab" data-filter="declined" aria-pressed="false">Declined</button>
       </div>
       <div class="overflow-x-auto">
         <table class="bookings-table">
@@ -186,10 +372,16 @@
   const dailyRateInput = document.getElementById("dailyRate");
   const body = document.getElementById("bookingsBody");
   const filterTabs = document.getElementById("filterTabs");
+  const searchInput = document.getElementById("renterSearch");
+
+  const newBookingToggle = document.getElementById("newBookingToggle");
+  const newBookingToggleLabel = document.getElementById("newBookingToggleLabel");
+  const newBookingPanel = document.getElementById("newBookingPanel");
 
   let vehicles = [];
   let bookings = [];
   let currentFilter = "requested";
+  let searchTerm = "";
 
   function escapeHtml(str) {
     const div = document.createElement("div");
@@ -201,6 +393,20 @@
     if (!iso) return "—";
     return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
   }
+
+  function initials(name) {
+    if (!name) return "?";
+    const parts = name.trim().split(/\s+/);
+    return ((parts[0] && parts[0][0]) || "") + ((parts[1] && parts[1][0]) || "");
+  }
+
+  // ---- New Booking disclosure ----
+  newBookingToggle.addEventListener("click", () => {
+    const isOpen = newBookingToggle.getAttribute("aria-expanded") === "true";
+    newBookingToggle.setAttribute("aria-expanded", String(!isOpen));
+    newBookingPanel.hidden = isOpen;
+    newBookingToggleLabel.textContent = isOpen ? "Add walk-in booking" : "Close";
+  });
 
   // ---- Load vehicles for the dropdown ----
   async function loadVehicles() {
@@ -234,52 +440,114 @@
     });
   });
 
+  // ---- Stat counts (computed from the full unfiltered list) ----
+  function renderStats() {
+    const counts = { requested: 0, out: 0, overdue: 0, returned: 0 };
+    bookings.forEach((b) => {
+      if (counts[b.computedStatus] !== undefined) counts[b.computedStatus]++;
+    });
+    document.getElementById("statRequested").textContent = counts.requested;
+    document.getElementById("statOut").textContent = counts.out;
+    document.getElementById("statOverdue").textContent = counts.overdue;
+    document.getElementById("statReturned").textContent = counts.returned;
+
+    document.getElementById("countRequested").textContent = counts.requested ? counts.requested : "";
+    document.getElementById("countOut").textContent = counts.out ? counts.out : "";
+    document.getElementById("countOverdue").textContent = counts.overdue ? counts.overdue : "";
+  }
+
+  function docThumbs(b) {
+    const thumbs = [];
+    if (b.proofOfResidenceUrl) {
+      thumbs.push(`<a href="${b.proofOfResidenceUrl}" target="_blank" rel="noopener" class="doc-thumb" title="Proof of residence">
+        <img src="${b.proofOfResidenceUrl}" alt="Proof of residence"/><span class="doc-thumb__label">Res.</span>
+      </a>`);
+    }
+    if (b.driverLicenseImageUrl) {
+      thumbs.push(`<a href="${b.driverLicenseImageUrl}" target="_blank" rel="noopener" class="doc-thumb" title="Driver's licence">
+        <img src="${b.driverLicenseImageUrl}" alt="Driver's licence"/><span class="doc-thumb__label">Lic.</span>
+      </a>`);
+    }
+    return thumbs.length ? `<div class="doc-thumbs">${thumbs.join("")}</div>` : "";
+  }
+
+  function actionsCell(b) {
+    if (b.computedStatus === "requested") {
+      return `<div class="flex gap-2">
+        <button data-confirm="${b._id}" class="btn btn-primary btn-sm"><span class="material-symbols-outlined" style="font-size:14px">check</span>Confirm</button>
+        <button data-decline="${b._id}" class="btn btn-danger-outline btn-sm">Decline</button>
+      </div>`;
+    }
+    if (b.computedStatus === "out" || b.computedStatus === "overdue") {
+      return `<button data-return="${b._id}" class="btn btn-outline btn-sm">Mark Returned</button>`;
+    }
+    if (b.computedStatus === "returned") {
+      return `<span class="booking-detail">Returned ${fmtDate(b.actualReturnDate)}</span>`;
+    }
+    return `<span class="booking-detail">Declined</span>`;
+  }
+
   // ---- Load + render bookings ----
   function render() {
-    const visible = currentFilter === "all" ? bookings : bookings.filter((b) => b.computedStatus === currentFilter);
+    renderStats();
+
+    let visible = currentFilter === "all" ? bookings.slice() : bookings.filter((b) => b.computedStatus === currentFilter);
+
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      visible = visible.filter((b) =>
+        (b.renterName || "").toLowerCase().includes(q) || (b.renterPhone || "").toLowerCase().includes(q)
+      );
+    }
 
     if (!visible.length) {
-      body.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-8">No bookings here yet.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="6">
+        <div class="empty-state">
+          <span class="material-symbols-outlined">inbox</span>
+          <p>${searchTerm ? "No bookings match your search." : "No bookings here yet."}</p>
+        </div>
+      </td></tr>`;
       return;
     }
 
     body.innerHTML = visible.map((b) => `
-      <tr>
+      <tr class="${b.computedStatus === "overdue" ? "is-overdue" : ""}">
         <td>
           <p class="font-semibold">${escapeHtml(b.vehicleName)}</p>
           ${b.dailyRate ? `<p class="booking-detail">K${b.dailyRate}/day</p>` : ""}
         </td>
         <td>
-          <p class="font-semibold">${escapeHtml(b.renterName)}</p>
-          <p class="booking-detail">${escapeHtml(b.renterPhone)}${b.renterEmail ? " · " + escapeHtml(b.renterEmail) : ""}</p>
-          <p class="booking-detail">${b.driverOption === "self" ? "Self-drive" : "Company driver"}${b.residentialAddress ? " · " + escapeHtml(b.residentialAddress) : ""}</p>
-          <p class="booking-detail">
-            ${b.proofOfResidenceUrl ? `<a href="${b.proofOfResidenceUrl}" target="_blank" rel="noopener" class="underline">Proof of residence</a>` : ""}
-            ${b.driverLicenseImageUrl ? ` · <a href="${b.driverLicenseImageUrl}" target="_blank" rel="noopener" class="underline">Licence photo</a>` : ""}
-          </p>
+          <div class="renter-row">
+            <span class="avatar">${escapeHtml(initials(b.renterName)).toUpperCase()}</span>
+            <div>
+              <p class="font-semibold">${escapeHtml(b.renterName)}</p>
+              <p class="booking-detail contact-line">
+                <a class="contact-link" href="tel:${escapeHtml(String(b.renterPhone || "").replace(/[^\d+]/g, ""))}">
+                  <span class="material-symbols-outlined">call</span>${escapeHtml(b.renterPhone)}
+                </a>
+                ${b.renterEmail ? `<a class="contact-link" href="mailto:${escapeHtml(b.renterEmail)}">
+                  <span class="material-symbols-outlined">mail</span>${escapeHtml(b.renterEmail)}
+                </a>` : ""}
+              </p>
+              ${b.residentialAddress ? `<p class="booking-detail">${escapeHtml(b.residentialAddress)}</p>` : ""}
+              <span class="chip">
+                <span class="material-symbols-outlined">${b.driverOption === "self" ? "person" : "airport_shuttle"}</span>
+                ${b.driverOption === "self" ? "Self-drive" : "Company driver"}
+              </span>
+              ${docThumbs(b)}
+            </div>
+          </div>
         </td>
         <td>${fmtDate(b.pickupDate)}</td>
         <td>${fmtDate(b.expectedReturnDate)}</td>
         <td>
           <span class="status-pill status-pill--${b.computedStatus}">${b.computedStatus}</span>
           ${b.requestStatus === "confirmed" ? `
-          <label class="flex items-center gap-1 booking-detail mt-2 cursor-pointer">
+          <label class="contract-toggle">
             <input type="checkbox" data-contract="${b._id}" ${b.contractSigned ? "checked" : ""}/> Contract signed
           </label>` : ""}
         </td>
-        <td>
-          ${b.computedStatus === "requested"
-            ? `<div class="flex gap-2">
-                <button data-confirm="${b._id}" class="text-sm px-3 py-1.5 bg-[#3B4A1E] text-white rounded hover:opacity-90">Confirm</button>
-                <button data-decline="${b._id}" class="text-sm px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50">Decline</button>
-               </div>`
-            : b.computedStatus === "out" || b.computedStatus === "overdue"
-            ? `<button data-return="${b._id}" class="text-sm px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50">Mark Returned</button>`
-            : b.computedStatus === "returned"
-            ? `<span class="booking-detail">Returned ${fmtDate(b.actualReturnDate)}</span>`
-            : `<span class="booking-detail">Declined</span>`
-          }
-        </td>
+        <td>${actionsCell(b)}</td>
       </tr>
     `).join("");
 
@@ -390,6 +658,7 @@
       if (!res.ok) throw new Error(data.error || "Something went wrong.");
       form.reset();
       selfDriveFields.classList.remove("hidden");
+      newBookingToggle.click(); // collapse the panel back down after a successful create
       loadBookings();
     } catch (err) {
       formError.textContent = err.message;
@@ -404,6 +673,11 @@
       currentFilter = btn.dataset.filter;
       render();
     });
+  });
+
+  searchInput.addEventListener("input", () => {
+    searchTerm = searchInput.value.trim();
+    render();
   });
 
   loadVehicles();

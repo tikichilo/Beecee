@@ -680,6 +680,71 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 
 /* --------------------------------------------------------------------------
+   Contact page — info list rows, quick-action chips, map card
+   -------------------------------------------------------------------------- */
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #edeeef; /* surface-container */
+}
+.info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.info-row:first-child {
+  padding-top: 0;
+}
+.info-row__icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 0.5rem;
+  background: #E4EAC9; /* primary-fixed */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.quick-action:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+.quick-action .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.map-card {
+  position: relative;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid #c4c6cf; /* outline-variant */
+  background: #e1e3e4; /* surface-variant, shows while the iframe loads */
+}
+.map-card iframe {
+  display: block;
+  width: 100%;
+  height: 320px;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
    Accessibility
    -------------------------------------------------------------------------- */
 a:focus-visible,
@@ -729,9 +794,25 @@ textarea:focus-visible {
 <!-- Main Content Canvas -->
 <main class="flex-grow px-margin-mobile md:px-margin-desktop py-margin-desktop max-w-container-max mx-auto w-full">
 <!-- Hero Section -->
-<section class="text-center mb-[80px]">
-<h1 class="font-display-lg text-display-lg text-primary mb-unit">Let's Talk Logistics</h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">Get in touch with our team for inquiries, quotes, or support. We are here to keep your supply chain moving.</p>
+<section class="bg-primary rounded-xl px-6 py-12 md:px-16 md:py-16 mb-[80px] text-center map-bg">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-primary mb-unit">Let's talk logistics</h1>
+<p class="font-body-lg text-body-lg text-primary-fixed max-w-2xl mx-auto mb-8">
+                Get in touch with our team for inquiries, quotes, or support. We're here to keep your supply chain moving.
+            </p>
+<div class="flex flex-wrap items-center justify-center gap-3">
+<a class="quick-action" href="tel:+260211000000">
+<span class="material-symbols-outlined" aria-hidden="true">call</span>
+                    Call us
+                </a>
+<a class="quick-action" href="https://wa.me/260977480568" target="_blank" rel="noopener">
+<span class="material-symbols-outlined" aria-hidden="true">chat</span>
+                    WhatsApp
+                </a>
+<a class="quick-action" href="mailto:info@beeceelogistics.co.zm">
+<span class="material-symbols-outlined" aria-hidden="true">mail</span>
+                    Email us
+                </a>
+</div>
 </section>
 <!-- Split Layout: Contact Info & Map / Form -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-[80px]">
@@ -739,61 +820,101 @@ textarea:focus-visible {
 <div class="flex flex-col gap-gutter">
 <!-- Contact Info Card -->
 <div class="bg-surface-container-lowest p-gutter rounded-lg border border-outline-variant shadow-[0px_4px_12px_rgba(31,58,95,0.08)]">
-<h2 class="font-headline-md text-headline-md text-primary mb-gutter">Contact Information</h2>
-<div class="flex flex-col gap-6">
-<div class="flex items-start gap-4">
-<span class="material-symbols-outlined text-secondary icon-fill" aria-hidden="true">location_on</span>
+<h2 class="font-headline-md text-headline-md text-primary mb-4">Contact information</h2>
+<div class="flex flex-col">
+<div class="info-row">
+<div class="info-row__icon">
+<span class="material-symbols-outlined text-primary icon-fill" aria-hidden="true">location_on</span>
+</div>
 <div>
-<h3 class="font-body-md text-body-md font-semibold text-on-surface">Head Office</h3>
-<p class="font-body-md text-body-md text-on-surface-variant">Musonda Ngosa Rd,<br/>Villa Elizabetha,<br/>Lusaka, Zambia</p>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Head office</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Musonda Ngosa Rd, Villa Elizabetha, Lusaka, Zambia</p>
 </div>
 </div>
-<div class="flex items-start gap-4">
-<span class="material-symbols-outlined text-secondary icon-fill" aria-hidden="true">call</span>
+<div class="info-row">
+<div class="info-row__icon">
+<span class="material-symbols-outlined text-primary icon-fill" aria-hidden="true">call</span>
+</div>
 <div>
-<h3 class="font-body-md text-body-md font-semibold text-on-surface">Phone / WhatsApp</h3>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Phone</h3>
 <p class="font-body-md text-body-md text-on-surface-variant"><a class="hover:text-primary transition-colors" href="tel:+260211000000">+260 211 000 000</a></p>
 </div>
 </div>
-<div class="flex items-start gap-4">
-<span class="material-symbols-outlined text-secondary icon-fill" aria-hidden="true">mail</span>
+<div class="info-row">
+<div class="info-row__icon">
+<span class="material-symbols-outlined text-primary icon-fill" aria-hidden="true">chat</span>
+</div>
+<div>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">WhatsApp</h3>
+<p class="font-body-md text-body-md text-on-surface-variant"><a class="hover:text-primary transition-colors" href="https://wa.me/260977480568" target="_blank" rel="noopener">+260 977 480 568</a></p>
+</div>
+</div>
+<div class="info-row">
+<div class="info-row__icon">
+<span class="material-symbols-outlined text-primary icon-fill" aria-hidden="true">mail</span>
+</div>
 <div>
 <h3 class="font-body-md text-body-md font-semibold text-on-surface">Email</h3>
 <p class="font-body-md text-body-md text-on-surface-variant"><a class="hover:text-primary transition-colors" href="mailto:info@beeceelogistics.co.zm">info@beeceelogistics.co.zm</a></p>
 </div>
 </div>
+<div class="info-row">
+<div class="info-row__icon">
+<span class="material-symbols-outlined text-primary icon-fill" aria-hidden="true">schedule</span>
+</div>
+<div>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface">Business hours</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Monday – Friday, 08:00 – 17:00<br/>Saturday, 08:00 – 13:00</p>
 </div>
 </div>
-<!-- Embedded Map Card -->
-<div class="bg-surface-container-lowest p-unit rounded-lg border border-outline-variant h-[300px] overflow-hidden">
-<img class="w-full h-full object-cover rounded-DEFAULT" alt="Map view of Lusaka, Zambia highlighting the Villa Elizabetha area near the head office" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCtRUaTT3H6OamB03XAYy-NuUh7OEsr5tGZ_4CSr0HXF8Tp24s5Zo2mwEtmJICuPBwKiKAio73Vx9JoYkGC10GcQh2HAcgvuHKnLXBgpkfUmfie5eM0EsVWYuQCuojkmroSJ8xAhz_XlSzwozLnUE4GaXo4jKs6pxtg8Q2faAyrU772e7UaK02pPCjngOC-SakKDlv1oGeFtoMPUFk7IYM4i9f4KQQCB_t_VynjNC-lVwhIh4ZCxDqR"/>
+</div>
+</div>
+<!-- Live Map Card -->
+<div class="bg-surface-container-lowest p-gutter rounded-lg border border-outline-variant">
+<div class="map-card mb-4">
+<iframe
+                        src="https://www.google.com/maps?q=Musonda+Ngosa+Road,+Villa+Elizabetha,+Lusaka,+Zambia&output=embed"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        title="Map showing Bee Cee Logistics head office in Villa Elizabetha, Lusaka">
+</iframe>
+</div>
+<a class="link-arrow" href="https://www.google.com/maps/dir/?api=1&destination=Musonda+Ngosa+Road,+Villa+Elizabetha,+Lusaka,+Zambia" target="_blank" rel="noopener">
+                    Get directions <span class="material-symbols-outlined text-sm" aria-hidden="true">arrow_forward</span>
+</a>
 </div>
 </div>
 <!-- Right Column: Contact Form -->
 <div class="bg-surface-container-lowest p-gutter rounded-lg border border-outline-variant shadow-[0px_4px_12px_rgba(31,58,95,0.08)]">
-<h2 class="font-headline-md text-headline-md text-primary mb-2">Send an Inquiry</h2>
-<p class="font-body-md text-body-md text-on-surface-variant mb-gutter">Fill out the form below and our team will get back to you shortly.</p>
+<h2 class="font-headline-md text-headline-md text-primary mb-2">Send an inquiry</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-gutter">Fill out the form below and our team will get back to you within one business day.</p>
 <form class="flex flex-col gap-6" data-contact-form="">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <div class="flex flex-col gap-2">
-<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="firstName">First Name</label>
+<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="firstName">First name</label>
 <input class="form-field font-body-md text-body-md" id="firstName" name="firstName" placeholder="John" type="text" required=""/>
 </div>
 <div class="flex flex-col gap-2">
-<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="lastName">Last Name</label>
+<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="lastName">Last name</label>
 <input class="form-field font-body-md text-body-md" id="lastName" name="lastName" placeholder="Doe" type="text" required=""/>
 </div>
 </div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 <div class="flex flex-col gap-2">
-<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="email">Email Address</label>
+<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="email">Email address</label>
 <input class="form-field font-body-md text-body-md" id="email" name="email" placeholder="john@company.com" type="email" required=""/>
 </div>
 <div class="flex flex-col gap-2">
-<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="inquiryType">Inquiry Type</label>
+<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="phone">Phone number <span class="font-normal text-on-surface-variant normal-case tracking-normal">(optional)</span></label>
+<input class="form-field font-body-md text-body-md" id="phone" name="phone" placeholder="+260 9XX XXX XXX" type="tel"/>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface font-semibold" for="inquiryType">Inquiry type</label>
 <select class="form-field font-body-md text-body-md" id="inquiryType" name="inquiryType">
-<option>General Inquiry</option>
-<option>Request a Quote</option>
-<option>Fleet Services</option>
+<option>General inquiry</option>
+<option>Request a quote</option>
+<option>Fleet services</option>
 <option>Support</option>
 </select>
 </div>
@@ -801,7 +922,13 @@ textarea:focus-visible {
 <label class="font-label-sm text-label-sm text-on-surface font-semibold" for="message">Message</label>
 <textarea class="form-field font-body-md text-body-md resize-none" id="message" name="message" placeholder="How can we help you?" rows="5" required=""></textarea>
 </div>
-<button class="btn btn-primary mt-4 w-full md:w-auto self-start" type="submit">Submit Message</button>
+<div class="flex flex-col gap-3">
+<button class="btn btn-primary w-full md:w-auto self-start" type="submit">
+<span class="material-symbols-outlined text-sm" aria-hidden="true">send</span>
+                        Send message
+                    </button>
+<p class="font-body-md text-body-md text-on-surface-variant text-xs">We only use your details to respond to this inquiry — never shared with third parties.</p>
+</div>
 </form>
 </div>
 </div>
@@ -826,13 +953,25 @@ textarea:focus-visible {
 <a class="text-on-primary-container hover:text-on-primary transition-colors" href="clientarea.html">Client Portal</a>
 </div>
 <div class="flex flex-col gap-2">
-<h4 class="text-on-primary font-bold mb-2">Compliance</h4>
-<div class="flex flex-wrap gap-2">
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZPPA Certified</span>
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZRA Compliant</span>
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">NAPSA Registered</span>
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">PACRA Verified</span>
-</div>
+  <h4 class="text-on-primary font-bold mb-2">Compliance</h4>
+  <div class="flex flex-wrap gap-2">
+    <a href="documents/zppa-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      ZPPA Certified
+    </a>
+    <a href="documents/zra-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      ZRA Compliant
+    </a>
+    <a href="documents/napsa-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      NAPSA Registered
+    </a>
+    <a href="documents/pacra-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      PACRA Verified
+    </a>
+  </div>
 </div>
 <div class="col-span-1 md:col-span-4 mt-4 pt-4 border-t border-primary-container/40 text-on-primary-container">
             © <span data-current-year="">2024</span> Bee Cee Logistics Ltd. All rights reserved. <span class="opacity-70">· Site by <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="https://tikichilo.github.io/tiki-portfolio/experience.html" target="_blank" rel="noopener">Tiki Chilomo</a> · <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="/admin">Staff Login</a></span>

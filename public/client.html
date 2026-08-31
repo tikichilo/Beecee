@@ -699,6 +699,42 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 
 /* --------------------------------------------------------------------------
+   Partner tiles — client.html's logo grid. Each tile links out to the
+   partner's real website; the corner glyph only reveals on hover/focus so
+   the grid stays clean until someone means to interact with it.
+   -------------------------------------------------------------------------- */
+.partner-tile {
+  position: relative;
+  text-decoration: none;
+}
+.partner-tile__external {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 16px;
+  color: #7b5800; /* secondary */
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.partner-tile:hover .partner-tile__external,
+.partner-tile:focus-visible .partner-tile__external {
+  opacity: 1;
+  transform: translateY(0);
+}
+.partner-tile:hover,
+.partner-tile:focus-visible {
+  border-color: #3B4A1E; /* primary */
+}
+.partner-tile:hover .partner-tile__label,
+.partner-tile:focus-visible .partner-tile__label {
+  color: #3B4A1E; /* primary */
+}
+.partner-tile__label {
+  transition: color 0.15s ease;
+}
+
+/* --------------------------------------------------------------------------
    Accessibility
    -------------------------------------------------------------------------- */
 a:focus-visible,
@@ -759,41 +795,48 @@ textarea:focus-visible {
 <h2 class="font-headline-md text-headline-md text-primary">Our Partners in Progress</h2>
 </div>
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow">
-<div class="text-center text-primary-container font-label-sm text-label-sm font-bold opacity-80 uppercase tracking-wider">
+<a class="partner-tile bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow" href="https://www.parliament.gov.zm/" target="_blank" rel="noopener" aria-label="Visit the National Assembly of Zambia website (opens in a new tab)">
+<span class="material-symbols-outlined partner-tile__external" aria-hidden="true">open_in_new</span>
+<div class="partner-tile__label text-center text-primary-container font-label-sm text-label-sm font-bold opacity-80 uppercase tracking-wider">
                         National Assembly<br/>of Zambia
                     </div>
-</div>
-<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow">
-<div class="text-center text-primary-container font-headline-md text-headline-md font-bold opacity-80 uppercase tracking-widest">
+</a>
+<a class="partner-tile bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow" href="https://www.oxfam.org/en/what-we-do/countries/zambia" target="_blank" rel="noopener" aria-label="Visit Oxfam's Zambia programme page (opens in a new tab)">
+<span class="material-symbols-outlined partner-tile__external" aria-hidden="true">open_in_new</span>
+<div class="partner-tile__label text-center text-primary-container font-headline-md text-headline-md font-bold opacity-80 uppercase tracking-widest">
                         Oxfam
                     </div>
-</div>
-<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow">
-<div class="text-center text-primary-container font-display-lg text-display-lg font-bold opacity-80">
+</a>
+<a class="partner-tile bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow" href="https://www.giz.de/en/regions/africa/zambia" target="_blank" rel="noopener" aria-label="Visit GIZ's Zambia page (opens in a new tab)">
+<span class="material-symbols-outlined partner-tile__external" aria-hidden="true">open_in_new</span>
+<div class="partner-tile__label text-center text-primary-container font-display-lg text-display-lg font-bold opacity-80">
                         giz
                     </div>
-</div>
-<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow">
-<div class="text-center text-primary-container font-label-sm text-label-sm font-bold opacity-80 uppercase tracking-wider">
+</a>
+<a class="partner-tile bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow" href="https://www.elections.org.zm/" target="_blank" rel="noopener" aria-label="Visit the Electoral Commission of Zambia website (opens in a new tab)">
+<span class="material-symbols-outlined partner-tile__external" aria-hidden="true">open_in_new</span>
+<div class="partner-tile__label text-center text-primary-container font-label-sm text-label-sm font-bold opacity-80 uppercase tracking-wider">
                         Electoral Commission<br/>of Zambia
                     </div>
-</div>
-<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow">
-<div class="text-center text-primary-container font-display-lg text-display-lg font-bold opacity-80 tracking-tighter">
+</a>
+<a class="partner-tile bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow" href="https://www.pwc.com/zm/en.html" target="_blank" rel="noopener" aria-label="Visit PwC Zambia's website (opens in a new tab)">
+<span class="material-symbols-outlined partner-tile__external" aria-hidden="true">open_in_new</span>
+<div class="partner-tile__label text-center text-primary-container font-display-lg text-display-lg font-bold opacity-80 tracking-tighter">
                         pwc
                     </div>
-</div>
-<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow">
-<div class="text-center text-primary-container font-label-sm text-label-sm font-bold opacity-80 uppercase tracking-wider">
+</a>
+<a class="partner-tile bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow" href="https://www.crs.org/where-we-work/africa/zambia" target="_blank" rel="noopener" aria-label="Visit Catholic Relief Services' Zambia page (opens in a new tab)">
+<span class="material-symbols-outlined partner-tile__external" aria-hidden="true">open_in_new</span>
+<div class="partner-tile__label text-center text-primary-container font-label-sm text-label-sm font-bold opacity-80 uppercase tracking-wider">
                         Catholic Relief<br/>Services
                     </div>
-</div>
-<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow">
-<div class="text-center text-primary-container font-headline-md text-headline-md font-bold opacity-80">
+</a>
+<a class="partner-tile bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex items-center justify-center h-32 hover:shadow-[0px_4px_12px_rgba(31,58,95,0.08)] transition-shadow" href="https://www.chaz.org.zm/" target="_blank" rel="noopener" aria-label="Visit the Churches Health Association of Zambia website (opens in a new tab)">
+<span class="material-symbols-outlined partner-tile__external" aria-hidden="true">open_in_new</span>
+<div class="partner-tile__label text-center text-primary-container font-headline-md text-headline-md font-bold opacity-80">
                         CHAZ
                     </div>
-</div>
+</a>
 </div>
 </section>
 <!-- Case Studies (Bento Grid Style) -->
@@ -876,13 +919,25 @@ textarea:focus-visible {
 <a class="text-on-primary-container hover:text-on-primary transition-colors" href="clientarea.html">Client Portal</a>
 </div>
 <div class="flex flex-col gap-2">
-<h4 class="text-on-primary font-bold mb-2">Compliance</h4>
-<div class="flex flex-wrap gap-2">
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZPPA Certified</span>
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZRA Compliant</span>
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">NAPSA Registered</span>
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">PACRA Verified</span>
-</div>
+  <h4 class="text-on-primary font-bold mb-2">Compliance</h4>
+  <div class="flex flex-wrap gap-2">
+    <a href="documents/zppa-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      ZPPA Certified
+    </a>
+    <a href="documents/zra-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      ZRA Compliant
+    </a>
+    <a href="documents/napsa-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      NAPSA Registered
+    </a>
+    <a href="documents/pacra-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      PACRA Verified
+    </a>
+  </div>
 </div>
 <div class="col-span-1 md:col-span-4 mt-4 pt-4 border-t border-primary-container/40 text-on-primary-container">
             © <span data-current-year="">2024</span> Bee Cee Logistics Ltd. All rights reserved. <span class="opacity-70">· Site by <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="https://tikichilo.github.io/tiki-portfolio/experience.html" target="_blank" rel="noopener">Tiki Chilomo</a> · <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="/admin">Staff Login</a></span>

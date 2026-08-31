@@ -661,13 +661,21 @@ h1, h2, h3, h4, h5, h6, .display-font {
    Fleet filters
    -------------------------------------------------------------------------- */
 .fleet-filter {
-  padding: 8px 16px;
-  border-radius: 0.125rem;
+  padding: 10px 18px;
+  border-radius: 9999px;
   border: 1px solid #c4c6cf; /* outline-variant */
-  background: #f8f9fa; /* surface */
+  background: #ffffff; /* surface-container-lowest */
   color: #43474e; /* on-surface-variant */
   font-family: "Inter", sans-serif;
-  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  font-weight: 600;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.fleet-filter .material-symbols-outlined {
+  font-size: 18px;
 }
 .fleet-filter:hover {
   border-color: #3B4A1E;
@@ -694,10 +702,83 @@ h1, h2, h3, h4, h5, h6, .display-font {
   color: #ffffff;
   border-color: #3B4A1E;
   font-weight: 700;
+  box-shadow: 0 4px 10px rgba(59, 74, 30, 0.25);
 }
 
 .fleet-card[hidden] {
   display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Fleet page — hero stat strip, skeleton loading state for the live grid,
+   "how it works" steps, and the closing booking CTA banner.
+   -------------------------------------------------------------------------- */
+.fleet-stat-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  margin-top: 24px;
+}
+.fleet-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fleet-stat .material-symbols-outlined {
+  color: #7b5800; /* secondary */
+  font-size: 22px;
+}
+.fleet-stat span:last-child {
+  color: #43474e; /* on-surface-variant */
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.fleet-skeleton-card {
+  border: 1px solid #c4c6cf; /* outline-variant */
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #ffffff;
+}
+.fleet-skeleton-media {
+  height: 180px;
+  background: linear-gradient(90deg, #edeeef 25%, #e1e3e4 37%, #edeeef 63%);
+  background-size: 400% 100%;
+  animation: fleet-skeleton-shimmer 1.4s ease infinite;
+}
+.fleet-skeleton-line {
+  height: 12px;
+  border-radius: 0.25rem;
+  background: linear-gradient(90deg, #edeeef 25%, #e1e3e4 37%, #edeeef 63%);
+  background-size: 400% 100%;
+  animation: fleet-skeleton-shimmer 1.4s ease infinite;
+}
+@keyframes fleet-skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fleet-skeleton-media, .fleet-skeleton-line { animation: none; }
+}
+
+.fleet-step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.fleet-step__index {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background: #3B4A1E; /* primary */
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
 }
 
 /* --------------------------------------------------------------------------
@@ -750,21 +831,119 @@ textarea:focus-visible {
 </div>
 <main class="flex-grow px-margin-mobile md:px-margin-desktop py-margin-desktop max-w-container-max mx-auto w-full">
 <!-- Header & Filters -->
-<section class="mb-gutter text-center md:text-left">
+<section class="mb-10 text-center">
 <h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-4">Our Fleet</h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Reliable vehicles for every logistics need, from executive transport to heavy freight.</p>
-</section>
-<section class="mb-8 overflow-x-auto pb-2">
-<div class="flex gap-4 min-w-max" data-fleet-filters="" role="group" aria-label="Filter fleet by category">
-<button class="fleet-filter" data-filter="all" aria-pressed="true">All</button>
-<button class="fleet-filter" data-filter="saloon" aria-pressed="false">Saloon Cars</button>
-<button class="fleet-filter" data-filter="4x4" aria-pressed="false">4x4 &amp; SUVs</button>
-<button class="fleet-filter" data-filter="bus" aria-pressed="false">Buses</button>
-<button class="fleet-filter" data-filter="truck" aria-pressed="false">Trucks</button>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">Reliable vehicles for every logistics need, from executive transport to heavy freight — ready to hire across Zambia.</p>
+<div class="fleet-stat-strip justify-center">
+<div class="fleet-stat">
+<span class="material-symbols-outlined icon-fill" aria-hidden="true">workspace_premium</span>
+<span>28+ years combined experience</span>
+</div>
+<div class="fleet-stat">
+<span class="material-symbols-outlined icon-fill" aria-hidden="true">category</span>
+<span>Saloon, 4x4, bus &amp; truck categories</span>
+</div>
+<div class="fleet-stat">
+<span class="material-symbols-outlined icon-fill" aria-hidden="true">public</span>
+<span>Available nationwide</span>
+</div>
 </div>
 </section>
-<!-- Fleet Grid — populated live from the fleet dashboard via /api/fleet -->
-<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter" data-fleet-grid></section>
+<section class="mb-8 overflow-x-auto pb-2">
+<div class="flex gap-3 min-w-max" data-fleet-filters="" role="group" aria-label="Filter fleet by category">
+<button class="fleet-filter" data-filter="all" aria-pressed="true">
+<span class="material-symbols-outlined" aria-hidden="true">apps</span>
+                    All
+                </button>
+<button class="fleet-filter" data-filter="saloon" aria-pressed="false">
+<span class="material-symbols-outlined" aria-hidden="true">directions_car</span>
+                    Saloon Cars
+                </button>
+<button class="fleet-filter" data-filter="4x4" aria-pressed="false">
+<span class="material-symbols-outlined" aria-hidden="true">terrain</span>
+                    4x4 &amp; SUVs
+                </button>
+<button class="fleet-filter" data-filter="bus" aria-pressed="false">
+<span class="material-symbols-outlined" aria-hidden="true">directions_bus</span>
+                    Buses
+                </button>
+<button class="fleet-filter" data-filter="truck" aria-pressed="false">
+<span class="material-symbols-outlined" aria-hidden="true">local_shipping</span>
+                    Trucks
+                </button>
+</div>
+</section>
+<!-- Fleet Grid — populated live from the fleet dashboard via /api/fleet.
+     The skeleton cards below are the initial state only; BeeCeeFleet
+     replaces this content once /api/fleet responds. -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter mb-20" data-fleet-grid aria-live="polite" aria-busy="true">
+<div class="fleet-skeleton-card" aria-hidden="true">
+<div class="fleet-skeleton-media"></div>
+<div class="p-4 flex flex-col gap-3">
+<div class="fleet-skeleton-line" style="width: 60%;"></div>
+<div class="fleet-skeleton-line" style="width: 40%;"></div>
+<div class="fleet-skeleton-line" style="width: 80%;"></div>
+</div>
+</div>
+<div class="fleet-skeleton-card" aria-hidden="true">
+<div class="fleet-skeleton-media"></div>
+<div class="p-4 flex flex-col gap-3">
+<div class="fleet-skeleton-line" style="width: 60%;"></div>
+<div class="fleet-skeleton-line" style="width: 40%;"></div>
+<div class="fleet-skeleton-line" style="width: 80%;"></div>
+</div>
+</div>
+<div class="fleet-skeleton-card" aria-hidden="true">
+<div class="fleet-skeleton-media"></div>
+<div class="p-4 flex flex-col gap-3">
+<div class="fleet-skeleton-line" style="width: 60%;"></div>
+<div class="fleet-skeleton-line" style="width: 40%;"></div>
+<div class="fleet-skeleton-line" style="width: 80%;"></div>
+</div>
+</div>
+</section>
+<!-- How hiring works -->
+<section class="mb-20">
+<div class="flex items-center gap-4 mb-10 border-b border-outline-variant pb-4">
+<span class="material-symbols-outlined text-primary text-3xl icon-fill" aria-hidden="true">checklist</span>
+<h2 class="font-headline-md text-headline-md text-primary">How Hiring Works</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="fleet-step">
+<div class="fleet-step__index">1</div>
+<div>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface mb-1">Choose a vehicle</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Filter by category above to find the right fit for your trip or project.</p>
+</div>
+</div>
+<div class="fleet-step">
+<div class="fleet-step__index">2</div>
+<div>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface mb-1">Request a quote</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Tell us your dates and destination — we'll confirm pricing and availability quickly.</p>
+</div>
+</div>
+<div class="fleet-step">
+<div class="fleet-step__index">3</div>
+<div>
+<h3 class="font-body-md text-body-md font-semibold text-on-surface mb-1">We deliver, on time</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Your vehicle is prepared and ready at the agreed pickup point, right on schedule.</p>
+</div>
+</div>
+</div>
+<div class="mt-8 flex items-start gap-3 bg-surface-container-low border border-outline-variant rounded-lg p-4 max-w-3xl">
+<span class="material-symbols-outlined text-secondary" aria-hidden="true">info</span>
+<p class="font-body-md text-body-md text-on-surface-variant">Quoted rates are for self-drive hire. Requesting a company driver is available at an additional cost — let us know when requesting your quote.</p>
+</div>
+</section>
+<!-- Booking CTA banner -->
+<section class="bg-primary rounded-xl px-6 py-12 md:px-16 md:py-14 text-center map-bg">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-primary mb-4">Need Custom Car Hire?</h2>
+<p class="font-body-lg text-body-lg text-primary-fixed max-w-2xl mx-auto mb-8">Whether it's one vehicle or several at once for group travel, events, or a larger project, we'll put together a custom car hire quote to match.</p>
+<a class="btn btn-primary" href="request.html">
+                Request a Quote <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+</a>
+</section>
 </main>
 <!-- Footer -->
 <footer class="w-full py-margin-desktop px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-4 gap-gutter bg-primary border-t border-primary-container mt-auto text-on-primary font-label-sm text-label-sm">
@@ -786,13 +965,25 @@ textarea:focus-visible {
 <a class="text-on-primary-container hover:text-on-primary transition-colors" href="clientarea.html">Client Portal</a>
 </div>
 <div class="flex flex-col gap-2">
-<h4 class="text-on-primary font-bold mb-2">Compliance</h4>
-<div class="flex flex-wrap gap-2">
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZPPA Certified</span>
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZRA Compliant</span>
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">NAPSA Registered</span>
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">PACRA Verified</span>
-</div>
+  <h4 class="text-on-primary font-bold mb-2">Compliance</h4>
+  <div class="flex flex-wrap gap-2">
+    <a href="documents/zppa-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      ZPPA Certified
+    </a>
+    <a href="documents/zra-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      ZRA Compliant
+    </a>
+    <a href="documents/napsa-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      NAPSA Registered
+    </a>
+    <a href="documents/pacra-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      PACRA Verified
+    </a>
+  </div>
 </div>
 <div class="col-span-1 md:col-span-4 mt-4 pt-4 border-t border-primary-container/40 text-on-primary-container">
             © <span data-current-year="">2024</span> Bee Cee Logistics Ltd. All rights reserved. <span class="opacity-70">· Site by <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="https://tikichilo.github.io/tiki-portfolio/experience.html" target="_blank" rel="noopener">Tiki Chilomo</a> · <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="/admin">Staff Login</a></span>

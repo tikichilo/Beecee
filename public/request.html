@@ -217,6 +217,22 @@ tailwind.config = {
     setupFormValidation("[data-contact-form]", contactFormFields);
     setupFormValidation("[data-quote-form]", quoteFormFields, "/api/quote-requests");
     setupVehicleBooking();
+    setupRemovalsRequest();
+  }
+
+  /* ------------------------------------------------------------------------
+     Switches between the three request.html modes (quote / vehicle booking /
+     removals) — only one is ever visible at a time.
+     ------------------------------------------------------------------------ */
+  function showRequestMode(mode) {
+    const modes = {
+      quote: document.querySelector("[data-quote-mode]"),
+      booking: document.querySelector("[data-booking-mode]"),
+      removals: document.querySelector("[data-removals-mode]"),
+    };
+    Object.entries(modes).forEach(([key, el]) => {
+      if (el) el.hidden = key !== mode;
+    });
   }
 
   /* ------------------------------------------------------------------------
@@ -283,8 +299,7 @@ tailwind.config = {
     const vehicleId = new URLSearchParams(window.location.search).get("vehicle");
     if (!vehicleId) return; // stay in normal quote-request mode
 
-    quoteMode.hidden = true;
-    bookingMode.hidden = false;
+    showRequestMode("booking");
 
     const form = bookingMode.querySelector("[data-booking-form]");
     const nameEl = bookingMode.querySelector("[data-booking-vehicle-name]");
@@ -435,6 +450,153 @@ tailwind.config = {
     });
 
     Object.keys(bookingFormFields).forEach((name) => {
+      const field = form.elements.namedItem(name);
+      if (!field) return;
+      field.addEventListener("input", () => setFieldError(field, false));
+      field.addEventListener("change", () => setFieldError(field, false));
+    });
+  }
+
+  /* ------------------------------------------------------------------------
+     Removals & Relocation request (request.html?service=removals) — the
+     "Learn More" link on the Removals & Relocation service card sends
+     people here. Collects identification (NRC for an individual, or a
+     business registration number for a company), pickup/destination,
+     moving date, and proof of residence, then posts to
+     /api/removal-requests for admin review.
+     ------------------------------------------------------------------------ */
+  function setupRemovalsRequest() {
+    const removalsMode = document.querySelector("[data-removals-mode]");
+    if (!removalsMode) return;
+
+    const service = new URLSearchParams(window.location.search).get("service");
+    if (service !== "removals") return; // stay in normal quote-request mode
+
+    showRequestMode("removals");
+
+    const form = removalsMode.querySelector("[data-removals-form]");
+
+    /* --- Individual vs Business toggle -------------------------------------
+       Swaps the ID field's label/placeholder and which document photo is
+       required. Everything shows by default until a choice is made, same
+       as the self-drive/company-driver pattern on the booking form. */
+    const idTypeInputs = form.querySelectorAll('input[name="idType"]');
+    const businessNameField = removalsMode.querySelector("[data-business-only]");
+    const idNumberLabel = removalsMode.querySelector("[data-id-number-label]");
+    const idNumberInput = form.elements.namedItem("idNumber");
+    const idDocLabel = removalsMode.querySelector("[data-id-doc-label]");
+    const idDocInput = form.elements.namedItem("idDocumentImage");
+
+    function applyIdTypeVisibility() {
+      const selected = form.querySelector('input[name="idType"]:checked');
+      const isBusiness = selected && selected.value === "business";
+      const isIndividual = selected && selected.value === "individual";
+
+      // Business Name only makes sense once "Business" is explicitly chosen.
+      if (businessNameField) businessNameField.hidden = !isBusiness;
+      const businessNameInput = form.elements.namedItem("businessName");
+      if (businessNameInput) businessNameInput.required = isBusiness;
+
+      if (isBusiness) {
+        idNumberLabel.textContent = "Business Registration Number (PACRA) *";
+        idNumberInput.placeholder = "e.g., 12345678";
+        idDocLabel.textContent = "Photo of Business Registration Certificate *";
+      } else if (isIndividual) {
+        idNumberLabel.textContent = "NRC Number *";
+        idNumberInput.placeholder = "e.g., 123456/78/1";
+        idDocLabel.textContent = "Photo of NRC *";
+      } else {
+        idNumberLabel.textContent = "NRC / Business Registration Number *";
+        idNumberInput.placeholder = "";
+        idDocLabel.textContent = "Photo of NRC or Business Registration Certificate *";
+      }
+    }
+
+    idTypeInputs.forEach((el) => el.addEventListener("change", applyIdTypeVisibility));
+    applyIdTypeVisibility();
+
+    const removalsFormFields = {
+      fullName: { required: true, label: "Full name" },
+      email: { required: true, label: "Email address", type: "email" },
+      phone: { required: true, label: "Phone number" },
+      idNumber: { required: true, label: "NRC / business registration number" },
+      moveFrom: { required: true, label: "Moving from" },
+      moveTo: { required: true, label: "Moving to" },
+      moveDate: { required: true, label: "Preferred moving date" },
+    };
+
+    form.setAttribute("novalidate", "");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const errors = validate(form, removalsFormFields);
+
+      const idType = form.querySelector('input[name="idType"]:checked');
+      if (!idType) errors.push("idType");
+
+      const isBusiness = idType && idType.value === "business";
+      if (isBusiness) {
+        const businessNameInput = form.elements.namedItem("businessName");
+        if (businessNameInput && !businessNameInput.value.trim()) {
+          setFieldError(businessNameInput, true, "Business name is required.");
+          errors.push("businessName");
+        }
+      }
+
+      if (idDocInput && !idDocInput.files.length) {
+        setFieldError(idDocInput, true, "A photo of the ID / registration document is required.");
+        errors.push("idDocumentImage");
+      }
+
+      const residenceInput = form.elements.namedItem("proofOfResidenceImage");
+      if (residenceInput && !residenceInput.files.length) {
+        setFieldError(residenceInput, true, "A photo of proof of residence is required.");
+        errors.push("proofOfResidenceImage");
+      }
+
+      if (errors.length) {
+        showToast(
+          "Please fix " + errors.length + " field" + (errors.length > 1 ? "s" : "") + " before submitting.",
+          "error"
+        );
+        return;
+      }
+
+      const submitBtn = form.querySelector('[type="submit"]');
+      const originalLabel = submitBtn ? submitBtn.textContent : "";
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending…";
+      }
+
+      try {
+        const formData = new FormData(form);
+        formData.set("idType", idType.value);
+        const res = await fetch("/api/removal-requests", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Something went wrong. Please try again.");
+
+        showToast("Thanks — your move request has been received. We'll be in touch with a quote shortly.");
+        form.reset();
+        applyIdTypeVisibility();
+        Object.keys(removalsFormFields).forEach((name) => {
+          const field = form.elements.namedItem(name);
+          if (field) setFieldError(field, false);
+        });
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalLabel;
+        }
+      }
+    });
+
+    Object.keys(removalsFormFields).forEach((name) => {
       const field = form.elements.namedItem(name);
       if (!field) return;
       field.addEventListener("input", () => setFieldError(field, false));
@@ -1105,6 +1267,112 @@ textarea:focus-visible {
 </form>
 </div>
 </div>
+<!-- Removals & Relocation request mode — shown instead of the quote form
+     when arriving via "Learn More" on the Removals & Relocation service
+     card (request.html?service=removals). -->
+<div data-removals-mode hidden>
+<div class="text-center mb-12">
+<h1 class="font-display-lg text-display-lg text-primary mb-4">Request a Move</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">Tell us about your relocation and we'll follow up with a tailored quote and next steps.</p>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-[0px_4px_12px_rgba(31,58,95,0.08)] overflow-hidden">
+<form class="p-margin-mobile md:p-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter" data-removals-form="" enctype="multipart/form-data">
+
+<!-- Section 1: Contact Information -->
+<div class="col-span-1 md:col-span-2 border-b border-surface-variant pb-4 mb-4">
+<h2 class="font-headline-md text-headline-md text-primary mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" aria-hidden="true">person</span>
+                        Contact Information
+                    </h2>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlFullName">Full Name *</label>
+<input class="form-field font-body-md text-body-md" id="rlFullName" name="fullName" placeholder="John Doe" required="" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlPhone">Phone Number *</label>
+<input class="form-field font-body-md text-body-md" id="rlPhone" name="phone" placeholder="+260 97 0000000" required="" type="tel"/>
+</div>
+<div class="flex flex-col gap-2 col-span-1 md:col-span-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlEmail">Email Address *</label>
+<input class="form-field font-body-md text-body-md" id="rlEmail" name="email" placeholder="john@example.com" required="" type="email"/>
+</div>
+
+<!-- Section 2: Identification -->
+<div class="col-span-1 md:col-span-2 border-b border-surface-variant pb-4 mb-4 mt-6">
+<h2 class="font-headline-md text-headline-md text-primary mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" aria-hidden="true">badge</span>
+                        Identification
+                    </h2>
+</div>
+<div class="flex flex-col gap-2 col-span-1 md:col-span-2">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Who is this move for? *</span>
+<div class="flex flex-col sm:flex-row gap-3">
+<label class="flex items-center gap-2 form-field font-body-md text-body-md cursor-pointer">
+<input id="rlIdTypeIndividual" type="radio" name="idType" value="individual" required/> Individual
+</label>
+<label class="flex items-center gap-2 form-field font-body-md text-body-md cursor-pointer">
+<input id="rlIdTypeBusiness" type="radio" name="idType" value="business" required/> Business
+</label>
+</div>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlIdNumber" data-id-number-label>NRC / Business Registration Number *</label>
+<input class="form-field font-body-md text-body-md" id="rlIdNumber" name="idNumber" required="" type="text"/>
+</div>
+<div class="flex flex-col gap-2" data-business-only hidden>
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlBusinessName">Business Name</label>
+<input class="form-field font-body-md text-body-md" id="rlBusinessName" name="businessName" placeholder="Registered business name" type="text"/>
+</div>
+<div class="flex flex-col gap-2 col-span-1 md:col-span-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlIdDocumentImage" data-id-doc-label>Photo of NRC or Business Registration Certificate *</label>
+<input class="form-field font-body-md text-body-md" id="rlIdDocumentImage" name="idDocumentImage" required="" type="file" accept="image/*"/>
+</div>
+<div class="flex flex-col gap-2 col-span-1 md:col-span-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlProofOfResidenceImage">Photo of Proof of Residence *</label>
+<input class="form-field font-body-md text-body-md" id="rlProofOfResidenceImage" name="proofOfResidenceImage" required="" type="file" accept="image/*"/>
+</div>
+
+<!-- Section 3: Move Details -->
+<div class="col-span-1 md:col-span-2 border-b border-surface-variant pb-4 mb-4 mt-6">
+<h2 class="font-headline-md text-headline-md text-primary mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" aria-hidden="true">local_shipping</span>
+                        Move Details
+                    </h2>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlMoveFrom">Moving From *</label>
+<input class="form-field font-body-md text-body-md" id="rlMoveFrom" name="moveFrom" placeholder="Current address" required="" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlMoveTo">Moving To *</label>
+<input class="form-field font-body-md text-body-md" id="rlMoveTo" name="moveTo" placeholder="Destination address" required="" type="text"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlMoveDate">Preferred Moving Date *</label>
+<input class="form-field font-body-md text-body-md" id="rlMoveDate" name="moveDate" required="" type="date"/>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlAlternateDate">Alternate Date — optional</label>
+<input class="form-field font-body-md text-body-md" id="rlAlternateDate" name="alternateDate" type="date"/>
+</div>
+<div class="flex flex-col gap-2 col-span-1 md:col-span-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlInventory">Items to be Moved — optional</label>
+<textarea class="form-field font-body-md text-body-md resize-none" id="rlInventory" name="inventory" placeholder="Rough list or volume — e.g., 3-bedroom household, office of 12 desks..." rows="3"></textarea>
+</div>
+<div class="flex flex-col gap-2 col-span-1 md:col-span-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="rlNotes">Notes — optional</label>
+<textarea class="form-field font-body-md text-body-md resize-none" id="rlNotes" name="notes" placeholder="Anything else we should know about this move..." rows="3"></textarea>
+</div>
+
+<div class="col-span-1 md:col-span-2 mt-6 flex justify-end">
+<button class="btn btn-primary w-full md:w-auto" type="submit">
+                        Submit Move Request
+                    </button>
+</div>
+</form>
+</div>
+</div>
 </main>
 <!-- Footer -->
 <footer class="w-full py-margin-desktop px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-4 gap-gutter bg-primary border-t border-primary-container mt-auto text-on-primary font-label-sm text-label-sm">
@@ -1126,13 +1394,25 @@ textarea:focus-visible {
 <a class="text-on-primary-container hover:text-on-primary transition-colors" href="clientarea.html">Client Portal</a>
 </div>
 <div class="flex flex-col gap-2">
-<h4 class="text-on-primary font-bold mb-2">Compliance</h4>
-<div class="flex flex-wrap gap-2">
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZPPA Certified</span>
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">ZRA Compliant</span>
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">NAPSA Registered</span>
-<span class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs">PACRA Verified</span>
-</div>
+  <h4 class="text-on-primary font-bold mb-2">Compliance</h4>
+  <div class="flex flex-wrap gap-2">
+    <a href="documents/zppa-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      ZPPA Certified
+    </a>
+    <a href="documents/zra-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      ZRA Compliant
+    </a>
+    <a href="documents/napsa-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      NAPSA Registered
+    </a>
+    <a href="documents/pacra-certificate.pdf" target="_blank" rel="noopener"
+       class="bg-primary-container px-3 py-1 rounded text-on-primary text-xs hover:opacity-80 transition-opacity">
+      PACRA Verified
+    </a>
+  </div>
 </div>
 <div class="col-span-1 md:col-span-4 mt-4 pt-4 border-t border-primary-container/40 text-on-primary-container">
             © <span data-current-year="">2024</span> Bee Cee Logistics Ltd. All rights reserved. <span class="opacity-70">· Site by <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="https://tikichilo.github.io/tiki-portfolio/experience.html" target="_blank" rel="noopener">Tiki Chilomo</a> · <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="/admin">Staff Login</a></span>
