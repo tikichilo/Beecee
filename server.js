@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 
-require("./utils/cloudinaryUpload"); // fail-fast Cloudinary env check + config
+require("./utils/CloudinaryUpload"); // fail-fast Cloudinary env check + config
 
 const authRoutes = require("./routes/auth");
 const fleetRoutes = require("./routes/fleet");

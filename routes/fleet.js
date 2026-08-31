@@ -8,7 +8,7 @@ const {
   uploadImageBuffers,
   deleteCloudinaryImage,
   deleteCloudinaryImages,
-} = require("../utils/cloudinaryUpload");
+} = require("../utils/CloudinaryUpload");
 
 const CLOUDINARY_FOLDER = "bee-cee-logistics/fleet";
 
