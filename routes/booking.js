@@ -5,7 +5,7 @@ const {
   uploadBookingDocs,
   uploadImageBuffer,
   deleteCloudinaryImage,
-} = require("../utils/CloudinaryUpload");
+} = require("../utils/cloudinaryUpload");
 
 const CLOUDINARY_FOLDER = "bee-cee-logistics/booking-docs";
 
