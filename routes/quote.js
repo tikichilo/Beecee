@@ -12,12 +12,54 @@ function requireAuth(req, res, next) {
   next();
 }
 
-router.use(requireAuth);
+// --------------------------------------------------------------------
+// POST /api/quote-requests — public. Used by the "Request a Quote" form.
+// No auth required — this is how prospective customers reach us.
+// --------------------------------------------------------------------
+router.post("/", async (req, res) => {
+  try {
+    const {
+      fullName,
+      company,
+      email,
+      phone,
+      serviceType,
+      dateRange,
+      route,
+      cargoDetails,
+    } = req.body;
+
+    if (!fullName || !email || !phone || !serviceType) {
+      return res.status(400).json({
+        error: "Full name, email, phone, and service type are required.",
+      });
+    }
+    if (!SERVICE_TYPES.includes(serviceType)) {
+      return res.status(400).json({ error: "Invalid service type." });
+    }
+
+    const quote = await QuoteRequest.create({
+      fullName,
+      company,
+      email,
+      phone,
+      serviceType,
+      dateRange,
+      route,
+      cargoDetails,
+    });
+
+    res.status(201).json(quote);
+  } catch (err) {
+    console.error("Quote request creation error:", err.message);
+    res.status(500).json({ error: "Something went wrong submitting your quote request." });
+  }
+});
 
 // --------------------------------------------------------------------
-// GET /api/quote-requests — ?status=new|contacted|closed filter optional
+// GET /api/quote-requests — admin-only. ?status=new|contacted|closed filter optional
 // --------------------------------------------------------------------
-router.get("/", async (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   try {
     const { status } = req.query;
     const filter = status && STATUSES.includes(status) ? { status } : {};
@@ -30,9 +72,9 @@ router.get("/", async (req, res) => {
 });
 
 // --------------------------------------------------------------------
-// PATCH /api/quote-requests/:id — update status
+// PATCH /api/quote-requests/:id — admin-only. update status
 // --------------------------------------------------------------------
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", requireAuth, async (req, res) => {
   try {
     const { status } = req.body;
     if (!status || !STATUSES.includes(status)) {
@@ -54,9 +96,9 @@ router.patch("/:id", async (req, res) => {
 });
 
 // --------------------------------------------------------------------
-// DELETE /api/quote-requests/:id
+// DELETE /api/quote-requests/:id — admin-only
 // --------------------------------------------------------------------
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAuth, async (req, res) => {
   try {
     const quote = await QuoteRequest.findByIdAndDelete(req.params.id);
     if (!quote) return res.status(404).json({ error: "Quote request not found." });

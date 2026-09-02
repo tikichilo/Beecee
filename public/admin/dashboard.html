@@ -37,10 +37,6 @@
     gap: 14px;
   }
 
-  .chart-card--wide {
-    grid-column: 1 / -1;
-  }
-
   .chart-card--empty {
     display: none;
   }
@@ -58,8 +54,10 @@
     height: 220px;
   }
 
-  .chart-card--wide .chart-card__canvas-wrap {
-    height: 240px;
+  @media (max-width: 480px) {
+    .chart-grid { gap: 12px; }
+    .chart-card { padding: 14px 16px; }
+    .chart-card__canvas-wrap { height: 200px; }
   }
 </style>
 </head>
@@ -94,10 +92,6 @@
         <span class="admin-stat-card__label">Overdue Bookings</span>
         <span class="admin-stat-card__value" id="statOverdue">—</span>
       </div>
-      <div class="admin-stat-card">
-        <span class="admin-stat-card__label">Receipts Issued</span>
-        <span class="admin-stat-card__value" id="statReceipts">—</span>
-      </div>
     </div>
 
     <section class="analytics-section" id="analyticsSection">
@@ -122,18 +116,13 @@
           <h3 class="chart-card__title">Quote Requests by Status</h3>
           <div class="chart-card__canvas-wrap"><canvas id="chartQuotesStatus"></canvas></div>
         </div>
-
-        <div class="chart-card chart-card--wide" id="cardReceiptsTrend">
-          <h3 class="chart-card__title">Receipts Issued Over Time</h3>
-          <div class="chart-card__canvas-wrap"><canvas id="chartReceiptsTrend"></canvas></div>
-        </div>
       </div>
     </section>
 
     <div class="admin-empty-state" id="emptyState" style="display:none">
       <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span>
       <h3>Nothing here yet</h3>
-      <p>Once quotes, bookings, and receipts start coming in, this dashboard will reflect them live.</p>
+      <p>Once quotes and bookings start coming in, this dashboard will reflect them live.</p>
     </div>
   </main>
 </div>
@@ -236,69 +225,6 @@
     });
   }
 
-  function renderReceiptsTrend(receipts) {
-    const card = document.getElementById("cardReceiptsTrend");
-
-    // Group by calendar month using createdAt if present. Not every
-    // receipts schema is guaranteed to carry this field, so if it's
-    // missing on every record we quietly hide the card instead of
-    // guessing at a shape that isn't there.
-    const monthMap = new Map(); // sortKey (year*12+month) -> { label, count }
-    receipts.forEach((r) => {
-      if (!r || !r.createdAt) return;
-      const d = new Date(r.createdAt);
-      if (isNaN(d)) return;
-      const sortKey = d.getFullYear() * 12 + d.getMonth();
-      const label = d.toLocaleDateString("en-GB", { month: "short", year: "2-digit" });
-      if (!monthMap.has(sortKey)) monthMap.set(sortKey, { label, count: 0 });
-      monthMap.get(sortKey).count += 1;
-    });
-
-    if (!monthMap.size) {
-      card.classList.add("chart-card--empty");
-      return;
-    }
-    card.classList.remove("chart-card--empty");
-
-    const sorted = Array.from(monthMap.entries()).sort((a, b) => a[0] - b[0]);
-    const labels = sorted.map(([, v]) => v.label);
-    const data = sorted.map(([, v]) => v.count);
-
-    const ctx = document.getElementById("chartReceiptsTrend").getContext("2d");
-    new Chart(ctx, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "Receipts",
-            data,
-            borderColor: "#3B4A1E",
-            backgroundColor: "rgba(140, 179, 62, 0.18)",
-            fill: true,
-            tension: 0.3,
-            pointBackgroundColor: "#8CB33E",
-            pointBorderColor: "#fff",
-            pointRadius: 4,
-            pointHoverRadius: 6,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { titleFont: { family: "Inter" }, bodyFont: { family: "Inter" } },
-        },
-        scales: {
-          y: { beginAtZero: true, ticks: { precision: 0, font: { size: 11 } }, grid: { color: "#f0f1ec" } },
-          x: { ticks: { font: { size: 11 } }, grid: { display: false } },
-        },
-      },
-    });
-  }
-
   async function fetchJsonSafe(url) {
     try {
       const res = await fetch(url);
@@ -311,11 +237,10 @@
   }
 
   async function loadDashboard() {
-    const [fleetRes, bookingsRes, quotesRes, receiptsRes] = await Promise.all([
+    const [fleetRes, bookingsRes, quotesRes] = await Promise.all([
       fetchJsonSafe("/api/fleet"),
       fetchJsonSafe("/api/bookings"),
       fetchJsonSafe("/api/quote-requests"),
-      fetchJsonSafe("/api/receipts"),
     ]);
 
     document.getElementById("statFleet").textContent = fleetRes.ok ? fleetRes.data.length : "—";
@@ -328,14 +253,12 @@
     document.getElementById("statOverdue").textContent = bookingsRes.ok
       ? bookingsRes.data.filter((b) => b.status === "overdue").length
       : "—";
-    document.getElementById("statReceipts").textContent = receiptsRes.ok ? receiptsRes.data.length : "—";
 
     const fleetArr = fleetRes.data;
     const bookingsArr = bookingsRes.data;
     const quotesArr = quotesRes.data;
-    const receiptsArr = receiptsRes.data;
 
-    const hasAnyData = fleetArr.length || bookingsArr.length || quotesArr.length || receiptsArr.length;
+    const hasAnyData = fleetArr.length || bookingsArr.length || quotesArr.length;
 
     document.getElementById("statGrid").style.display = hasAnyData ? "" : "none";
     document.getElementById("analyticsSection").style.display = hasAnyData ? "" : "none";
@@ -347,7 +270,6 @@
     renderDistributionChart("chartFleetStatus", "cardFleetStatus", "bar", countBy(fleetArr, "status"));
     renderDistributionChart("chartBookingsStatus", "cardBookingsStatus", "bar", countBy(bookingsArr, "status"));
     renderDistributionChart("chartQuotesStatus", "cardQuotesStatus", "doughnut", countBy(quotesArr, "status"));
-    renderReceiptsTrend(receiptsArr);
   }
 
   loadDashboard();

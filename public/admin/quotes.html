@@ -30,6 +30,28 @@
   table.quotes-table td{ padding:12px; border-bottom:1px solid #f1f2f3; vertical-align:top; }
   table.quotes-table tr:last-child td{ border-bottom:none; }
   .quote-detail{ font-size:12px; color:#6b7280; margin-top:2px; }
+
+  /* ---- Toolbar & search: usability tweaks for touch/small screens ---- */
+  .filter-tab{ min-height:36px; display:inline-flex; align-items:center; }
+
+  /* ---- Responsive table: below 700px, each row becomes a labeled
+     card instead of forcing horizontal scroll on a 6-column table. ---- */
+  @media (max-width: 700px) {
+    #filterTabs{ overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px; -webkit-overflow-scrolling:touch; }
+    .filter-tab{ flex-shrink:0; }
+
+    table.quotes-table thead{ display:none; }
+    table.quotes-table, table.quotes-table tbody, table.quotes-table tr, table.quotes-table td{ display:block; width:100%; }
+    table.quotes-table tr{ padding:14px 14px 10px; border-bottom:8px solid #f6f7f3; }
+    table.quotes-table td{ border-bottom:none; padding:6px 0; }
+    table.quotes-table td[data-label]::before{
+      content: attr(data-label);
+      display:block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.04em; color:#9aa0a6; margin-bottom:3px;
+    }
+    table.quotes-table td:empty, table.quotes-table td[data-label=""]{ display:none; }
+    table.quotes-table select{ width:100%; }
+  }
 </style>
 </head>
 <body class="admin-body">
@@ -111,20 +133,20 @@
 
     body.innerHTML = visible.map((q) => `
       <tr>
-        <td>
+        <td data-label="Contact">
           <p class="font-semibold">${escapeHtml(q.fullName)}</p>
           ${q.company ? `<p class="quote-detail">${escapeHtml(q.company)}</p>` : ""}
           <p class="quote-detail">${escapeHtml(q.email)} · ${escapeHtml(q.phone)}</p>
         </td>
-        <td>${SERVICE_LABEL[q.serviceType] || escapeHtml(q.serviceType)}</td>
-        <td>
+        <td data-label="Service">${SERVICE_LABEL[q.serviceType] || escapeHtml(q.serviceType)}</td>
+        <td data-label="Details">
           ${q.dateRange ? `<p class="quote-detail">Dates: ${escapeHtml(q.dateRange)}</p>` : ""}
           ${q.route ? `<p class="quote-detail">Route: ${escapeHtml(q.route)}</p>` : ""}
           ${q.cargoDetails ? `<p class="quote-detail" style="max-width:260px">${escapeHtml(q.cargoDetails)}</p>` : ""}
         </td>
-        <td>${fmtDate(q.createdAt)}</td>
-        <td><span class="status-pill status-pill--${q.status}">${q.status}</span></td>
-        <td>
+        <td data-label="Received">${fmtDate(q.createdAt)}</td>
+        <td data-label="Status"><span class="status-pill status-pill--${q.status}">${q.status}</span></td>
+        <td data-label="Update status">
           <select data-status-select="${q._id}" class="border border-gray-300 rounded px-2 py-1 text-xs">
             <option value="new"${q.status === "new" ? " selected" : ""}>New</option>
             <option value="contacted"${q.status === "contacted" ? " selected" : ""}>Contacted</option>

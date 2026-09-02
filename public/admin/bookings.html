@@ -160,6 +160,33 @@
   .empty-state{ text-align:center; padding:48px 20px; color:var(--bp-muted); }
   .empty-state .material-symbols-outlined{ font-size:32px; color:var(--bp-border); margin-bottom:8px; }
   .empty-state p{ font-size:13.5px; }
+
+  /* ---- Usability: bigger touch targets + a search box that isn't
+     pinned to a fixed width on narrower viewports ---- */
+  .btn{ min-height:36px; }
+  .btn-sm{ min-height:32px; }
+  .filter-tab{ min-height:34px; display:inline-flex; align-items:center; }
+  .search-box input{ width:100%; max-width:260px; }
+
+  @media (max-width: 700px) {
+    .toolbar{ flex-direction:column; align-items:stretch; }
+    .search-box input{ max-width:none; }
+    #filterTabs{ overflow-x:auto; flex-wrap:nowrap; padding-bottom:4px; -webkit-overflow-scrolling:touch; }
+    .filter-tab{ flex-shrink:0; }
+
+    /* Below 700px a 6-column table stops being usable even with
+       horizontal scroll, so each row becomes a labeled card. */
+    table.bookings-table thead{ display:none; }
+    table.bookings-table, table.bookings-table tbody, table.bookings-table tr, table.bookings-table td{ display:block; width:100%; }
+    table.bookings-table tr{ padding:14px 14px 12px; border-bottom:8px solid var(--bp-canvas); box-shadow:none; }
+    table.bookings-table tr.is-overdue{ box-shadow:inset 3px 0 0 var(--bp-danger); }
+    table.bookings-table td{ border-bottom:none; padding:6px 0; }
+    table.bookings-table td[data-label]::before{
+      content: attr(data-label);
+      display:block; font-size:10.5px; font-weight:700; text-transform:uppercase;
+      letter-spacing:0.04em; color:var(--bp-muted); margin-bottom:3px;
+    }
+  }
 </style>
 </head>
 <body class="admin-body">
@@ -512,11 +539,11 @@
 
     body.innerHTML = visible.map((b) => `
       <tr class="${b.computedStatus === "overdue" ? "is-overdue" : ""}">
-        <td>
+        <td data-label="Vehicle">
           <p class="font-semibold">${escapeHtml(b.vehicleName)}</p>
           ${b.dailyRate ? `<p class="booking-detail">K${b.dailyRate}/day</p>` : ""}
         </td>
-        <td>
+        <td data-label="Renter">
           <div class="renter-row">
             <span class="avatar">${escapeHtml(initials(b.renterName)).toUpperCase()}</span>
             <div>
@@ -538,16 +565,16 @@
             </div>
           </div>
         </td>
-        <td>${fmtDate(b.pickupDate)}</td>
-        <td>${fmtDate(b.expectedReturnDate)}</td>
-        <td>
+        <td data-label="Pickup">${fmtDate(b.pickupDate)}</td>
+        <td data-label="Expected Return">${fmtDate(b.expectedReturnDate)}</td>
+        <td data-label="Status">
           <span class="status-pill status-pill--${b.computedStatus}">${b.computedStatus}</span>
           ${b.requestStatus === "confirmed" ? `
           <label class="contract-toggle">
             <input type="checkbox" data-contract="${b._id}" ${b.contractSigned ? "checked" : ""}/> Contract signed
           </label>` : ""}
         </td>
-        <td>${actionsCell(b)}</td>
+        <td data-label="Actions">${actionsCell(b)}</td>
       </tr>
     `).join("");
 

@@ -287,6 +287,14 @@ body.admin-body {
 
 /* ---------------- Responsive ---------------- */
 
+/* Tablet: sidebar still shows, but content gets a little breathing
+   room back since there's less width to spare than on desktop. */
+@media (max-width: 1100px) and (min-width: 881px) {
+  :root { --admin-sidebar-width: 200px; }
+  .admin-content { padding: 22px; }
+  .admin-stat-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+}
+
 @media (max-width: 880px) {
   .admin-sidebar {
     position: fixed;
@@ -295,6 +303,7 @@ body.admin-body {
     transform: translateX(-100%);
     transition: transform 0.22s ease;
     box-shadow: 0 0 40px rgba(0,0,0,0.35);
+    width: min(var(--admin-sidebar-width), 82vw);
   }
   .admin-sidebar.is-open { transform: translateX(0); }
   .admin-sidebar__scrim.is-visible { display: block; }
@@ -302,9 +311,16 @@ body.admin-body {
   .admin-topbar { padding: 16px 16px; }
   .admin-content { padding: 18px; }
   .admin-topbar__title { font-size: 18px; }
+
+  /* Touch targets grow slightly on touch-sized screens so nav links,
+     the toggle, and the logout button are comfortably tappable. */
+  .admin-sidebar__link { padding: 12px; min-height: 44px; }
+  .admin-sidebar__toggle { width: 42px; height: 42px; }
+  .admin-sidebar__logout { padding: 11px 10px; min-height: 44px; }
 }
 
 @media (max-width: 480px) {
   .admin-stat-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
   .admin-stat-card__value { font-size: 22px; }
+  .admin-topbar__meta { width: 100%; padding-top: 0; }
 }

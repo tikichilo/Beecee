@@ -13,7 +13,6 @@
     { href: "/admin/fleet", label: "Fleet", icon: "directions_car" },
     { href: "/admin/bookings", label: "Bookings", icon: "event_available" },
     { href: "/admin/quotes", label: "Quote Requests", icon: "request_quote" },
-    { href: "/admin/receipts", label: "Receipts", icon: "receipt_long" },
   ];
 
   function escapeHtml(str) {

@@ -418,11 +418,32 @@ tailwind.config = {
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
+   Design tokens — mirrors the Tailwind config colors already used across
+   the site, exposed as CSS variables so this file's own rules (hover states,
+   focus rings, custom components) stay in sync with the brand palette
+   without hardcoding the same hex values in a dozen places.
+   -------------------------------------------------------------------------- */
+:root {
+  --color-primary: #3B4A1E;
+  --color-primary-dark: #2c3717;
+  --color-primary-container: #4E5A26;
+  --color-primary-fixed: #E4EAC9;
+  --color-secondary: #7b5800;
+  --color-secondary-container: #fdc34d;
+  --color-secondary-container-hover: #ffcf6e;
+  --color-on-secondary-container: #715000;
+  --color-error: #ba1a1a;
+  --color-outline-variant: #c4c6cf;
+  --color-surface: #f8f9fa;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
    Base
    -------------------------------------------------------------------------- */
 body {
   font-family: "Inter", sans-serif;
-  background-color: #f8f9fa; /* background */
+  background-color: var(--color-surface);
   color: #191c1d; /* on-background */
 }
 
@@ -441,6 +462,32 @@ h1, h2, h3, h4, h5, h6, .display-font {
   font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
+/* Softer, on-brand text selection and scrollbar — small touches that make
+   the whole site feel considered rather than left at browser defaults. */
+::selection {
+  background-color: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
+}
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary-container) var(--color-surface);
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary-container);
+  border-radius: 9999px;
+  border: 2px solid var(--color-surface);
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary);
+}
+
 /* --------------------------------------------------------------------------
    Site header / navigation
    -------------------------------------------------------------------------- */
@@ -448,19 +495,45 @@ h1, h2, h3, h4, h5, h6, .display-font {
   box-shadow: 0 4px 12px rgba(31, 58, 95, 0.08);
 }
 
+/* Nav links get a soft pill highlight on hover and a smoothly animated
+   underline on the active item, instead of a flat static border. */
+.nav-link--active,
+.nav-link--inactive {
+  position: relative;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  transition: color 0.2s var(--ease-standard), background-color 0.2s var(--ease-standard);
+}
+
 .nav-link--active {
-  color: #3B4A1E; /* primary */
+  color: var(--color-primary);
   font-weight: 700;
-  border-bottom: 2px solid #3B4A1E;
-  padding-bottom: 4px;
+}
+.nav-link--active::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 2px;
+  background: var(--color-primary);
+  border-radius: 9999px;
+  transform: scaleX(1);
+  transform-origin: center;
+  transition: transform 0.25s var(--ease-standard);
 }
 
 .nav-link--inactive {
   color: #43474e; /* on-surface-variant */
-  transition: color 0.2s ease;
 }
-.nav-link--inactive:hover {
-  color: #3B4A1E; /* primary */
+.nav-link--inactive:hover,
+.nav-link--inactive:focus-visible {
+  color: var(--color-primary);
+  background-color: rgba(59, 74, 30, 0.08);
+}
+.nav-link--inactive:active {
+  transform: scale(0.97);
 }
 
 /* Site logo — sized up and given a soft shadow so it reads clearly
@@ -469,11 +542,15 @@ h1, h2, h3, h4, h5, h6, .display-font {
   height: 62px;
   width: auto;
   display: block;
+  cursor: pointer;
   filter: drop-shadow(0 1px 2px rgba(59, 74, 30, 0.25));
-  transition: transform 0.2s ease;
+  transition: transform 0.2s var(--ease-standard);
 }
 .site-logo:hover {
   transform: scale(1.05);
+}
+.site-logo:active {
+  transform: scale(0.98);
 }
 .site-logo--lg {
   height: 72px;
@@ -483,7 +560,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
   font-weight: 700;
   font-size: 17px;
   line-height: 1.15;
-  color: #3B4A1E; /* primary */
+  color: var(--color-primary);
   letter-spacing: -0.01em;
   display: none;
 }
@@ -510,8 +587,10 @@ h1, h2, h3, h4, h5, h6, .display-font {
 .hero-slide {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
   opacity: 0;
   transition: opacity 1.4s ease;
   animation: hero-ken-burns 14s ease-in-out infinite;
@@ -525,7 +604,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
   position: absolute;
   inset: 0;
   z-index: 2;
-  background-color: #3B4A1E;
+  background-color: var(--color-primary);
   opacity: 0.45;
   mix-blend-mode: multiply;
 }
@@ -534,10 +613,49 @@ h1, h2, h3, h4, h5, h6, .display-font {
   50% { transform: scale(1.08); }
   100% { transform: scale(1); }
 }
+/* On narrow screens the hero box is a very different shape from these
+   landscape photos, so object-fit: cover already has to crop more just to
+   fill the frame. A smaller zoom here (1.03 vs 1.08) keeps the Ken Burns
+   motion without pushing extra content out of view on top of that. */
+@media (max-width: 767px) {
+  .hero-slide {
+    animation-name: hero-ken-burns-mobile;
+  }
+}
+@keyframes hero-ken-burns-mobile {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
 @media (prefers-reduced-motion: reduce) {
   .hero-slide {
     animation: none;
   }
+}
+
+/* --------------------------------------------------------------------------
+   Trust strip logos (index.html) — plain-text partner names that link out
+   to each partner's real site. Grayscale/muted at rest, full color and a
+   slight lift on hover/focus so the row still reads as a calm logo strip
+   until someone means to interact with it.
+   -------------------------------------------------------------------------- */
+.trust-logo {
+  display: inline-block;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  filter: grayscale(1);
+  opacity: 0.7;
+  transition: filter 0.2s ease, opacity 0.2s ease, transform 0.2s var(--ease-standard);
+}
+.trust-logo:hover,
+.trust-logo:focus-visible {
+  filter: grayscale(0);
+  opacity: 1;
+  transform: translateY(-2px);
+}
+.trust-logo:active {
+  transform: translateY(0) scale(0.97);
 }
 
 /* Mobile nav drawer, shared across every page */
@@ -548,7 +666,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
   right: 0;
   z-index: 40;
   background: #ffffff; /* surface-container-lowest */
-  border-bottom: 1px solid #c4c6cf; /* outline-variant */
+  border-bottom: 1px solid var(--color-outline-variant);
   box-shadow: 0 12px 24px rgba(31, 58, 95, 0.12);
   padding: 16px;
   display: flex;
@@ -565,12 +683,25 @@ h1, h2, h3, h4, h5, h6, .display-font {
   border-radius: 0.25rem;
   color: #191c1d;
   font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+[data-mobile-menu] a:hover,
+[data-mobile-menu] a:focus-visible {
+  background-color: rgba(59, 74, 30, 0.08);
+  color: var(--color-primary);
+}
+[data-mobile-menu] a:active {
+  transform: scale(0.98);
 }
 
 [data-mobile-menu] a.nav-link--active {
-  background: #fdc34d; /* secondary-container */
-  color: #715000; /* on-secondary-container */
+  background: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
   border-bottom: none;
+}
+[data-mobile-menu] a.nav-link--active::after {
+  content: none; /* the underline trick is header-only; the drawer uses a filled pill instead */
 }
 
 [data-mobile-menu] .mobile-menu__cta {
@@ -599,12 +730,17 @@ h1, h2, h3, h4, h5, h6, .display-font {
   border: 1px solid transparent;
   cursor: pointer;
   text-decoration: none;
-  transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.2s var(--ease-standard), color 0.2s var(--ease-standard),
+              opacity 0.2s var(--ease-standard), border-color 0.2s var(--ease-standard),
+              box-shadow 0.2s var(--ease-standard), transform 0.15s var(--ease-standard);
 }
 .btn:disabled,
 .btn[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
+}
+.btn:not(:disabled):not([aria-disabled="true"]):active {
+  transform: scale(0.97);
 }
 .btn-sm {
   padding: 8px 16px;
@@ -613,20 +749,22 @@ h1, h2, h3, h4, h5, h6, .display-font {
   width: 100%;
 }
 .btn-primary {
-  background-color: #fdc34d; /* secondary-container */
-  color: #715000; /* on-secondary-container */
+  background-color: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
 }
 .btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
+  background-color: var(--color-secondary-container-hover);
+  box-shadow: 0 6px 16px rgba(253, 195, 77, 0.4);
 }
 .btn-outline {
   background-color: transparent;
-  border-color: #3B4A1E; /* primary */
-  color: #3B4A1E;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 .btn-outline:hover:not(:disabled) {
-  background-color: #3B4A1E;
+  background-color: var(--color-primary);
   color: #ffffff;
+  box-shadow: 0 6px 16px rgba(59, 74, 30, 0.25);
 }
 .btn-outline-invert {
   background-color: transparent;
@@ -638,25 +776,31 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 
 /* Secondary text link with a trailing arrow — used for "View Specs",
-   "Learn More", "Read Full Study" etc. so every instance matches. */
+   "Learn More", "Read Full Study" etc. so every instance matches. The arrow
+   nudges forward on hover as a small directional cue. */
 .link-arrow {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #7b5800; /* secondary */
+  color: var(--color-secondary);
   font-family: "Inter", sans-serif;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-decoration: none;
+  cursor: pointer;
   transition: color 0.2s ease;
 }
 .link-arrow:hover {
-  color: #3B4A1E; /* primary */
+  color: var(--color-primary);
   text-decoration: underline;
 }
 .link-arrow .material-symbols-outlined {
   font-size: 16px;
+  transition: transform 0.2s var(--ease-standard);
+}
+.link-arrow:hover .material-symbols-outlined {
+  transform: translateX(3px);
 }
 /* Same component, tuned for use on dark/primary-colored card backgrounds
    where the default secondary-brown wouldn't have enough contrast. */
@@ -676,27 +820,32 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 
 /* --------------------------------------------------------------------------
-   Forms — consistent focus/invalid states used on contact & quote forms
+   Forms — consistent hover/focus/invalid states used on contact & quote
+   forms. A hover state on the field border (before focus) makes the form
+   feel more responsive to the cursor moving around it.
    -------------------------------------------------------------------------- */
 .form-field {
-  border: 1px solid #c4c6cf; /* outline-variant */
+  border: 1px solid var(--color-outline-variant);
   border-radius: 0.125rem;
   padding: 12px;
   font-family: "Inter", sans-serif;
   background-color: #f8f9fa; /* surface-bright */
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
+.form-field:hover {
+  border-color: #9aa0aa;
+}
 .form-field:focus {
   outline: none;
-  border-color: #3B4A1E; /* primary */
-  box-shadow: 0 0 0 1px #3B4A1E;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 74, 30, 0.15);
 }
 .form-field[data-invalid="true"] {
-  border-color: #ba1a1a; /* error */
-  box-shadow: 0 0 0 1px #ba1a1a;
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 1px var(--color-error);
 }
 .form-error-text {
-  color: #ba1a1a;
+  color: var(--color-error);
   font-size: 12px;
   margin-top: 4px;
 }
@@ -708,7 +857,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
   right: 24px;
   z-index: 60;
   max-width: 360px;
-  background: #3B4A1E; /* primary */
+  background: var(--color-primary);
   color: #ffffff;
   border-radius: 0.25rem;
   padding: 16px 20px;
@@ -727,34 +876,58 @@ h1, h2, h3, h4, h5, h6, .display-font {
   pointer-events: auto;
 }
 .toast--error {
-  background: #ba1a1a;
+  background: var(--color-error);
 }
 
 /* --------------------------------------------------------------------------
-   Fleet filters
+   Fleet filters — pill buttons with a clearer pressed/active state and a
+   small tactile press effect for click feedback.
    -------------------------------------------------------------------------- */
 .fleet-filter {
   padding: 8px 16px;
   border-radius: 0.125rem;
-  border: 1px solid #c4c6cf; /* outline-variant */
+  border: 1px solid var(--color-outline-variant);
   background: #f8f9fa; /* surface */
   color: #43474e; /* on-surface-variant */
   font-family: "Inter", sans-serif;
-  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, transform 0.15s var(--ease-standard);
 }
 .fleet-filter:hover {
-  border-color: #3B4A1E;
-  color: #3B4A1E;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.fleet-filter:active {
+  transform: scale(0.96);
 }
 .fleet-filter[aria-pressed="true"] {
-  background: #3B4A1E; /* primary */
+  background: var(--color-primary);
   color: #ffffff;
-  border-color: #3B4A1E;
+  border-color: var(--color-primary);
   font-weight: 700;
 }
 
 .fleet-card[hidden] {
   display: none;
+}
+
+.fleet-card__media { overflow: hidden; }
+.fleet-card__nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border-radius: 9999px; border: none;
+  background: rgba(25, 28, 29, 0.55); color: #fff; font-size: 12px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  opacity: 0; transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.15s var(--ease-standard);
+}
+.fleet-card__media:hover .fleet-card__nav { opacity: 1; }
+.fleet-card__nav:hover { background: rgba(25, 28, 29, 0.8); }
+.fleet-card__nav:active { transform: translateY(-50%) scale(0.9); }
+.fleet-card__nav--prev { left: 8px; }
+.fleet-card__nav--next { right: 8px; }
+.fleet-card__count {
+  position: absolute; bottom: 8px; right: 8px;
+  background: rgba(25, 28, 29, 0.55); color: #fff; font-size: 11px;
+  padding: 2px 8px; border-radius: 9999px;
 }
 
 /* --------------------------------------------------------------------------
@@ -765,7 +938,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #3B4A1E;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -775,6 +948,7 @@ textarea:focus-visible {
     animation-duration: 0.001ms !important;
   }
 }
+
 </style>
 <script src="js/fleet-render.js" defer></script>
 <style>
@@ -824,18 +998,18 @@ textarea:focus-visible {
 <a class="btn btn-primary btn-block mobile-menu__cta" href="request.html">Request a Quote</a>
 </div>
 <!-- Hero Section -->
-<section class="relative w-full min-h-[600px] flex items-center justify-center bg-primary text-on-primary">
+<section class="relative w-full min-h-[340px] sm:min-h-[440px] md:min-h-[600px] flex items-center justify-center bg-primary text-on-primary">
 <div class="absolute inset-0 z-0" aria-hidden="true" data-hero-slideshow>
-<div class="hero-slide hero-slide--active" data-hero-slide style="background-image: url('/images/hero1.jpg')"></div>
-<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero2.jpg')"></div>
-<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero3.jpg')"></div>
-<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero4.jpg')"></div>
-<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero5.jpg')"></div>
-<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero6.jpg')"></div>
-<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero7.jpg')"></div>
-<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero8.jpg')"></div>
-<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero9.jpg')"></div>
-<div class="hero-slide" data-hero-slide style="background-image: url('/images/hero10.jpg')"></div>
+<img class="hero-slide hero-slide--active" data-hero-slide src="/images/hero1.jpg" alt="" loading="eager" fetchpriority="high"/>
+<img class="hero-slide" data-hero-slide src="/images/hero2.jpg" alt="" loading="lazy"/>
+<img class="hero-slide" data-hero-slide src="/images/hero3.jpg" alt="" loading="lazy"/>
+<img class="hero-slide" data-hero-slide src="/images/hero4.jpg" alt="" loading="lazy"/>
+<img class="hero-slide" data-hero-slide src="/images/hero5.jpg" alt="" loading="lazy"/>
+<img class="hero-slide" data-hero-slide src="/images/hero6.jpg" alt="" loading="lazy"/>
+<img class="hero-slide" data-hero-slide src="/images/hero7.jpg" alt="" loading="lazy"/>
+<img class="hero-slide" data-hero-slide src="/images/hero8.jpg" alt="" loading="lazy"/>
+<img class="hero-slide" data-hero-slide src="/images/hero9.jpg" alt="" loading="lazy"/>
+<img class="hero-slide" data-hero-slide src="/images/hero10.jpg" alt="" loading="lazy"/>
 <div class="hero-slide__tint"></div>
 </div>
 <div class="relative z-10 text-center max-w-4xl px-margin-mobile md:px-margin-desktop py-20 flex flex-col items-center gap-6">
@@ -851,12 +1025,12 @@ textarea:focus-visible {
 <section class="w-full bg-surface-container py-8 border-b border-outline-variant">
 <div class="max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop flex flex-col md:flex-row items-center justify-between gap-6">
 <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Trusted by Global Partners</span>
-<div class="flex flex-wrap justify-center gap-8 opacity-70 grayscale">
-<span class="font-headline-md text-headline-md font-bold text-on-surface">Oxfam</span>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">PATH</span>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">GIZ</span>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">ECZ</span>
-<span class="font-headline-md text-headline-md font-bold text-on-surface">CHAZ</span>
+<div class="flex flex-wrap justify-center gap-8">
+<a class="trust-logo font-headline-md text-headline-md font-bold text-on-surface" href="https://www.oxfam.org/en/what-we-do/countries/zambia" target="_blank" rel="noopener" aria-label="Visit Oxfam's Zambia programme page (opens in a new tab)">Oxfam</a>
+<a class="trust-logo font-headline-md text-headline-md font-bold text-on-surface" href="https://www.path.org/" target="_blank" rel="noopener" aria-label="Visit PATH's website (opens in a new tab)">PATH</a>
+<a class="trust-logo font-headline-md text-headline-md font-bold text-on-surface" href="https://www.giz.de/en/regions/africa/zambia" target="_blank" rel="noopener" aria-label="Visit GIZ's Zambia page (opens in a new tab)">GIZ</a>
+<a class="trust-logo font-headline-md text-headline-md font-bold text-on-surface" href="https://www.elections.org.zm/" target="_blank" rel="noopener" aria-label="Visit the Electoral Commission of Zambia website (opens in a new tab)">ECZ</a>
+<a class="trust-logo font-headline-md text-headline-md font-bold text-on-surface" href="https://www.chaz.org.zm/" target="_blank" rel="noopener" aria-label="Visit the Churches Health Association of Zambia website (opens in a new tab)">CHAZ</a>
 </div>
 </div>
 </section>
@@ -997,7 +1171,7 @@ textarea:focus-visible {
   </div>
 </div>
 <div class="col-span-1 md:col-span-4 mt-4 pt-4 border-t border-primary-container/40 text-on-primary-container">
-            © <span data-current-year="">2026</span> Bee Cee Logistics Ltd. All rights reserved. <span class="opacity-70">· Site by <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="https://tikichilo.github.io/tiki-portfolio/experience.html" target="_blank" rel="noopener">Tiki Chilomo</a> · <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="/admin">Staff Login</a></span>
+            © <span data-current-year="">2024</span> Bee Cee Logistics Ltd. All rights reserved. <span class="opacity-70">· Site by <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="https://tikichilo.github.io/tiki-portfolio/experience.html" target="_blank" rel="noopener">Tiki Chilomo</a> · <a class="hover:text-on-primary transition-colors underline decoration-dotted" href="/admin">Staff Login</a></span>
         </div>
 </footer>
 </body>

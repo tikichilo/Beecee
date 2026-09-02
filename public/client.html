@@ -375,7 +375,7 @@ tailwind.config = {
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <style>
 /* ==========================================================================
-   Bee Cee Logistics — bee.css
+   Bee Cee Logistics — bee.css (client.html)
    All hand-written CSS for the site. Tailwind (loaded via CDN, configured in
    bee.js) supplies the utility classes used throughout the markup; this file
    only holds things Tailwind utilities can't express cleanly: base type
@@ -384,11 +384,29 @@ tailwind.config = {
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
+   Design tokens — mirrors the Tailwind config colors already used across
+   the site, exposed as CSS variables so this file's hover/press states stay
+   in sync with the brand palette without hardcoding hex values everywhere.
+   -------------------------------------------------------------------------- */
+:root {
+  --color-primary: #3B4A1E;
+  --color-primary-container: #4E5A26;
+  --color-secondary: #7b5800;
+  --color-secondary-container: #fdc34d;
+  --color-secondary-container-hover: #ffcf6e;
+  --color-on-secondary-container: #715000;
+  --color-error: #ba1a1a;
+  --color-outline-variant: #c4c6cf;
+  --color-surface: #f8f9fa;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
    Base
    -------------------------------------------------------------------------- */
 body {
   font-family: "Inter", sans-serif;
-  background-color: #f8f9fa; /* background */
+  background-color: var(--color-surface);
   color: #191c1d; /* on-background */
 }
 
@@ -407,6 +425,31 @@ h1, h2, h3, h4, h5, h6, .display-font {
   font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
+/* Softer, on-brand text selection and scrollbar. */
+::selection {
+  background-color: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
+}
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary-container) var(--color-surface);
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary-container);
+  border-radius: 9999px;
+  border: 2px solid var(--color-surface);
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary);
+}
+
 /* --------------------------------------------------------------------------
    Site header / navigation
    -------------------------------------------------------------------------- */
@@ -414,19 +457,40 @@ h1, h2, h3, h4, h5, h6, .display-font {
   box-shadow: 0 4px 12px rgba(31, 58, 95, 0.08);
 }
 
+.nav-link--active,
+.nav-link--inactive {
+  position: relative;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  transition: color 0.2s var(--ease-standard), background-color 0.2s var(--ease-standard);
+}
+
 .nav-link--active {
-  color: #3B4A1E; /* primary */
+  color: var(--color-primary);
   font-weight: 700;
-  border-bottom: 2px solid #3B4A1E;
-  padding-bottom: 4px;
+}
+.nav-link--active::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 2px;
+  background: var(--color-primary);
+  border-radius: 9999px;
 }
 
 .nav-link--inactive {
   color: #43474e; /* on-surface-variant */
-  transition: color 0.2s ease;
 }
-.nav-link--inactive:hover {
-  color: #3B4A1E; /* primary */
+.nav-link--inactive:hover,
+.nav-link--inactive:focus-visible {
+  color: var(--color-primary);
+  background-color: rgba(59, 74, 30, 0.08);
+}
+.nav-link--inactive:active {
+  transform: scale(0.97);
 }
 
 /* Site logo — sized up and given a soft shadow so it reads clearly
@@ -435,11 +499,15 @@ h1, h2, h3, h4, h5, h6, .display-font {
   height: 62px;
   width: auto;
   display: block;
+  cursor: pointer;
   filter: drop-shadow(0 1px 2px rgba(59, 74, 30, 0.25));
-  transition: transform 0.2s ease;
+  transition: transform 0.2s var(--ease-standard);
 }
 .site-logo:hover {
   transform: scale(1.05);
+}
+.site-logo:active {
+  transform: scale(0.98);
 }
 .site-logo--lg {
   height: 72px;
@@ -449,7 +517,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
   font-weight: 700;
   font-size: 17px;
   line-height: 1.15;
-  color: #3B4A1E; /* primary */
+  color: var(--color-primary);
   letter-spacing: -0.01em;
   display: none;
 }
@@ -470,7 +538,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
   right: 0;
   z-index: 40;
   background: #ffffff; /* surface-container-lowest */
-  border-bottom: 1px solid #c4c6cf; /* outline-variant */
+  border-bottom: 1px solid var(--color-outline-variant);
   box-shadow: 0 12px 24px rgba(31, 58, 95, 0.12);
   padding: 16px;
   display: flex;
@@ -487,12 +555,25 @@ h1, h2, h3, h4, h5, h6, .display-font {
   border-radius: 0.25rem;
   color: #191c1d;
   font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+[data-mobile-menu] a:hover,
+[data-mobile-menu] a:focus-visible {
+  background-color: rgba(59, 74, 30, 0.08);
+  color: var(--color-primary);
+}
+[data-mobile-menu] a:active {
+  transform: scale(0.98);
 }
 
 [data-mobile-menu] a.nav-link--active {
-  background: #fdc34d; /* secondary-container */
-  color: #715000; /* on-secondary-container */
+  background: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
   border-bottom: none;
+}
+[data-mobile-menu] a.nav-link--active::after {
+  content: none;
 }
 
 [data-mobile-menu] .mobile-menu__cta {
@@ -516,17 +597,22 @@ h1, h2, h3, h4, h5, h6, .display-font {
   letter-spacing: 0.05em;
   font-weight: 600;
   line-height: 1;
-  border-radius: 0.5rem; /* rounded-lg, matches index.html's CTA */
+  border-radius: 0.5rem;
   padding: 14px 24px;
   border: 1px solid transparent;
   cursor: pointer;
   text-decoration: none;
-  transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.2s var(--ease-standard), color 0.2s var(--ease-standard),
+              opacity 0.2s var(--ease-standard), border-color 0.2s var(--ease-standard),
+              box-shadow 0.2s var(--ease-standard), transform 0.15s var(--ease-standard);
 }
 .btn:disabled,
 .btn[aria-disabled="true"] {
   opacity: 0.5;
   cursor: not-allowed;
+}
+.btn:not(:disabled):not([aria-disabled="true"]):active {
+  transform: scale(0.97);
 }
 .btn-sm {
   padding: 8px 16px;
@@ -535,20 +621,22 @@ h1, h2, h3, h4, h5, h6, .display-font {
   width: 100%;
 }
 .btn-primary {
-  background-color: #fdc34d; /* secondary-container */
-  color: #715000; /* on-secondary-container */
+  background-color: var(--color-secondary-container);
+  color: var(--color-on-secondary-container);
 }
 .btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
+  background-color: var(--color-secondary-container-hover);
+  box-shadow: 0 6px 16px rgba(253, 195, 77, 0.4);
 }
 .btn-outline {
   background-color: transparent;
-  border-color: #3B4A1E; /* primary */
-  color: #3B4A1E;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 .btn-outline:hover:not(:disabled) {
-  background-color: #3B4A1E;
+  background-color: var(--color-primary);
   color: #ffffff;
+  box-shadow: 0 6px 16px rgba(59, 74, 30, 0.25);
 }
 .btn-outline-invert {
   background-color: transparent;
@@ -565,20 +653,25 @@ h1, h2, h3, h4, h5, h6, .display-font {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #7b5800; /* secondary */
+  color: var(--color-secondary);
   font-family: "Inter", sans-serif;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-decoration: none;
+  cursor: pointer;
   transition: color 0.2s ease;
 }
 .link-arrow:hover {
-  color: #3B4A1E; /* primary */
+  color: var(--color-primary);
   text-decoration: underline;
 }
 .link-arrow .material-symbols-outlined {
   font-size: 16px;
+  transition: transform 0.2s var(--ease-standard);
+}
+.link-arrow:hover .material-symbols-outlined {
+  transform: translateX(3px);
 }
 /* Same component, tuned for use on dark/primary-colored card backgrounds
    where the default secondary-brown wouldn't have enough contrast. */
@@ -598,27 +691,31 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 
 /* --------------------------------------------------------------------------
-   Forms — consistent focus/invalid states used on contact & quote forms
+   Forms — consistent hover/focus/invalid states used on contact & quote
+   forms.
    -------------------------------------------------------------------------- */
 .form-field {
-  border: 1px solid #c4c6cf; /* outline-variant */
+  border: 1px solid var(--color-outline-variant);
   border-radius: 0.125rem;
   padding: 12px;
   font-family: "Inter", sans-serif;
   background-color: #f8f9fa; /* surface-bright */
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
+.form-field:hover {
+  border-color: #9aa0aa;
+}
 .form-field:focus {
   outline: none;
-  border-color: #3B4A1E; /* primary */
-  box-shadow: 0 0 0 1px #3B4A1E;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 74, 30, 0.15);
 }
 .form-field[data-invalid="true"] {
-  border-color: #ba1a1a; /* error */
-  box-shadow: 0 0 0 1px #ba1a1a;
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 1px var(--color-error);
 }
 .form-error-text {
-  color: #ba1a1a;
+  color: var(--color-error);
   font-size: 12px;
   margin-top: 4px;
 }
@@ -630,7 +727,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
   right: 24px;
   z-index: 60;
   max-width: 360px;
-  background: #3B4A1E; /* primary */
+  background: var(--color-primary);
   color: #ffffff;
   border-radius: 0.25rem;
   padding: 16px 20px;
@@ -649,7 +746,7 @@ h1, h2, h3, h4, h5, h6, .display-font {
   pointer-events: auto;
 }
 .toast--error {
-  background: #ba1a1a;
+  background: var(--color-error);
 }
 
 /* --------------------------------------------------------------------------
@@ -658,20 +755,24 @@ h1, h2, h3, h4, h5, h6, .display-font {
 .fleet-filter {
   padding: 8px 16px;
   border-radius: 0.125rem;
-  border: 1px solid #c4c6cf; /* outline-variant */
+  border: 1px solid var(--color-outline-variant);
   background: #f8f9fa; /* surface */
   color: #43474e; /* on-surface-variant */
   font-family: "Inter", sans-serif;
-  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, transform 0.15s var(--ease-standard);
 }
 .fleet-filter:hover {
-  border-color: #3B4A1E;
-  color: #3B4A1E;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.fleet-filter:active {
+  transform: scale(0.96);
 }
 .fleet-filter[aria-pressed="true"] {
-  background: #3B4A1E; /* primary */
+  background: var(--color-primary);
   color: #ffffff;
-  border-color: #3B4A1E;
+  border-color: var(--color-primary);
   font-weight: 700;
 }
 
@@ -685,17 +786,29 @@ h1, h2, h3, h4, h5, h6, .display-font {
    swapped out for a direct "call us" affordance.
    -------------------------------------------------------------------------- */
 .contact-logo-tile {
-  background-color: #3B4A1E; /* primary */
+  background-color: var(--color-primary);
+  transition: background-color 0.2s ease;
+}
+.contact-logo-tile:hover {
+  background-color: var(--color-primary-container);
 }
 .contact-logo-link {
   color: #ffffff;
   text-decoration: none;
+  cursor: pointer;
 }
 .contact-logo-link .material-symbols-outlined {
   font-size: 56px;
+  transition: transform 0.2s var(--ease-standard);
 }
 .contact-logo-link:hover {
   opacity: 0.9;
+}
+.contact-logo-link:hover .material-symbols-outlined {
+  transform: scale(1.1);
+}
+.contact-logo-link:active .material-symbols-outlined {
+  transform: scale(1.02);
 }
 
 /* --------------------------------------------------------------------------
@@ -706,13 +819,22 @@ h1, h2, h3, h4, h5, h6, .display-font {
 .partner-tile {
   position: relative;
   text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.2s var(--ease-standard), border-color 0.2s ease;
+}
+.partner-tile:hover,
+.partner-tile:focus-visible {
+  transform: translateY(-2px);
+}
+.partner-tile:active {
+  transform: translateY(0) scale(0.98);
 }
 .partner-tile__external {
   position: absolute;
   top: 10px;
   right: 10px;
   font-size: 16px;
-  color: #7b5800; /* secondary */
+  color: var(--color-secondary);
   opacity: 0;
   transform: translateY(-2px);
   transition: opacity 0.15s ease, transform 0.15s ease;
@@ -724,11 +846,11 @@ h1, h2, h3, h4, h5, h6, .display-font {
 }
 .partner-tile:hover,
 .partner-tile:focus-visible {
-  border-color: #3B4A1E; /* primary */
+  border-color: var(--color-primary);
 }
 .partner-tile:hover .partner-tile__label,
 .partner-tile:focus-visible .partner-tile__label {
-  color: #3B4A1E; /* primary */
+  color: var(--color-primary);
 }
 .partner-tile__label {
   transition: color 0.15s ease;
@@ -742,7 +864,7 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #3B4A1E;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 

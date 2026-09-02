@@ -30,8 +30,18 @@
   }
   body::after{ content:""; position:fixed; inset:0; box-shadow:inset 0 0 180px 40px rgba(0,0,0,0.65); pointer-events:none; }
 
+  .page-stack{ position:relative; z-index:1; width:100%; max-width:420px; display:flex; flex-direction:column; gap:14px; }
+
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px; align-self:flex-start;
+    font-family:"JetBrains Mono", monospace; font-size:11px; font-weight:500; letter-spacing:0.1em;
+    color:var(--text-1); text-decoration:none; padding:6px 2px; transition:color 0.15s ease;
+  }
+  .back-link:hover{ color:var(--green-bright); }
+  .back-link svg{ width:13px; height:13px; flex-shrink:0; }
+
   .panel{
-    position:relative; z-index:1; width:100%; max-width:420px;
+    position:relative; width:100%;
     background:linear-gradient(180deg, var(--bg-1), var(--bg-2));
     border:1px solid var(--border); border-radius:6px; padding:0 0 32px;
     box-shadow:0 30px 60px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.4);
@@ -103,50 +113,57 @@
 </head>
 <body>
 
-<main class="panel">
-  <div class="panel__stripe" aria-hidden="true"></div>
-  <div class="panel__header">
-    <span class="panel__brand">BEE CEE LOGISTICS</span>
-    <span class="panel__tag"><span class="dot" id="statusDot"></span>TERMINAL 01 // ZM</span>
-  </div>
+<div class="page-stack">
+  <a href="/" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+    Back to website
+  </a>
 
-  <div class="scene" aria-hidden="true">
-    <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg">
-      <rect x="70" y="86" width="160" height="54" rx="10" fill="#191F13" stroke="#2B341F"/>
-      <rect x="95" y="82" width="110" height="10" rx="5" fill="#050702" stroke="#2B341F"/>
-      <circle id="ledLight" cx="205" cy="113" r="5" fill="#E8A33D"/>
-      <g id="keycard">
-        <rect id="keycardBody" x="95" y="20" width="110" height="68" rx="8" fill="#3B4A1E" stroke="#4C5E27" stroke-width="2"/>
-        <rect x="95" y="34" width="110" height="10" fill="#0A0D08" opacity="0.6"/>
-        <rect x="108" y="58" width="60" height="6" rx="3" fill="rgba(237,234,224,0.5)"/>
-        <rect x="108" y="70" width="40" height="6" rx="3" fill="rgba(237,234,224,0.35)"/>
-      </g>
-    </svg>
-  </div>
-
-  <h1 class="panel__title">Terminal<br/><span>Access</span></h1>
-  <p class="panel__sub">Sign in with your issued credentials to reach the fleet dashboard.</p>
-
-  <form id="loginForm" class="panel__form" novalidate>
-    <div>
-      <label class="panel__label" for="username">USERNAME</label>
-      <input id="username" name="username" type="text" required autocomplete="username" class="panel__input"/>
+  <main class="panel">
+    <div class="panel__stripe" aria-hidden="true"></div>
+    <div class="panel__header">
+      <span class="panel__brand">BEE CEE LOGISTICS</span>
+      <span class="panel__tag"><span class="dot" id="statusDot"></span>TERMINAL 01 // ZM</span>
     </div>
-    <div>
-      <label class="panel__label" for="password">PASSWORD</label>
-      <input id="password" name="password" type="password" required autocomplete="current-password" class="panel__input"/>
-    </div>
-    <button type="submit" class="panel__btn" id="submitBtn">
-      <span id="btnLabel">Swipe In</span>
-    </button>
-    <p class="panel__status" id="statusMsg">STATUS: STANDBY</p>
-  </form>
 
-  <div class="panel__footer">
-    <a href="/admin/access">Sign up</a>
-    <a class="muted" href="/admin/forgot-password">Forgot password?</a>
-  </div>
-</main>
+    <div class="scene" aria-hidden="true">
+      <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg">
+        <rect x="70" y="86" width="160" height="54" rx="10" fill="#191F13" stroke="#2B341F"/>
+        <rect x="95" y="82" width="110" height="10" rx="5" fill="#050702" stroke="#2B341F"/>
+        <circle id="ledLight" cx="205" cy="113" r="5" fill="#E8A33D"/>
+        <g id="keycard">
+          <rect id="keycardBody" x="95" y="20" width="110" height="68" rx="8" fill="#3B4A1E" stroke="#4C5E27" stroke-width="2"/>
+          <rect x="95" y="34" width="110" height="10" fill="#0A0D08" opacity="0.6"/>
+          <rect x="108" y="58" width="60" height="6" rx="3" fill="rgba(237,234,224,0.5)"/>
+          <rect x="108" y="70" width="40" height="6" rx="3" fill="rgba(237,234,224,0.35)"/>
+        </g>
+      </svg>
+    </div>
+
+    <h1 class="panel__title">Terminal<br/><span>Access</span></h1>
+    <p class="panel__sub">Sign in with your issued credentials to reach the fleet dashboard.</p>
+
+    <form id="loginForm" class="panel__form" novalidate>
+      <div>
+        <label class="panel__label" for="username">USERNAME</label>
+        <input id="username" name="username" type="text" required autocomplete="username" class="panel__input"/>
+      </div>
+      <div>
+        <label class="panel__label" for="password">PASSWORD</label>
+        <input id="password" name="password" type="password" required autocomplete="current-password" class="panel__input"/>
+      </div>
+      <button type="submit" class="panel__btn" id="submitBtn">
+        <span id="btnLabel">Swipe In</span>
+      </button>
+      <p class="panel__status" id="statusMsg">STATUS: STANDBY</p>
+    </form>
+
+    <div class="panel__footer">
+      <a href="/admin/access">Sign up</a>
+      <a class="muted" href="/admin/forgot-password">Forgot password?</a>
+    </div>
+  </main>
+</div>
 
 <script>
   const form = document.getElementById("loginForm");
