@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const Admin = require("../models/Admin");
 const PasswordReset = require("../models/PasswordReset");
 const { sendPasswordResetEmail } = require("../lib/mailer");
+const { getPasswordPolicyErrors, formatPolicyMessage } = require("../utils/passwordPolicy");
 
 const INVITE_CODE = (process.env.INVITE_CODE || "").toUpperCase();
 
@@ -35,8 +36,10 @@ router.post("/signup", async (req, res) => {
     if (inviteCode.toUpperCase().trim() !== INVITE_CODE) {
       return res.status(403).json({ error: "Invalid invite code." });
     }
-    if (password.length < 8) {
-      return res.status(400).json({ error: "Password must be at least 8 characters." });
+
+    const policyErrors = getPasswordPolicyErrors(password, { username, email });
+    if (policyErrors.length) {
+      return res.status(400).json({ error: formatPolicyMessage(policyErrors) });
     }
 
     const cleanUsername = username.toLowerCase().trim();
@@ -99,7 +102,6 @@ router.post("/reset-password", async (req, res) => {
   try {
     const { token, password } = req.body;
     if (!token || !password) return res.status(400).json({ error: "Token and password are required." });
-    if (password.length < 8) return res.status(400).json({ error: "Password must be at least 8 characters." });
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
@@ -111,6 +113,22 @@ router.post("/reset-password", async (req, res) => {
 
     if (!resetRecord) {
       return res.status(400).json({ error: "This reset link is invalid or has expired." });
+    }
+
+    // Fetch the admin first so the policy check can reject a password
+    // that just contains their own username/email — same rule signup
+    // enforces, so a reset can't be used to sidestep it.
+    const admin = await Admin.findById(resetRecord.adminId);
+    if (!admin) {
+      return res.status(400).json({ error: "This reset link is invalid or has expired." });
+    }
+
+    const policyErrors = getPasswordPolicyErrors(password, {
+      username: admin.username,
+      email: admin.email,
+    });
+    if (policyErrors.length) {
+      return res.status(400).json({ error: formatPolicyMessage(policyErrors) });
     }
 
     const passwordHash = await Admin.hashPassword(password);

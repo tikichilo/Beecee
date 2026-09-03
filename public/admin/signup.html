@@ -96,6 +96,30 @@
   .panel__input:focus-visible{ border-color:var(--green-bright); box-shadow:0 0 0 3px rgba(140,179,62,0.18); }
   .panel__hint{ font-size:11.5px; color:var(--text-1); margin:6px 2px 0; }
 
+  /* Password show/hide toggle — password-toggle.js wraps the input in
+     .password-wrap and injects the .password-toggle button. */
+  .password-wrap{ position:relative; }
+  .password-wrap .panel__input{ padding-right:44px; }
+  .password-toggle{
+    position:absolute; top:50%; right:6px; transform:translateY(-50%);
+    width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+    background:transparent; border:none; color:var(--text-1); cursor:pointer;
+    border-radius:4px; transition:color 0.15s ease, background-color 0.15s ease;
+  }
+  .password-toggle:hover{ color:var(--green-bright); background:rgba(140,179,62,0.1); }
+  .password-toggle:focus-visible{ outline:2px solid var(--green-bright); outline-offset:2px; }
+  .password-toggle svg{ width:18px; height:18px; }
+
+  /* Live password requirement checklist */
+  .pw-requirements{ list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:4px; }
+  .pw-requirements li{
+    font-size:11.5px; color:var(--text-1); display:flex; align-items:center; gap:6px;
+    transition:color 0.15s ease;
+  }
+  .pw-requirements li::before{ content:"○"; font-size:9px; }
+  .pw-requirements li.is-met{ color:var(--green-bright); }
+  .pw-requirements li.is-met::before{ content:"●"; }
+
   .panel__btn{
     display:flex; align-items:center; justify-content:center; gap:8px; background:var(--green); color:var(--text-0);
     border:1px solid #4C5E27; border-radius:4px; padding:13px 16px; font-family:"Inter", sans-serif;
@@ -161,8 +185,14 @@
     </div>
     <div>
       <label class="panel__label" for="password">PASSWORD</label>
-      <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password" class="panel__input"/>
-      <p class="panel__hint">At least 8 characters.</p>
+      <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password" class="panel__input" data-password-toggle/>
+      <ul class="pw-requirements" id="pwRequirements">
+        <li data-rule="length">At least 8 characters</li>
+        <li data-rule="lower">A lowercase letter</li>
+        <li data-rule="upper">An uppercase letter</li>
+        <li data-rule="number">A number</li>
+        <li data-rule="symbol">A symbol (e.g. ! @ # $ %)</li>
+      </ul>
     </div>
     <button type="submit" class="panel__btn" id="submitBtn">
       <span id="btnLabel">Issue Badge</span>
@@ -173,6 +203,7 @@
   <p class="panel__footer">Already have an account? <a href="/admin">Log in</a></p>
 </main>
 
+<script src="/js/password-toggle.js" defer></script>
 <script>
   const inviteCode = sessionStorage.getItem("beecee_invite_code");
   if (!inviteCode) {
@@ -189,6 +220,8 @@
   const badgeId = document.getElementById("badgeId");
   const badgeStamp = document.getElementById("badgeStamp");
   const usernameInput = document.getElementById("username");
+  const passwordInput = document.getElementById("password");
+  const pwRequirementsList = document.getElementById("pwRequirements");
 
   usernameInput.addEventListener("input", () => {
     const val = usernameInput.value.trim();
@@ -196,12 +229,45 @@
     badgeId.textContent = val ? `ID: ${val.toUpperCase()}` : "ID: PENDING";
   });
 
+  // Mirrors the server-side rules in utils/passwordPolicy.js. If you
+  // change a rule there, update this object to match, or the checklist
+  // will show green while the server still rejects the password.
+  const PW_RULES = {
+    length: (v) => v.length >= 8,
+    lower: (v) => /[a-z]/.test(v),
+    upper: (v) => /[A-Z]/.test(v),
+    number: (v) => /[0-9]/.test(v),
+    symbol: (v) => /[^A-Za-z0-9]/.test(v),
+  };
+
+  function updatePwRequirements(value) {
+    let allMet = true;
+    pwRequirementsList.querySelectorAll("li[data-rule]").forEach((li) => {
+      const rule = li.getAttribute("data-rule");
+      const met = PW_RULES[rule] ? PW_RULES[rule](value) : false;
+      li.classList.toggle("is-met", met);
+      if (!met) allMet = false;
+    });
+    return allMet;
+  }
+
+  passwordInput.addEventListener("input", () => updatePwRequirements(passwordInput.value));
+
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const username = usernameInput.value.trim();
     const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
+    const password = passwordInput.value;
+
+    // Client-side pre-check so an obviously weak password doesn't need a
+    // round trip to the server to be rejected. The server re-checks this
+    // regardless — this is a UX shortcut, not the real enforcement.
+    if (!updatePwRequirements(password)) {
+      statusMsg.className = "panel__status is-denied";
+      statusMsg.textContent = "STATUS: PASSWORD DOESN'T MEET REQUIREMENTS YET";
+      return;
+    }
 
     btn.disabled = true;
     btnLabel.textContent = "Printing…";
