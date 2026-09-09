@@ -581,6 +581,27 @@ html {
   .fleet-skeleton-media, .fleet-skeleton-line { animation: none; }
 }
 
+/* ----------------------------------------------------------------------
+   Homepage fleet photo gallery thumbnails (js/cee.js loadFleetPhotos) —
+   army-green frame is set via the border-primary utility class on the
+   button; this adds the tap/click affordance (lift + glow) on
+   hover/focus so it's obvious the photo opens a lightbox.
+   ---------------------------------------------------------------------- */
+.fleet-photo-thumb {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fleet-photo-thumb:hover,
+.fleet-photo-thumb:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 74, 30, 0.35);
+  outline: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fleet-photo-thumb { transition: none; }
+  .fleet-photo-thumb:hover, .fleet-photo-thumb:focus-visible { transform: none; }
+}
+
 .fleet-step {
   display: flex;
   gap: 16px;

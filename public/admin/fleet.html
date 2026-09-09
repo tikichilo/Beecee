@@ -10,7 +10,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <link href="/admin/admin-shared.css" rel="stylesheet"/>
 <style>
-  .thumb { width:64px; height:64px; object-fit:cover; border-radius:4px; }
+  .field-hint { font-size:12px; color:#6b7280; margin-top:4px; }
+  .category-card { transition: box-shadow .15s ease; }
+  .category-card.is-dirty { box-shadow: 0 0 0 2px rgba(59,74,30,0.25); }
+  .toggle-pill {
+    display:inline-flex; align-items:center; gap:8px; cursor:pointer;
+    user-select:none;
+  }
+  .toggle-pill input { width:16px; height:16px; }
   .thumb-lg { width:88px; height:88px; object-fit:cover; border-radius:6px; }
   .preview-tile { position:relative; }
   .preview-remove {
@@ -18,14 +25,6 @@
     background:#dc2626; color:#fff; border-radius:9999px; font-size:12px;
     line-height:1; display:flex; align-items:center; justify-content:center;
     border:2px solid #fff; cursor:pointer;
-  }
-  .field-hint { font-size:12px; color:#6b7280; margin-top:4px; }
-
-  /* ---- Usability: comfortable touch targets on phones/tablets ---- */
-  @media (max-width: 640px) {
-    #vehicleList [data-edit], #vehicleList [data-delete] { padding-top:9px; padding-bottom:9px; }
-    #vehicleForm button[type="submit"], #cancelEditBtn { min-height:44px; }
-    #fleetSearch { min-height:40px; }
   }
 </style>
 </head>
@@ -37,120 +36,47 @@
   <header class="admin-topbar">
     <div>
       <h1 class="admin-topbar__title">Fleet</h1>
-      <p class="admin-topbar__subtitle">Add, edit, and manage vehicles shown on the public site.</p>
+      <p class="admin-topbar__subtitle">Set category rates and manage the homepage fleet photo gallery.</p>
     </div>
     <div class="admin-topbar__meta" id="whoami"></div>
   </header>
 
   <main class="admin-content">
 
-    <!-- Add / Edit form -->
-    <section class="bg-white border border-gray-200 rounded-lg p-6 mb-8">
-      <h2 id="formTitle" class="font-bold text-[#3B4A1E] mb-4" style="font-family:'Montserrat',sans-serif">Add a Vehicle</h2>
-      <form id="vehicleForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input type="hidden" id="vehicleId" value=""/>
-
-        <div>
-          <label class="block text-sm font-medium mb-1">Car Name</label>
-          <input id="name" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="e.g. Toyota Land Cruiser Prado"/>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium mb-1">Category</label>
-          <select id="category" required class="w-full border border-gray-300 rounded px-3 py-2">
-            <option value="saloon">Saloon Car</option>
-            <option value="4x4">4x4 & SUV</option>
-            <option value="bus">Bus</option>
-            <option value="truck">Truck</option>
-          </select>
-        </div>
-
-        <div id="seatingCapacityWrap">
-          <label class="block text-sm font-medium mb-1">
-            Seating Capacity <span id="seatingRequiredMark" class="text-red-500">*</span>
-          </label>
-          <input id="seatingCapacity" type="number" min="1" class="w-full border border-gray-300 rounded px-3 py-2"/>
-          <p id="seatingHint" class="field-hint"></p>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium mb-1">Load Limit (kg) — optional</label>
-          <input id="loadLimitKg" type="number" min="0" class="w-full border border-gray-300 rounded px-3 py-2"/>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium mb-1">Booking Fee (ZMW / day)</label>
-          <input id="bookingFee" type="number" min="0" required class="w-full border border-gray-300 rounded px-3 py-2"/>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium mb-1">Location</label>
-          <input id="location" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="e.g. Lusaka Depot"/>
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium mb-1">Status</label>
-          <select id="status" class="w-full border border-gray-300 rounded px-3 py-2">
-            <option value="available">Available</option>
-            <option value="booked">Booked</option>
-            <option value="maintenance">Maintenance</option>
-          </select>
-        </div>
-
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium mb-1">Description — optional</label>
-          <textarea id="description" rows="2" class="w-full border border-gray-300 rounded px-3 py-2"></textarea>
-        </div>
-
-        <div class="md:col-span-2" id="existingImagesWrap" style="display:none">
-          <label class="block text-sm font-medium mb-1">Current Photos <span class="text-gray-400 font-normal">(untick to remove)</span></label>
-          <div id="existingImages" class="flex flex-wrap gap-3"></div>
-        </div>
-
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium mb-1">Add Photos <span class="text-gray-400 font-normal">(1–10 total, JPG/PNG/WEBP)</span></label>
-          <input id="imagesInput" type="file" accept="image/jpeg,image/png,image/webp" multiple class="w-full border border-gray-300 rounded px-3 py-2 bg-white"/>
-          <div id="newImagePreviews" class="flex flex-wrap gap-3 mt-3"></div>
-          <p id="photoCountHint" class="field-hint"></p>
-        </div>
-
-        <p id="formError" class="md:col-span-2 text-sm text-red-600 hidden"></p>
-
-        <div class="md:col-span-2 flex gap-3">
-          <button type="submit" id="submitBtn" class="bg-[#3B4A1E] text-white font-semibold rounded px-5 py-2 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed">
-            <span id="submitLabel">Add Vehicle</span>
-          </button>
-          <button type="button" id="cancelEditBtn" class="border border-gray-300 rounded px-5 py-2 hidden">Cancel</button>
-        </div>
-      </form>
-    </section>
-
-    <!-- Vehicle list -->
+    <!-- Category rates -->
     <section class="bg-white border border-gray-200 rounded-lg p-6">
       <div class="flex items-center justify-between gap-4 mb-4 flex-wrap">
-        <h2 class="font-bold text-[#3B4A1E]" style="font-family:'Montserrat',sans-serif">Current Fleet</h2>
-        <div class="relative w-full sm:w-72">
-          <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" style="font-size:19px" aria-hidden="true">search</span>
-          <input
-            id="fleetSearch"
-            type="text"
-            placeholder="Search name, category, location, price, load limit…"
-            class="w-full border border-gray-300 rounded pl-9 pr-8 py-2 text-sm"
-            autocomplete="off"
-          />
-          <button
-            type="button"
-            id="fleetSearchClear"
-            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
-            aria-label="Clear search"
-          >
-            <span class="material-symbols-outlined" style="font-size:18px">close</span>
-          </button>
-        </div>
+        <h2 class="font-bold text-[#3B4A1E]" style="font-family:'Montserrat',sans-serif">Fleet Categories</h2>
+        <p class="text-xs text-gray-500">Every category always shows — there's a fixed set, so nothing to add or delete here.</p>
       </div>
-      <p id="fleetSearchCount" class="text-xs text-gray-500 mb-2 hidden"></p>
-      <div id="vehicleList" class="flex flex-col divide-y divide-gray-100">
+      <p id="loadError" class="text-sm text-red-600 hidden mb-4"></p>
+      <div id="categoryList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <p class="text-gray-500 text-sm py-4">Loading…</p>
+      </div>
+    </section>
+
+    <!-- Homepage photo gallery -->
+    <section class="bg-white border border-gray-200 rounded-lg p-6 mt-8">
+      <div class="flex items-center justify-between gap-4 mb-4 flex-wrap">
+        <h2 class="font-bold text-[#3B4A1E]" style="font-family:'Montserrat',sans-serif">Homepage Fleet Photos</h2>
+        <p class="text-xs text-gray-500">These show in the fleet gallery on the homepage — not on the Fleet page.</p>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-sm font-medium mb-1">Add Photos <span class="text-gray-400 font-normal">(JPG/PNG/WEBP, up to 10 at once)</span></label>
+        <input id="galleryImagesInput" type="file" accept="image/jpeg,image/png,image/webp" multiple class="w-full border border-gray-300 rounded px-3 py-2 bg-white"/>
+        <div id="galleryNewPreviews" class="flex flex-wrap gap-3 mt-3"></div>
+        <p id="galleryUploadError" class="text-sm text-red-600 hidden mt-2"></p>
+        <button type="button" id="galleryUploadBtn" class="mt-3 bg-[#3B4A1E] text-white text-sm font-semibold rounded px-4 py-2 hover:opacity-90 transition disabled:opacity-60 disabled:cursor-not-allowed">
+          Upload Photos
+        </button>
+      </div>
+
+      <div>
+        <h3 class="text-sm font-medium text-gray-600 mb-2">Current Photos</h3>
+        <div id="galleryCurrentPhotos" class="flex flex-wrap gap-3">
+          <p class="text-gray-500 text-sm">Loading…</p>
+        </div>
       </div>
     </section>
 
@@ -161,332 +87,6 @@
 <script>
   AdminShell.init("/admin/fleet");
 </script>
-<script>
-(function () {
-  "use strict";
-
-  const form = document.getElementById("vehicleForm");
-  const formTitle = document.getElementById("formTitle");
-  const submitBtn = document.getElementById("submitBtn");
-  const submitLabel = document.getElementById("submitLabel");
-  const cancelEditBtn = document.getElementById("cancelEditBtn");
-  const formError = document.getElementById("formError");
-  const vehicleIdField = document.getElementById("vehicleId");
-  const existingImagesWrap = document.getElementById("existingImagesWrap");
-  const existingImagesDiv = document.getElementById("existingImages");
-
-  const categorySelect = document.getElementById("category");
-  const seatingCapacityWrap = document.getElementById("seatingCapacityWrap");
-  const seatingInput = document.getElementById("seatingCapacity");
-  const seatingHint = document.getElementById("seatingHint");
-  const seatingRequiredMark = document.getElementById("seatingRequiredMark");
-
-  const imagesInput = document.getElementById("imagesInput");
-  const newImagePreviews = document.getElementById("newImagePreviews");
-  const photoCountHint = document.getElementById("photoCountHint");
-
-  const fleetSearchInput = document.getElementById("fleetSearch");
-  const fleetSearchClear = document.getElementById("fleetSearchClear");
-  const fleetSearchCount = document.getElementById("fleetSearchCount");
-
-  const fields = ["name", "category", "seatingCapacity", "loadLimitKg", "bookingFee", "location", "status", "description"];
-
-  // Cargo-only categories don't carry passengers, so seating capacity
-  // doesn't apply — a truck bed isn't measured in seats.
-  const CARGO_ONLY_CATEGORIES = ["truck"];
-
-  // Friendly labels so a search for "suv" also hits the "4x4" category,
-  // matching what the admin reads on screen rather than just the enum.
-  const CATEGORY_LABELS = {
-    saloon: "Saloon Car",
-    "4x4": "4x4 & SUV",
-    bus: "Bus",
-    truck: "Truck",
-  };
-
-  // New photos picked by the admin, held here (not on the <input>) so
-  // individual files can be previewed and removed before upload.
-  let selectedFiles = [];
-  let selectedFilePreviewUrls = [];
-
-  // All vehicles as last loaded from the API — the search bar filters
-  // this in-memory rather than re-hitting the server on every keystroke.
-  let allVehicles = [];
-
-  function escapeHtml(str) {
-    return String(str ?? "").replace(/[&<>"']/g, (c) => ({
-      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-    }[c]));
-  }
-
-  // ---- Seating capacity: hidden entirely for cargo-only categories ----
-  function updateSeatingRequirement() {
-    const isCargoOnly = CARGO_ONLY_CATEGORIES.includes(categorySelect.value);
-    seatingCapacityWrap.style.display = isCargoOnly ? "none" : "";
-    seatingInput.required = !isCargoOnly;
-    seatingRequiredMark.style.display = isCargoOnly ? "none" : "inline";
-    seatingHint.textContent = "";
-    if (isCargoOnly) seatingInput.value = "";
-  }
-  categorySelect.addEventListener("change", updateSeatingRequirement);
-
-  // ---- New-photo previews ----
-  function revokePreviewUrls() {
-    selectedFilePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
-    selectedFilePreviewUrls = [];
-  }
-
-  function renderNewImagePreviews() {
-    revokePreviewUrls();
-
-    if (!selectedFiles.length) {
-      newImagePreviews.innerHTML = "";
-      updatePhotoCountHint();
-      return;
-    }
-
-    newImagePreviews.innerHTML = selectedFiles.map((file, i) => {
-      const url = URL.createObjectURL(file);
-      selectedFilePreviewUrls.push(url);
-      return `
-        <div class="preview-tile">
-          <img class="thumb-lg" src="${url}" alt="${escapeHtml(file.name)}"/>
-          <button type="button" data-remove-new="${i}" class="preview-remove" aria-label="Remove this photo">×</button>
-        </div>
-      `;
-    }).join("");
-
-    newImagePreviews.querySelectorAll("[data-remove-new]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        selectedFiles.splice(Number(btn.dataset.removeNew), 1);
-        renderNewImagePreviews();
-      });
-    });
-
-    updatePhotoCountHint();
-  }
-
-  function countKeptImages() {
-    return document.querySelectorAll(".keep-image:checked").length;
-  }
-
-  function updatePhotoCountHint() {
-    const total = countKeptImages() + selectedFiles.length;
-    photoCountHint.textContent = `${total} of 10 photo${total === 1 ? "" : "s"} selected (minimum 1 required).`;
-    photoCountHint.style.color = total < 1 || total > 10 ? "#dc2626" : "#6b7280";
-  }
-
-  imagesInput.addEventListener("change", () => {
-    const incoming = Array.from(imagesInput.files);
-    incoming.forEach((file) => {
-      const alreadyAdded = selectedFiles.some(
-        (f) => f.name === file.name && f.size === file.size && f.lastModified === file.lastModified
-      );
-      if (!alreadyAdded) selectedFiles.push(file);
-    });
-    imagesInput.value = ""; // reset so picking again fires "change" and lets them add more
-    renderNewImagePreviews();
-  });
-
-  // ---- Search: filter the already-loaded fleet by any field the
-  // admin might type — a name fragment, a category word, a location,
-  // a price, a load limit, or a seating count. ----
-  function vehicleMatchesSearch(v, term) {
-    if (!term) return true;
-
-    const haystacks = [
-      v.name,
-      v.category,
-      CATEGORY_LABELS[v.category],
-      v.location,
-      v.status,
-      v.description,
-      v.bookingFee != null ? String(v.bookingFee) : "",
-      v.seatingCapacity != null ? String(v.seatingCapacity) : "",
-      v.loadLimitKg != null ? String(v.loadLimitKg) : "",
-    ];
-
-    return haystacks.some((h) => h && String(h).toLowerCase().includes(term));
-  }
-
-  function applyFleetSearch() {
-    const raw = fleetSearchInput.value.trim();
-    const term = raw.toLowerCase();
-    fleetSearchClear.classList.toggle("hidden", !raw);
-
-    const filtered = term ? allVehicles.filter((v) => vehicleMatchesSearch(v, term)) : allVehicles;
-
-    if (term) {
-      fleetSearchCount.textContent = `${filtered.length} of ${allVehicles.length} vehicle${allVehicles.length === 1 ? "" : "s"} match "${raw}"`;
-      fleetSearchCount.classList.remove("hidden");
-    } else {
-      fleetSearchCount.classList.add("hidden");
-    }
-
-    renderVehicleList(filtered, { searchActive: !!term });
-  }
-
-  fleetSearchInput.addEventListener("input", applyFleetSearch);
-  fleetSearchClear.addEventListener("click", () => {
-    fleetSearchInput.value = "";
-    applyFleetSearch();
-    fleetSearchInput.focus();
-  });
-
-  // ---- Render vehicle list ----
-  function renderVehicleList(vehicles, opts) {
-    opts = opts || {};
-    const list = document.getElementById("vehicleList");
-
-    if (!vehicles.length) {
-      list.innerHTML = opts.searchActive
-        ? `<p class="text-gray-500 text-sm py-4">No vehicles match your search.</p>`
-        : `<p class="text-gray-500 text-sm py-4">No vehicles added yet.</p>`;
-      return;
-    }
-
-    list.innerHTML = vehicles.map((v) => {
-      const seating = v.seatingCapacity ? `${escapeHtml(v.seatingCapacity)} seats · ` : "";
-      return `
-      <div class="flex flex-col sm:flex-row sm:items-center gap-3 py-3">
-        <div class="flex items-center gap-3 flex-1 min-w-0">
-          <img class="thumb flex-shrink-0" src="${escapeHtml(v.images[0])}" alt="${escapeHtml(v.name)}"/>
-          <div class="flex-1 min-w-0">
-            <p class="font-semibold truncate">${escapeHtml(v.name)}</p>
-            <p class="text-sm text-gray-500">${escapeHtml(v.category)} · ${seating}K${escapeHtml(v.bookingFee)}/day · ${escapeHtml(v.location)} · ${escapeHtml(v.status)}</p>
-          </div>
-        </div>
-        <div class="flex gap-2 sm:flex-shrink-0">
-          <button data-edit="${v._id}" class="flex-1 sm:flex-none text-sm px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50">Edit</button>
-          <button data-delete="${v._id}" class="flex-1 sm:flex-none text-sm px-3 py-1.5 border border-red-300 text-red-600 rounded hover:bg-red-50">Delete</button>
-        </div>
-      </div>
-    `;
-    }).join("");
-
-    list.querySelectorAll("[data-edit]").forEach((btn) =>
-      btn.addEventListener("click", () => startEdit(btn.dataset.edit))
-    );
-    list.querySelectorAll("[data-delete]").forEach((btn) =>
-      btn.addEventListener("click", () => deleteVehicle(btn.dataset.delete))
-    );
-  }
-
-  // ---- Load vehicle list from the API ----
-  async function loadVehicles() {
-    const list = document.getElementById("vehicleList");
-    list.innerHTML = `<p class="text-gray-500 text-sm py-4">Loading…</p>`;
-    allVehicles = await fetch("/api/fleet").then((r) => r.json());
-    applyFleetSearch();
-  }
-
-  async function deleteVehicle(id) {
-    if (!confirm("Delete this vehicle? This can't be undone.")) return;
-    const res = await fetch(`/api/fleet/${id}`, { method: "DELETE" });
-    if (res.ok) loadVehicles();
-  }
-
-  async function startEdit(id) {
-    const v = await fetch(`/api/fleet/${id}`).then((r) => r.json());
-    vehicleIdField.value = v._id;
-    document.getElementById("name").value = v.name;
-    document.getElementById("category").value = v.category;
-    document.getElementById("seatingCapacity").value = v.seatingCapacity || "";
-    document.getElementById("loadLimitKg").value = v.loadLimitKg || "";
-    document.getElementById("bookingFee").value = v.bookingFee;
-    document.getElementById("location").value = v.location;
-    document.getElementById("status").value = v.status;
-    document.getElementById("description").value = v.description || "";
-    updateSeatingRequirement();
-
-    existingImagesWrap.style.display = "";
-    existingImagesDiv.innerHTML = v.images.map((img) => `
-      <label class="flex flex-col items-center gap-1 text-xs">
-        <img class="thumb" src="${escapeHtml(img)}"/>
-        <span class="flex items-center gap-1"><input type="checkbox" checked value="${escapeHtml(img)}" class="keep-image"/> keep</span>
-      </label>
-    `).join("");
-    existingImagesDiv.querySelectorAll(".keep-image").forEach((cb) =>
-      cb.addEventListener("change", updatePhotoCountHint)
-    );
-
-    selectedFiles = [];
-    renderNewImagePreviews();
-
-    formTitle.textContent = "Edit Vehicle";
-    submitLabel.textContent = "Save Changes";
-    cancelEditBtn.classList.remove("hidden");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  cancelEditBtn.addEventListener("click", resetForm);
-
-  function resetForm() {
-    form.reset();
-    vehicleIdField.value = "";
-    existingImagesWrap.style.display = "none";
-    existingImagesDiv.innerHTML = "";
-    selectedFiles = [];
-    renderNewImagePreviews();
-    updateSeatingRequirement();
-    formTitle.textContent = "Add a Vehicle";
-    submitLabel.textContent = "Add Vehicle";
-    cancelEditBtn.classList.add("hidden");
-    formError.classList.add("hidden");
-  }
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    formError.classList.add("hidden");
-
-    const id = vehicleIdField.value;
-    const totalPhotos = countKeptImages() + selectedFiles.length;
-    if (totalPhotos < 1 || totalPhotos > 10) {
-      formError.textContent = "A vehicle needs between 1 and 10 photos.";
-      formError.classList.remove("hidden");
-      return;
-    }
-
-    const fd = new FormData();
-    fields.forEach((f) => {
-      const val = document.getElementById(f).value;
-      if (f === "seatingCapacity" && !val) return; // leave out entirely when not applicable
-      fd.append(f, val);
-    });
-
-    selectedFiles.forEach((file) => fd.append(id ? "newImages" : "images", file));
-
-    if (id) {
-      const kept = Array.from(document.querySelectorAll(".keep-image:checked")).map((cb) => cb.value);
-      fd.append("keepImages", JSON.stringify(kept));
-    }
-
-    submitBtn.disabled = true;
-    const originalLabel = submitLabel.textContent;
-    submitLabel.textContent = "Saving…";
-
-    try {
-      const res = await fetch(id ? `/api/fleet/${id}` : "/api/fleet", {
-        method: id ? "PUT" : "POST",
-        body: fd,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Something went wrong.");
-      resetForm();
-      loadVehicles();
-    } catch (err) {
-      formError.textContent = err.message;
-      formError.classList.remove("hidden");
-    } finally {
-      submitBtn.disabled = false;
-      submitLabel.textContent = originalLabel;
-    }
-  });
-
-  updateSeatingRequirement();
-  renderNewImagePreviews();
-  loadVehicles();
-})();
-</script>
+<script src="/admin/fleet-page.js" defer></script>
 </body>
 </html>

@@ -1,121 +1,115 @@
-/* ==========================================================================
-   Bee Cee Logistics — fleet-render.js
-   Fetches live fleet data from /api/fleet and renders it as cards, on both
-   the homepage preview and the full fleet.html grid. Keep this file in sync
-   with the card markup in bee.css if the design changes.
-   ========================================================================== */
+/* ============================================================
+   Bee Cee Logistics — Fleet category data + card rendering
+   Exposes window.BeeCeeFleet so any page can:
+     - fetchFleet(): get the (cached) list of the 5 fixed categories
+       with their rate ranges, from GET /api/fleet.
+     - renderFleetInto(selector, opts): render category rate cards
+       into a container. No filters — there are only 5 fixed
+       categories, so all of them always show. opts.limit caps how
+       many cards render, if ever needed; omit it to show all.
+   Used by fleet.html (via cee.js's loadFleet()) and by
+   request.html's category-booking form (via fetchFleet() directly).
+   Load this before cee.js on any page that needs it.
+   ============================================================ */
+
 (function () {
   "use strict";
 
-  const STATUS_LABEL = { available: "Available", booked: "Booked", maintenance: "Maintenance" };
-  const STATUS_CLASS = {
-    available: "bg-success text-white",
-    booked: "bg-error text-on-error",
-    maintenance: "bg-secondary-container text-on-secondary-container",
+  const ICONS = {
+    saloon: "directions_car",
+    "4x4": "terrain",
+    bus: "directions_bus",
+    truck: "local_shipping",
   };
-  const CATEGORY_LABEL = { saloon: "Saloon Car", "4x4": "4x4 & SUV", bus: "Bus", truck: "Truck" };
+  const DEFAULT_ICON = "directions_car";
 
-  function formatFee(fee) {
-    if (fee === undefined || fee === null || fee === "") return "";
-    return "K" + Number(fee).toLocaleString() + " / day";
+  let cachedFleet = null;
+  let fetchPromise = null;
+
+  function escapeHtml(str) {
+    return String(str ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
   }
 
-  function cardHTML(vehicle, { compact = false } = {}) {
-    const images = vehicle.images && vehicle.images.length ? vehicle.images : ["/images/fleet-placeholder.jpg"];
-    const statusKey = vehicle.status || "available";
-    const canBook = statusKey === "available";
+  function formatRate(cat) {
+    const noRealRange = !cat.minRate && !cat.maxRate;
+    if (!cat.acceptingBookings || noRealRange) return "Contact us for a rate";
+    if (cat.minRate === cat.maxRate) return `K${cat.minRate.toLocaleString()} / day`;
+    return `K${cat.minRate.toLocaleString()} – K${cat.maxRate.toLocaleString()} / day`;
+  }
 
-    const detailRows = compact
-      ? ""
-      : `
-      <dl class="grid grid-cols-2 gap-x-3 gap-y-1 font-data-mono text-data-mono text-on-surface-variant mb-4">
-        <dt class="opacity-70">Seats</dt><dd>${vehicle.seatingCapacity ?? "—"}</dd>
-        ${vehicle.loadLimitKg ? `<dt class="opacity-70">Load limit</dt><dd>${vehicle.loadLimitKg} kg</dd>` : ""}
-        <dt class="opacity-70">Location</dt><dd>${vehicle.location ?? "—"}</dd>
-        <dt class="opacity-70">Booking fee</dt><dd>${formatFee(vehicle.bookingFee)}</dd>
-      </dl>`;
+  // Cached + de-duped so fleet.html and request.html can both call this
+  // freely without firing off duplicate requests.
+  function fetchFleet() {
+    if (cachedFleet) return Promise.resolve(cachedFleet);
+    if (!fetchPromise) {
+      fetchPromise = fetch("/api/fleet")
+        .then((res) => {
+          if (!res.ok) throw new Error("Could not load fleet categories.");
+          return res.json();
+        })
+        .then((data) => {
+          cachedFleet = data;
+          return data;
+        })
+        .finally(() => {
+          fetchPromise = null;
+        });
+    }
+    return fetchPromise;
+  }
+
+  function cardTemplate(cat) {
+    const icon = ICONS[cat.category] || DEFAULT_ICON;
+    const available = !!cat.acceptingBookings;
 
     return `
-    <article class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col shadow-sm" data-fleet-card data-category="${vehicle.category}" data-vehicle-id="${vehicle._id}">
-      <div class="h-48 relative fleet-card__media" data-image-index="0">
-        ${images.map((src, i) => `<img class="w-full h-full object-cover fleet-card__img${i === 0 ? " is-active" : ""}" alt="${vehicle.name}" src="${src}" style="${i === 0 ? "" : "display:none"}"/>`).join("")}
-        ${images.length > 1 ? `
-          <button type="button" class="fleet-card__nav fleet-card__nav--prev" aria-label="Previous photo">&#10094;</button>
-          <button type="button" class="fleet-card__nav fleet-card__nav--next" aria-label="Next photo">&#10095;</button>
-          <span class="fleet-card__count">1 / ${images.length}</span>
-        ` : ""}
-        <span class="absolute top-2 right-2 ${STATUS_CLASS[statusKey]} font-label-sm text-label-sm px-2 py-1 rounded shadow-sm">${STATUS_LABEL[statusKey]}</span>
-      </div>
-      <div class="p-4 flex-grow flex flex-col justify-between">
-        <div>
-          <h3 class="font-headline-md text-headline-md text-primary mb-1">${vehicle.name}</h3>
-          <p class="font-body-md text-body-md text-on-surface-variant mb-2">${CATEGORY_LABEL[vehicle.category] || vehicle.category}</p>
-          ${detailRows}
+      <article class="bg-surface border border-outline-variant rounded-xl overflow-hidden flex flex-col" data-category="${escapeHtml(cat.category)}">
+        <div class="fleet-skeleton-media flex items-center justify-center" style="min-height:160px;">
+          <span class="material-symbols-outlined text-primary" style="font-size:56px;" aria-hidden="true">${icon}</span>
         </div>
-        ${canBook
-          ? `<a class="btn btn-primary btn-block btn-sm" href="request.html?vehicle=${vehicle._id}">Book Now</a>`
-          : `<button class="btn btn-outline btn-block btn-sm" disabled aria-disabled="true">Currently ${STATUS_LABEL[statusKey]}</button>`
-        }
-      </div>
-    </article>`;
+        <div class="p-4 flex flex-col gap-2 flex-grow">
+          <div class="flex items-center justify-between gap-2">
+            <h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">${escapeHtml(cat.label)}</h3>
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full ${available ? "bg-primary-container text-on-primary-container" : "bg-surface-container text-on-surface-variant"}">
+              ${available ? "Available" : "Unavailable"}
+            </span>
+          </div>
+          <p class="font-body-md text-body-md text-on-surface-variant">${formatRate(cat)}</p>
+          <div class="mt-auto pt-3">
+            ${
+              available
+                ? `<a href="request.html?category=${encodeURIComponent(cat.category)}" class="btn btn-primary btn-block">Request a Quote</a>`
+                : `<span class="btn btn-block opacity-50 pointer-events-none border border-outline-variant text-on-surface-variant">Currently Unavailable</span>`
+            }
+          </div>
+        </div>
+      </article>
+    `;
   }
 
-  function wireImageCyclers(root) {
-    root.querySelectorAll("[data-fleet-card]").forEach((card) => {
-      const media = card.querySelector(".fleet-card__media");
-      if (!media) return;
-      const imgs = Array.from(media.querySelectorAll(".fleet-card__img"));
-      const counter = media.querySelector(".fleet-card__count");
-      let index = 0;
+  async function renderFleetInto(selector, opts) {
+    opts = opts || {};
+    const grid = document.querySelector(selector);
+    if (!grid) return;
 
-      function show(i) {
-        imgs[index].style.display = "none";
-        imgs[index].classList.remove("is-active");
-        index = (i + imgs.length) % imgs.length;
-        imgs[index].style.display = "";
-        imgs[index].classList.add("is-active");
-        if (counter) counter.textContent = `${index + 1} / ${imgs.length}`;
-      }
-
-      const prev = media.querySelector(".fleet-card__nav--prev");
-      const next = media.querySelector(".fleet-card__nav--next");
-      if (prev) prev.addEventListener("click", (e) => { e.preventDefault(); show(index - 1); });
-      if (next) next.addEventListener("click", (e) => { e.preventDefault(); show(index + 1); });
-    });
-  }
-
-  async function fetchFleet(params = {}) {
-    const qs = new URLSearchParams(params).toString();
-    const res = await fetch("/api/fleet" + (qs ? `?${qs}` : ""));
-    if (!res.ok) throw new Error("Could not load fleet data.");
-    return res.json();
-  }
-
-  /**
-   * Renders into any container with [data-fleet-grid]. Pass compact:true for
-   * the homepage preview (name + category only, no spec table).
-   */
-  async function renderFleetInto(selector, { compact = false, category = "all", limit } = {}) {
-    const container = document.querySelector(selector);
-    if (!container) return;
-
-    container.innerHTML = `<p class="col-span-full text-center font-body-md text-body-md text-on-surface-variant py-8">Loading fleet…</p>`;
-
+    grid.setAttribute("aria-busy", "true");
     try {
-      let vehicles = await fetchFleet(category !== "all" ? { category } : {});
-      if (limit) vehicles = vehicles.slice(0, limit);
+      const categories = await fetchFleet();
+      const visible = opts.limit ? categories.slice(0, opts.limit) : categories;
 
-      if (!vehicles.length) {
-        container.innerHTML = `<p class="col-span-full text-center font-body-md text-body-md text-on-surface-variant py-8">No vehicles listed yet — check back soon.</p>`;
+      if (!visible.length) {
+        grid.innerHTML = '<p class="col-span-full text-center text-on-surface-variant py-8">No categories found.</p>';
         return;
       }
-
-      container.innerHTML = vehicles.map((v) => cardHTML(v, { compact })).join("");
-      wireImageCyclers(container);
+      grid.innerHTML = visible.map(cardTemplate).join("");
     } catch (err) {
-      container.innerHTML = `<p class="col-span-full text-center font-body-md text-body-md text-error py-8">${err.message}</p>`;
+      grid.innerHTML = '<p class="col-span-full text-center text-red-600 py-8">Couldn\'t load the fleet right now. Please try again shortly.</p>';
+    } finally {
+      grid.setAttribute("aria-busy", "false");
     }
   }
 
-  window.BeeCeeFleet = { renderFleetInto, fetchFleet };
+  window.BeeCeeFleet = { fetchFleet, renderFleetInto };
 })();

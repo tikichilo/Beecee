@@ -108,24 +108,34 @@
 </form>
 </div>
 </div>
-<!-- Vehicle booking mode — shown instead of the quote form when arriving via
-     "Book Now" on a fleet card (request.html?vehicle=<id>). -->
+<!-- Vehicle category booking mode — shown instead of the quote form when
+     arriving via "Request This Category" on a fleet card
+     (request.html?category=<key>). No individual vehicles are tracked —
+     the renter picks a category and proposes a daily rate within its
+     posted range; staff confirm the details when they review the request. -->
 <div data-booking-mode hidden>
 <div class="text-center mb-12">
 <h1 class="font-display-lg text-display-lg text-primary mb-4">Request to Book a Vehicle</h1>
-<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">You're requesting <span class="font-semibold text-primary" data-booking-vehicle-name>this vehicle</span>. Fill in your details below and our team will review your request and confirm availability shortly.</p>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">You're requesting a <span class="font-semibold text-primary" data-booking-category-label>vehicle</span>. Fill in your details below and our team will review your request and confirm availability shortly.</p>
 </div>
 <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-[0px_4px_12px_rgba(31,58,95,0.08)] overflow-hidden">
 <form class="p-margin-mobile md:p-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-gutter" data-booking-form="" enctype="multipart/form-data">
-<input type="hidden" name="vehicleId"/>
-<input type="hidden" name="vehicleName"/>
-<input type="hidden" name="dailyRate"/>
 <div class="col-span-1 md:col-span-2 border-b border-surface-variant pb-4 mb-4 flex items-center justify-between flex-wrap gap-2">
 <h2 class="font-headline-md text-headline-md text-primary flex items-center gap-2">
 <span class="material-symbols-outlined text-secondary" aria-hidden="true">directions_car</span>
-<span data-booking-vehicle-name>Selected vehicle</span>
-</h2>
-<span class="font-data-mono text-data-mono text-on-surface-variant" data-booking-vehicle-fee></span>
+                        Vehicle Category
+                    </h2>
+<span class="font-data-mono text-data-mono text-on-surface-variant" data-booking-category-range></span>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="bookingCategory">Vehicle Category *</label>
+<select class="form-field font-body-md text-body-md" id="bookingCategory" name="category" required>
+<option value="">Loading categories…</option>
+</select>
+</div>
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface-variant" for="proposedRate">Your Proposed Daily Rate (ZMW) *</label>
+<input class="form-field font-body-md text-body-md" id="proposedRate" name="proposedRate" required="" type="number" min="0" step="1"/>
 </div>
 <div class="flex flex-col gap-2">
 <label class="font-label-sm text-label-sm text-on-surface-variant" for="renterName">Full Name *</label>

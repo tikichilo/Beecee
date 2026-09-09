@@ -1,133 +1,104 @@
 const express = require("express");
 const router = express.Router();
 
-const Vehicle = require("../models/Vehicle");
+const FleetCategory = require("../models/FleetCategory");
 const { requireAdmin } = require("../middleware/auth");
-const {
-  uploadFleetImages,
-  uploadImageBuffers,
-  deleteCloudinaryImage,
-  deleteCloudinaryImages,
-} = require("../utils/cloudinaryUpload");
-
-const CLOUDINARY_FOLDER = "bee-cee-logistics/fleet";
+const { CATEGORIES, CATEGORY_KEYS, CATEGORY_LABELS } = require("../config/fleetCategories");
 
 // ------------------------------------------------------------------
-// PUBLIC — used by index.html and fleet.html to render live fleet cards
-// GET /api/fleet            -> all vehicles
-// GET /api/fleet?category=4x4  -> filtered
+// Makes sure a document exists for every category key, so the public
+// site and admin dashboard always have all 5 rows to show/edit even
+// before an admin has ever touched fleet.html. New categories default
+// to acceptingBookings:false with a 0-0 range until an admin sets a
+// real range — never shown as "available" with a made-up price.
+// ------------------------------------------------------------------
+async function ensureSeeded() {
+  const existing = await FleetCategory.find({}, "category");
+  const have = new Set(existing.map((c) => c.category));
+  const missing = CATEGORY_KEYS.filter((key) => !have.has(key));
+  if (!missing.length) return;
+
+  await FleetCategory.insertMany(
+    missing.map((category) => ({
+      category,
+      minRate: 0,
+      maxRate: 0,
+      acceptingBookings: false,
+    })),
+    { ordered: false }
+  ).catch(() => {}); // ignore races between concurrent requests
+
+}
+
+function withLabel(doc) {
+  const obj = doc.toObject ? doc.toObject() : doc;
+  return { ...obj, label: CATEGORY_LABELS[obj.category] || obj.category };
+}
+
+// ------------------------------------------------------------------
+// PUBLIC — used by index.html and fleet.html to render the 5 category
+// rate cards.
+// GET /api/fleet
 // ------------------------------------------------------------------
 router.get("/", async (req, res) => {
-  const filter = {};
-  if (req.query.category && req.query.category !== "all") {
-    filter.category = req.query.category;
-  }
-  const vehicles = await Vehicle.find(filter).sort({ createdAt: -1 });
-  res.json(vehicles);
+  await ensureSeeded();
+  const categories = await FleetCategory.find().sort({ category: 1 });
+
+  // Return in the fixed CATEGORIES display order, not alphabetical.
+  const byKey = new Map(categories.map((c) => [c.category, c]));
+  const ordered = CATEGORIES.map((c) => withLabel(byKey.get(c.key)));
+
+  res.json(ordered);
 });
 
-router.get("/:id", async (req, res) => {
-  const vehicle = await Vehicle.findById(req.params.id);
-  if (!vehicle) return res.status(404).json({ error: "Vehicle not found." });
-  res.json(vehicle);
+router.get("/:category", async (req, res) => {
+  if (!CATEGORY_KEYS.includes(req.params.category)) {
+    return res.status(404).json({ error: "Unknown category." });
+  }
+  await ensureSeeded();
+  const doc = await FleetCategory.findOne({ category: req.params.category });
+  if (!doc) return res.status(404).json({ error: "Category not found." });
+  res.json(withLabel(doc));
 });
 
 // ------------------------------------------------------------------
-// ADMIN — everything below requires a logged-in session
+// ADMIN — set the rate range / availability for a category. Categories
+// are a fixed set (see config/fleetCategories.js) so this is always an
+// upsert against one of the 5 known keys, never a create/delete.
+// PUT /api/fleet/:category
 // ------------------------------------------------------------------
-router.post("/", requireAdmin, uploadFleetImages.array("images", 10), async (req, res) => {
-  let images = [];
+router.put("/:category", requireAdmin, async (req, res) => {
+  const { category } = req.params;
+  if (!CATEGORY_KEYS.includes(category)) {
+    return res.status(404).json({ error: "Unknown category." });
+  }
+
   try {
-    if (!req.files || !req.files.length) {
-      return res.status(400).json({ error: "At least 1 image is required." });
+    const minRate = Number(req.body.minRate);
+    const maxRate = Number(req.body.maxRate);
+
+    if (!Number.isFinite(minRate) || !Number.isFinite(maxRate) || minRate < 0 || maxRate < 0) {
+      return res.status(400).json({ error: "Enter a valid minimum and maximum daily rate." });
+    }
+    if (maxRate < minRate) {
+      return res.status(400).json({ error: "Maximum rate can't be lower than the minimum rate." });
     }
 
-    console.log(`⬆️  Uploading ${req.files.length} fleet image(s) to Cloudinary...`);
-    images = await uploadImageBuffers(req.files, CLOUDINARY_FOLDER);
-    console.log(`✅ Uploaded ${images.length} image(s)`);
+    const doc = await FleetCategory.findOneAndUpdate(
+      { category },
+      {
+        category,
+        minRate,
+        maxRate,
+        acceptingBookings: req.body.acceptingBookings !== undefined ? !!req.body.acceptingBookings : true,
+      },
+      { new: true, upsert: true, runValidators: true }
+    );
 
-    if (!images.length) {
-      return res.status(500).json({ error: "All image uploads failed — please try again" });
-    }
-
-    const vehicle = await Vehicle.create({
-      name: req.body.name,
-      category: req.body.category,
-      images,
-      seatingCapacity: req.body.seatingCapacity,
-      loadLimitKg: req.body.loadLimitKg || undefined,
-      bookingFee: req.body.bookingFee,
-      location: req.body.location,
-      status: req.body.status || "available",
-      description: req.body.description || "",
-    });
-
-    res.status(201).json(vehicle);
+    res.json(withLabel(doc));
   } catch (err) {
-    // Clean up any images that already made it to Cloudinary if the
-    // DB save failed (e.g. bad category enum)
-    await deleteCloudinaryImages(images);
     res.status(400).json({ error: err.message });
   }
-});
-
-router.put("/:id", requireAdmin, uploadFleetImages.array("newImages", 10), async (req, res) => {
-  let newImages = [];
-  try {
-    const vehicle = await Vehicle.findById(req.params.id);
-    if (!vehicle) return res.status(404).json({ error: "Vehicle not found." });
-
-    // Images the admin chose to keep (sent back as JSON array of existing URLs)
-    let keptImages = vehicle.images;
-    if (req.body.keepImages) {
-      keptImages = JSON.parse(req.body.keepImages);
-    }
-
-    if (req.files && req.files.length) {
-      console.log(`⬆️  Uploading ${req.files.length} new fleet image(s) to Cloudinary...`);
-      newImages = await uploadImageBuffers(req.files, CLOUDINARY_FOLDER);
-      console.log(`✅ Uploaded ${newImages.length} image(s)`);
-    }
-
-    const finalImages = [...keptImages, ...newImages];
-
-    if (finalImages.length < 1 || finalImages.length > 10) {
-      await deleteCloudinaryImages(newImages);
-      return res.status(400).json({ error: "A vehicle needs between 1 and 10 images." });
-    }
-
-    // Remove from Cloudinary any images that were dropped by the admin
-    const removed = vehicle.images.filter((img) => !keptImages.includes(img));
-    for (const img of removed) {
-      await deleteCloudinaryImage(img);
-    }
-
-    vehicle.name = req.body.name ?? vehicle.name;
-    vehicle.category = req.body.category ?? vehicle.category;
-    vehicle.seatingCapacity = req.body.seatingCapacity ?? vehicle.seatingCapacity;
-    vehicle.loadLimitKg = req.body.loadLimitKg || undefined;
-    vehicle.bookingFee = req.body.bookingFee ?? vehicle.bookingFee;
-    vehicle.location = req.body.location ?? vehicle.location;
-    vehicle.status = req.body.status ?? vehicle.status;
-    vehicle.description = req.body.description ?? vehicle.description;
-    vehicle.images = finalImages;
-
-    await vehicle.save();
-    res.json(vehicle);
-  } catch (err) {
-    await deleteCloudinaryImages(newImages);
-    res.status(400).json({ error: err.message });
-  }
-});
-
-router.delete("/:id", requireAdmin, async (req, res) => {
-  const vehicle = await Vehicle.findById(req.params.id);
-  if (!vehicle) return res.status(404).json({ error: "Vehicle not found." });
-
-  await deleteCloudinaryImages(vehicle.images);
-
-  await vehicle.deleteOne();
-  res.json({ ok: true });
 });
 
 module.exports = router;

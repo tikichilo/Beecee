@@ -1,9 +1,15 @@
 const mongoose = require("mongoose");
+const { CATEGORY_KEYS } = require("../config/fleetCategories");
 
 const bookingSchema = new mongoose.Schema(
   {
-    vehicleId: { type: mongoose.Schema.Types.ObjectId, ref: "Vehicle", required: true },
-    vehicleName: { type: String, required: true, trim: true }, // snapshot at booking time, in case the vehicle is edited/deleted later
+    // No individual vehicles anymore — a booking is against a fleet
+    // category, with the renter's own proposed rate within that
+    // category's posted range. categoryLabel is a snapshot for display,
+    // in case the label ever changes later.
+    category: { type: String, required: true, enum: CATEGORY_KEYS },
+    categoryLabel: { type: String, required: true, trim: true },
+    proposedRate: { type: Number, required: true, min: 0 }, // ZMW/day
 
     renterName: { type: String, required: true, trim: true },
     renterPhone: { type: String, required: true, trim: true },
@@ -46,9 +52,6 @@ const bookingSchema = new mongoose.Schema(
     pickupDate: { type: Date, required: true },
     expectedReturnDate: { type: Date, required: true },
     actualReturnDate: { type: Date },
-
-    dailyRate: { type: Number, min: 0 }, // ZMW/day — optional, usually pulled from the vehicle's bookingFee
-
     // "overdue" is never stored here — it's derived in booking.js from expectedReturnDate vs now.
     // This only reflects whether the vehicle is physically out once a booking is confirmed —
     // see requestStatus above for whether it's been reviewed/accepted at all.

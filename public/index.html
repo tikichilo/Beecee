@@ -139,10 +139,16 @@
 <h2 class="font-headline-md text-headline-md text-primary mb-4">Our Fleet</h2>
 <p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Reliable vehicles for every logistical challenge.</p>
 </div>
-<!-- Populated live from the fleet dashboard via /api/fleet (3 most recent) -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter" data-fleet-grid></div>
+<!-- Populated automatically from photos added via the admin Fleet page's
+     homepage gallery uploader, through GET /api/fleet-images. Rendered by
+     cee.js's loadFleetPhotos() (data-fleet-photo-grid), which shows every
+     photo in the fleet database — no cap — with an army-green frame and
+     opens a full-size lightbox on tap/click. This is a plain photo
+     gallery — no categories or pricing live here, that's on fleet.html
+     via /api/fleet instead. -->
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" data-fleet-photo-grid></div>
 <div class="text-center mt-8">
-<a class="link-arrow" href="fleet.html">View Full Fleet <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
+<a class="link-arrow" href="fleet.html">Book Now<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
 </div>
 </div>
 </section>

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Booking = require("../models/Booking");
+const { CATEGORY_KEYS, CATEGORY_LABELS } = require("../config/fleetCategories");
 const {
   uploadBookingDocs,
   uploadImageBuffer,
@@ -54,7 +55,7 @@ router.get("/", requireAuth, async (req, res) => {
 });
 
 // --------------------------------------------------------------------
-// POST /api/bookings — public. Used by request.html?vehicle=<id> (renter
+// POST /api/bookings — public. Used by request.html?category=<key> (renter
 // self-service) and by the admin "New Booking" form. Accepts
 // multipart/form-data so the driver's-licence / proof-of-residence photos
 // can ride along with the rest of the fields; a plain JSON POST (no files)
@@ -66,8 +67,8 @@ router.post("/", uploadBookingDocs, async (req, res) => {
 
   try {
     const {
-      vehicleId,
-      vehicleName,
+      category,
+      proposedRate,
       renterName,
       renterPhone,
       renterEmail,
@@ -76,7 +77,6 @@ router.post("/", uploadBookingDocs, async (req, res) => {
       driverLicenseNumber,
       pickupDate,
       expectedReturnDate,
-      dailyRate,
       notes,
     } = req.body;
 
@@ -89,13 +89,19 @@ router.post("/", uploadBookingDocs, async (req, res) => {
       relationship: req.body.nextOfKinRelationship,
     };
 
+    if (!category || !CATEGORY_KEYS.includes(category)) {
+      return res.status(400).json({ error: "A valid vehicle category is required." });
+    }
     if (
-      !vehicleId || !vehicleName || !renterName || !renterPhone ||
+      !proposedRate || !renterName || !renterPhone ||
       !residentialAddress || !driverOption || !pickupDate || !expectedReturnDate
     ) {
       return res.status(400).json({
-        error: "Vehicle, renter name, phone, residential address, driver option, pickup date, and expected return date are required.",
+        error: "Proposed rate, renter name, phone, residential address, driver option, pickup date, and expected return date are required.",
       });
+    }
+    if (Number(proposedRate) <= 0) {
+      return res.status(400).json({ error: "Proposed rate must be greater than 0." });
     }
     if (!["self", "company-driver"].includes(driverOption)) {
       return res.status(400).json({ error: "Driver option must be 'self' or 'company-driver'." });
@@ -132,8 +138,9 @@ router.post("/", uploadBookingDocs, async (req, res) => {
     const isAdminSubmission = !!(req.session && req.session.adminId);
 
     const booking = await Booking.create({
-      vehicleId,
-      vehicleName,
+      category,
+      categoryLabel: CATEGORY_LABELS[category] || category,
+      proposedRate,
       renterName,
       renterPhone,
       renterEmail,
@@ -146,7 +153,6 @@ router.post("/", uploadBookingDocs, async (req, res) => {
       requestStatus: isAdminSubmission ? "confirmed" : "pending",
       pickupDate,
       expectedReturnDate,
-      dailyRate: dailyRate || undefined,
       notes,
     });
 

@@ -10,9 +10,10 @@ require("./utils/cloudinaryUpload"); // fail-fast Cloudinary env check + config
 
 const authRoutes = require("./routes/auth");
 const fleetRoutes = require("./routes/fleet");
+const fleetImageRoutes = require("./routes/fleetImages"); // <-- added: homepage fleet photo gallery
 const quoteRoutes = require("./routes/quote");
-const bookingRoutes = require("./routes/booking"); // <-- added
-const receiptRoutes = require("./routes/receipt"); // <-- added
+const bookingRoutes = require("./routes/booking");
+const receiptRoutes = require("./routes/receipt");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -80,9 +81,10 @@ app.use(express.static(SITE_DIR));
 // --------------------------------------------------------------------
 app.use("/api/auth", authRoutes);
 app.use("/api/fleet", fleetRoutes);
+app.use("/api/fleet-images", fleetImageRoutes); // <-- added: homepage fleet photo gallery
 app.use("/api/quote-requests", quoteRoutes);
-app.use("/api/bookings", bookingRoutes); // <-- added
-app.use("/api/receipts", receiptRoutes); // <-- added
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/receipts", receiptRoutes);
 
 // --------------------------------------------------------------------
 // Clean-URL routes for each page (Phase 1 — public site, per sitemap)
@@ -130,14 +132,15 @@ app.use((req, res) => {
 
 // --------------------------------------------------------------------
 // Error handling — must be registered after all routes (catches
-// multer/Cloudinary upload errors bubbled up from routes/fleet.js)
+// multer/Cloudinary upload errors bubbled up from routes/fleet.js and
+// routes/fleetImages.js)
 // --------------------------------------------------------------------
 app.use((err, req, res, next) => {
   if (err && err.name === "MulterError") {
     const messages = {
       LIMIT_FILE_SIZE: "Image is too large — max 5MB per file.",
-      LIMIT_FILE_COUNT: "Too many images — max 10 per fleet listing.",
-      LIMIT_UNEXPECTED_FILE: "Too many images — max 10 per fleet listing.",
+      LIMIT_FILE_COUNT: "Too many images — max 10 per upload.",
+      LIMIT_UNEXPECTED_FILE: "Too many images — max 10 per upload.",
     };
     return res.status(400).json({ error: messages[err.code] || err.message });
   }
