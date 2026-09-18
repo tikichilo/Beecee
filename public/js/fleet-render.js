@@ -1,12 +1,15 @@
 /* ============================================================
-   Bee Cee Logistics — Fleet category data + card rendering
+   Bee Cee Logistics — Fleet category data + card/filter rendering
    Exposes window.BeeCeeFleet so any page can:
      - fetchFleet(): get the (cached) list of the 5 fixed categories
        with their rate ranges, from GET /api/fleet.
      - renderFleetInto(selector, opts): render category rate cards
-       into a container. No filters — there are only 5 fixed
-       categories, so all of them always show. opts.limit caps how
-       many cards render, if ever needed; omit it to show all.
+       into a container. opts.limit caps how many cards render, if
+       ever needed; omit it to show all.
+     - renderFleetFilters(selector, opts): render the "All" + one
+       pill per category filter bar from the same live data, and
+       wire clicks to filter the rendered cards. opts.gridSelector
+       tells it which grid to filter (defaults to [data-fleet-grid]).
    Used by fleet.html (via cee.js's loadFleet()) and by
    request.html's category-booking form (via fetchFleet() directly).
    Load this before cee.js on any page that needs it.
@@ -64,8 +67,10 @@
     const icon = ICONS[cat.category] || DEFAULT_ICON;
     const available = !!cat.acceptingBookings;
 
+    // "fleet-card" class added so the filter bar below (and the existing
+    // .fleet-card[hidden] rule in bee.css) has something to select.
     return `
-      <article class="bg-surface border border-outline-variant rounded-xl overflow-hidden flex flex-col" data-category="${escapeHtml(cat.category)}">
+      <article class="fleet-card bg-surface border border-outline-variant rounded-xl overflow-hidden flex flex-col" data-category="${escapeHtml(cat.category)}">
         <div class="fleet-skeleton-media flex items-center justify-center" style="min-height:160px;">
           <span class="material-symbols-outlined text-primary" style="font-size:56px;" aria-hidden="true">${icon}</span>
         </div>
@@ -111,5 +116,65 @@
     }
   }
 
-  window.BeeCeeFleet = { fetchFleet, renderFleetInto };
+  /* ------------------------------------------------------------------------
+     Filter pill bar — one "All" pill plus one pill per live category,
+     built from the same /api/fleet data as the cards. Clicking a pill
+     toggles which .fleet-card elements are visible in the target grid by
+     comparing each card's data-category to the pill's data-filter.
+     No-ops quietly (leaves whatever static markup was already there, e.g.
+     just the "All" button) if the fetch fails, so a network hiccup never
+     leaves the filter bar empty.
+     ------------------------------------------------------------------------ */
+  function filterButtonTemplate(cat) {
+    const icon = ICONS[cat.category] || DEFAULT_ICON;
+    return `
+      <button type="button" class="fleet-filter" data-filter="${escapeHtml(cat.category)}" aria-pressed="false">
+        <span class="material-symbols-outlined" aria-hidden="true">${icon}</span>
+        ${escapeHtml(cat.label)}
+      </button>
+    `;
+  }
+
+  function applyFilter(gridSelector, filter) {
+    const grid = document.querySelector(gridSelector);
+    if (!grid) return;
+    grid.querySelectorAll(".fleet-card").forEach((card) => {
+      const matches = filter === "all" || card.getAttribute("data-category") === filter;
+      card.hidden = !matches;
+    });
+  }
+
+  async function renderFleetFilters(selector, opts) {
+    opts = opts || {};
+    const container = document.querySelector(selector);
+    if (!container) return;
+    const gridSelector = opts.gridSelector || "[data-fleet-grid]";
+
+    let categories = [];
+    try {
+      categories = await fetchFleet();
+    } catch (err) {
+      return; // keep whatever static "All" button is already in the markup
+    }
+
+    const allButtonTemplate = `
+      <button type="button" class="fleet-filter" data-filter="all" aria-pressed="true">
+        <span class="material-symbols-outlined" aria-hidden="true">apps</span>
+        All
+      </button>
+    `;
+
+    container.innerHTML = allButtonTemplate + categories.map(filterButtonTemplate).join("");
+
+    container.querySelectorAll("[data-filter]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        container.querySelectorAll("[data-filter]").forEach((b) => {
+          b.setAttribute("aria-pressed", String(b === btn));
+        });
+        applyFilter(gridSelector, btn.getAttribute("data-filter"));
+      });
+    });
+  }
+
+  window.BeeCeeFleet = { fetchFleet, renderFleetInto, renderFleetFilters };
 })();

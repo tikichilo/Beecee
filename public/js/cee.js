@@ -31,16 +31,24 @@
   /* ------------------------------------------------------------------------
      Fleet category cards (fleet.html full grid) — cards come from
      /api/fleet, not markup. No-ops on any page without [data-fleet-grid]
-     or without fleet-render.js loaded (window.BeeCeeFleet undefined). No
-     category filters — there are only 5 fixed categories now, so all of
-     them show at once.
+     or without fleet-render.js loaded (window.BeeCeeFleet undefined).
+
+     The filter pill bar ([data-fleet-filters]) is also populated live from
+     the same /api/fleet response — fleet-render.js owns building the
+     buttons and wiring the actual filtering, this just calls it whenever
+     the grid is on the page.
      ------------------------------------------------------------------------ */
   function loadFleet() {
     if (!window.BeeCeeFleet) return;
     const grid = document.querySelector("[data-fleet-grid]");
-    if (!grid) return;
-    const limit = grid.getAttribute("data-fleet-limit");
-    window.BeeCeeFleet.renderFleetInto("[data-fleet-grid]", limit ? { limit: Number(limit) } : {});
+    if (grid) {
+      const limit = grid.getAttribute("data-fleet-limit");
+      window.BeeCeeFleet.renderFleetInto("[data-fleet-grid]", limit ? { limit: Number(limit) } : {});
+    }
+    const filters = document.querySelector("[data-fleet-filters]");
+    if (filters && window.BeeCeeFleet.renderFleetFilters) {
+      window.BeeCeeFleet.renderFleetFilters("[data-fleet-filters]", { gridSelector: "[data-fleet-grid]" });
+    }
   }
 
   /* ------------------------------------------------------------------------
