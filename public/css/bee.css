@@ -1,24 +1,26 @@
 /* ==========================================================================
-   Bee Cee Logistics — bee.css
-   ONE shared stylesheet for every public page (index, services, fleet,
-   client, contact, about, request). Tailwind (loaded via CDN, configured in
-   tailwind-config.js) supplies the utility classes used throughout the
-   markup; this file only holds things Tailwind utilities can't express
-   cleanly: base type rules, the Material Symbols fill defaults, named
-   components (nav, footer, mobile menu, forms, cards) and page-specific
-   pieces (hero slideshow, fleet grid, partner tiles, contact info rows).
+   Bee Cee Logistics — bee.css  (v2 visual system)
 
-   Every selector here is safe to load on every page — a page that doesn't
-   have a given element (e.g. .hero-slide on a page with no hero) simply
-   never matches that rule. Nothing conflicts.
+   Drop-in replacement. Every selector, custom property and data-hook from
+   the previous file is preserved so no HTML or JS wiring breaks — this is
+   a restyle, not a rebuild. Brand hex values are UNCHANGED; everything
+   built on top of them (type, spacing, motion, elevation, mobile layout)
+   has been redone to read as a serious logistics operator rather than a
+   template.
+
+   Fonts are pulled in here via @import so nothing in <head> needs to
+   change. For production performance you'll eventually want to move the
+   two @font-face requests below into <link rel="preload"> tags in each
+   page's <head> — flag for later, not required for this to work.
    ========================================================================== */
 
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
 /* --------------------------------------------------------------------------
-   Design tokens — mirrors the Tailwind config colors in tailwind-config.js,
-   exposed as CSS variables so this file's hover/press states stay in sync
-   with the brand palette without hardcoding the same hex values repeatedly.
+   Design tokens
    -------------------------------------------------------------------------- */
 :root {
+  /* Brand — unchanged values, do not edit without checking tailwind-config.js */
   --color-primary: #3B4A1E;
   --color-primary-dark: #2c3717;
   --color-primary-container: #4E5A26;
@@ -30,25 +32,52 @@
   --color-error: #ba1a1a;
   --color-outline-variant: #c4c6cf;
   --color-surface: #f8f9fa;
+
+  /* New, additive tokens — used only by this v2 system */
+  --color-ink: #14170d;                 /* near-black tinted toward the brand green, replaces flat #000 */
+  --color-ink-soft: #2a2f1f;
+  --color-surface-1: #ffffff;
+  --color-line: rgba(20, 23, 13, 0.1);  /* structural hairline, not a shadow */
+  --shadow-card: 0 1px 2px rgba(20, 23, 13, 0.06), 0 10px 30px rgba(20, 23, 13, 0.06);
+  --shadow-lift: 0 20px 48px rgba(20, 23, 13, 0.16);
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-lg: 18px;
   --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --font-display: "Space Grotesk", "Montserrat", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --container-max: 1240px;
+  --edge: clamp(20px, 5vw, 64px); /* fluid page-edge padding, replaces fixed Tailwind gutters where this file governs */
 }
 
 /* --------------------------------------------------------------------------
    Base
    -------------------------------------------------------------------------- */
+* { box-sizing: border-box; }
+
 body {
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-body);
   background-color: var(--color-surface);
-  color: #191c1d; /* on-background */
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+/* Set by bee.js while the mobile panel is open, so the page underneath
+   can't scroll. */
+body.menu-open { overflow: hidden; }
 
 h1, h2, h3, h4, h5, h6, .display-font {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+  color: var(--color-ink);
 }
 
-/* Material Symbols: unfilled by default, filled where data-weight="fill"
-   or the .icon-fill helper is used. Keeps every page consistent instead of
-   each one re-declaring its own variation settings. */
+p { max-width: 68ch; }
+
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
 }
@@ -57,8 +86,6 @@ h1, h2, h3, h4, h5, h6, .display-font {
   font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
-/* Softer, on-brand text selection and scrollbar — small touches that make
-   the whole site feel considered rather than left at browser defaults. */
 ::selection {
   background-color: var(--color-secondary-container);
   color: var(--color-on-secondary-container);
@@ -66,36 +93,52 @@ h1, h2, h3, h4, h5, h6, .display-font {
 html {
   scrollbar-width: thin;
   scrollbar-color: var(--color-primary-container) var(--color-surface);
+  scroll-behavior: smooth;
 }
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-surface);
-}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--color-surface); }
 ::-webkit-scrollbar-thumb {
   background-color: var(--color-primary-container);
   border-radius: 9999px;
-  border: 2px solid var(--color-surface);
 }
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-primary);
+::-webkit-scrollbar-thumb:hover { background-color: var(--color-primary); }
+
+/* One deliberate load moment — header and hero settle into place instead
+   of appearing instantly. Everything else stays still until interacted
+   with; this is the only auto-playing motion on the page. */
+@keyframes settle-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+[data-site-header] { animation: settle-in 0.5s var(--ease-out-expo) both; }
+@media (prefers-reduced-motion: reduce) {
+  [data-site-header] { animation: none; }
 }
 
 /* --------------------------------------------------------------------------
    Site header / navigation
    -------------------------------------------------------------------------- */
+[data-site-header] {
+  background: rgba(248, 249, 250, 0.86);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border-bottom: 1px solid transparent;
+  transition: box-shadow 0.3s var(--ease-standard), border-color 0.3s var(--ease-standard), background-color 0.3s var(--ease-standard);
+}
 .site-header--scrolled {
-  box-shadow: 0 4px 12px rgba(31, 58, 95, 0.08);
+  border-bottom-color: var(--color-line);
+  box-shadow: 0 1px 0 var(--color-line), 0 12px 24px -12px rgba(20, 23, 13, 0.18);
 }
 
 .nav-link--active,
 .nav-link--inactive {
   position: relative;
   cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 9999px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 14px;
   transition: color 0.2s var(--ease-standard), background-color 0.2s var(--ease-standard);
 }
 
@@ -106,76 +149,57 @@ html {
 .nav-link--active::after {
   content: "";
   position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 0;
+  left: 14px;
+  right: 14px;
+  bottom: 2px;
   height: 2px;
-  background: var(--color-primary);
+  background: var(--color-secondary-container);
   border-radius: 9999px;
 }
 
-.nav-link--inactive {
-  color: #43474e; /* on-surface-variant */
-}
+.nav-link--inactive { color: var(--color-ink-soft); }
 .nav-link--inactive:hover,
 .nav-link--inactive:focus-visible {
   color: var(--color-primary);
-  background-color: rgba(59, 74, 30, 0.08);
+  background-color: var(--color-primary-fixed);
 }
-.nav-link--inactive:active {
-  transform: scale(0.97);
-}
+.nav-link--inactive:active { transform: scale(0.97); }
 
-/* Site logo — sized up and given a soft shadow so it reads clearly
-   against the light header background. */
 .site-logo {
-  height: 62px;
+  height: 56px;
   width: auto;
   display: block;
   cursor: pointer;
-  filter: drop-shadow(0 1px 2px rgba(59, 74, 30, 0.25));
   transition: transform 0.2s var(--ease-standard);
 }
-.site-logo:hover {
-  transform: scale(1.05);
-}
-.site-logo:active {
-  transform: scale(0.98);
-}
-.site-logo--lg {
-  height: 72px;
-}
+.site-logo:hover { transform: scale(1.04); }
+.site-logo:active { transform: scale(0.98); }
+.site-logo--lg { height: 68px; }
+
 .site-wordmark {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1.15;
-  color: var(--color-primary);
   letter-spacing: -0.01em;
+  color: var(--color-ink);
   display: none;
 }
 .site-wordmark br { display: none; }
-@media (min-width: 480px) {
-  .site-wordmark { display: block; }
-}
+@media (min-width: 480px) { .site-wordmark { display: block; } }
 @media (min-width: 480px) and (max-width: 767px) {
   .site-wordmark br { display: inline; }
-  .site-wordmark { font-size: 15px; }
+  .site-wordmark { font-size: 14px; }
 }
 
 /* --------------------------------------------------------------------------
-   Hero slideshow (index.html) — stacked <img> layers that crossfade via
-   opacity, each with a slow Ken Burns zoom. The dark tint overlay sits
-   above all slides so hero text stays legible regardless of which photo
-   is showing. Mobile gets a gentler zoom since the hero box is a very
-   different shape from these landscape photos on narrow screens, and
-   object-fit: cover already has to crop more just to fill the frame.
+   Hero slideshow — same crossfade mechanism, calmer motion and a heavier,
+   more deliberate tint gradient (edge-weighted rather than flat) so hero
+   copy sits in real contrast without looking like a dark filter was just
+   dropped on top of a stock photo.
    -------------------------------------------------------------------------- */
-[data-hero-slideshow] {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
+[data-hero-slideshow] { position: absolute; inset: 0; overflow: hidden; }
+
 .hero-slide {
   position: absolute;
   inset: 0;
@@ -184,56 +208,51 @@ html {
   object-fit: cover;
   object-position: center;
   opacity: 0;
-  transition: opacity 1.4s ease;
-  animation: hero-ken-burns 14s ease-in-out infinite;
+  transition: opacity 1.6s var(--ease-out-expo);
+  animation: hero-ken-burns 18s ease-in-out infinite;
   will-change: opacity, transform;
 }
-.hero-slide--active {
-  opacity: 1;
-  z-index: 1;
-}
+.hero-slide--active { opacity: 1; z-index: 1; }
+
 .hero-slide__tint {
   position: absolute;
   inset: 0;
   z-index: 2;
-  background-color: var(--color-primary);
-  opacity: 0.45;
-  mix-blend-mode: multiply;
+  background:
+    linear-gradient(115deg, rgba(20, 23, 13, 0.78) 0%, rgba(20, 23, 13, 0.38) 42%, rgba(20, 23, 13, 0.22) 100%);
 }
+
 @keyframes hero-ken-burns {
   0% { transform: scale(1); }
-  50% { transform: scale(1.08); }
+  50% { transform: scale(1.06); }
   100% { transform: scale(1); }
 }
 @media (max-width: 767px) {
-  .hero-slide {
-    animation-name: hero-ken-burns-mobile;
+  .hero-slide { animation-name: hero-ken-burns-mobile; }
+  .hero-slide__tint {
+    background: linear-gradient(180deg, rgba(20, 23, 13, 0.55) 0%, rgba(20, 23, 13, 0.72) 100%);
   }
 }
 @keyframes hero-ken-burns-mobile {
   0% { transform: scale(1); }
-  50% { transform: scale(1.03); }
+  50% { transform: scale(1.025); }
   100% { transform: scale(1); }
 }
-@media (prefers-reduced-motion: reduce) {
-  .hero-slide {
-    animation: none;
-  }
-}
+@media (prefers-reduced-motion: reduce) { .hero-slide { animation: none; } }
 
 /* --------------------------------------------------------------------------
-   Trust strip logos (index.html) — plain-text partner names that link out
-   to each partner's real site. Grayscale/muted at rest, full color on
-   hover/focus so the row still reads as a calm logo strip until someone
-   means to interact with it.
+   Trust strip logos
    -------------------------------------------------------------------------- */
 .trust-logo {
   display: inline-block;
   color: inherit;
   text-decoration: none;
   cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.005em;
   filter: grayscale(1);
-  opacity: 0.7;
+  opacity: 0.55;
   transition: filter 0.2s ease, opacity 0.2s ease, transform 0.2s var(--ease-standard);
 }
 .trust-logo:hover,
@@ -242,107 +261,119 @@ html {
   opacity: 1;
   transform: translateY(-2px);
 }
-.trust-logo:active {
-  transform: translateY(0) scale(0.97);
-}
+.trust-logo:active { transform: translateY(0) scale(0.97); }
 
-/* Mobile nav drawer, shared across every page */
+/* --------------------------------------------------------------------------
+   Mobile navigation — a real full-height panel, not a shrunk dropdown.
+   Slides in from the right with its own scroll, big touch targets, and the
+   primary CTA pinned to the bottom so it's reachable with a thumb.
+   -------------------------------------------------------------------------- */
 [data-mobile-menu] {
   position: fixed;
-  top: 80px;
-  left: 0;
-  right: 0;
+  inset: 0;
+  top: 0;
+  left: auto;
   z-index: 40;
-  background: #ffffff; /* surface-container-lowest */
-  border-bottom: 1px solid var(--color-outline-variant);
-  box-shadow: 0 12px 24px rgba(31, 58, 95, 0.12);
-  padding: 16px;
+  width: min(86vw, 380px);
+  background: var(--color-surface-1);
+  border-left: 1px solid var(--color-line);
+  box-shadow: var(--shadow-lift);
+  padding: 96px 24px 28px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+  transform: translateX(100%);
+  transition: transform 0.35s var(--ease-out-expo);
+  overflow-y: auto;
+}
+[data-mobile-menu]:not([hidden]) { transform: translateX(0); }
+[data-mobile-menu][hidden] {
+  display: flex; /* keep it flex so the transform still animates instead of popping */
+  transform: translateX(100%);
+  pointer-events: none;
 }
 
-[data-mobile-menu][hidden] {
-  display: none;
+/* Dim the page behind the panel; JS doesn't need to add a separate
+   scrim element — this pseudo layer rides on the same [hidden] toggle. */
+[data-mobile-menu]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  right: min(86vw, 380px);
+  background: rgba(20, 23, 13, 0.35);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
+[data-mobile-menu]:not([hidden])::before { opacity: 1; pointer-events: auto; }
 
 [data-mobile-menu] a {
-  padding: 12px 8px;
-  border-radius: 0.25rem;
-  color: #191c1d;
-  font-weight: 500;
+  padding: 16px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  border-bottom: 1px solid var(--color-line);
+  transition: background-color 0.15s ease, color 0.15s ease, padding-left 0.15s ease;
 }
+[data-mobile-menu] a:last-of-type { border-bottom: none; }
 [data-mobile-menu] a:hover,
 [data-mobile-menu] a:focus-visible {
-  background-color: rgba(59, 74, 30, 0.08);
+  background-color: var(--color-primary-fixed);
   color: var(--color-primary);
+  padding-left: 18px;
 }
-[data-mobile-menu] a:active {
-  transform: scale(0.98);
-}
+[data-mobile-menu] a:active { transform: scale(0.99); }
 
 [data-mobile-menu] a.nav-link--active {
-  background: var(--color-secondary-container);
-  color: var(--color-on-secondary-container);
+  background: var(--color-primary);
+  color: #ffffff;
   border-bottom: none;
 }
-[data-mobile-menu] a.nav-link--active::after {
-  content: none; /* the underline trick is header-only; the drawer uses a filled pill instead */
-}
+[data-mobile-menu] a.nav-link--active::after { content: none; }
 
 [data-mobile-menu] .mobile-menu__cta {
-  margin-top: 8px;
-  padding: 14px 24px;
+  margin-top: auto;
+  padding: 16px 24px;
 }
 
 /* --------------------------------------------------------------------------
-   Buttons — ONE set of CTA styles reused on every page. Any button/link that
-   triggers a primary action (Request a Quote, Book Now, Submit, New Quote)
-   uses .btn-primary; secondary/outline actions use .btn-outline or
-   .btn-outline-invert (for use on the dark primary hero background).
+   Buttons
    -------------------------------------------------------------------------- */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
-  letter-spacing: 0.05em;
+  font-family: var(--font-body);
+  font-size: 13px;
+  letter-spacing: 0.01em;
   font-weight: 600;
   line-height: 1;
-  border-radius: 0.5rem; /* rounded-lg, matches index.html's CTA */
-  padding: 14px 24px;
+  border-radius: var(--radius-sm);
+  padding: 15px 26px;
   border: 1px solid transparent;
   cursor: pointer;
   text-decoration: none;
   transition: background-color 0.2s var(--ease-standard), color 0.2s var(--ease-standard),
               opacity 0.2s var(--ease-standard), border-color 0.2s var(--ease-standard),
-              box-shadow 0.2s var(--ease-standard), transform 0.15s var(--ease-standard);
+              box-shadow 0.25s var(--ease-standard), transform 0.15s var(--ease-standard);
 }
-.btn:disabled,
-.btn[aria-disabled="true"] {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.btn:not(:disabled):not([aria-disabled="true"]):active {
-  transform: scale(0.97);
-}
-.btn-sm {
-  padding: 8px 16px;
-}
-.btn-block {
-  width: 100%;
-}
+.btn:disabled, .btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+.btn:not(:disabled):not([aria-disabled="true"]):hover { transform: translateY(-1px); }
+.btn:not(:disabled):not([aria-disabled="true"]):active { transform: translateY(0) scale(0.98); }
+.btn-sm { padding: 10px 18px; }
+.btn-block { width: 100%; }
+
 .btn-primary {
   background-color: var(--color-secondary-container);
   color: var(--color-on-secondary-container);
 }
 .btn-primary:hover:not(:disabled) {
   background-color: var(--color-secondary-container-hover);
-  box-shadow: 0 6px 16px rgba(253, 195, 77, 0.4);
+  box-shadow: 0 10px 24px rgba(253, 195, 77, 0.38);
 }
 .btn-outline {
   background-color: transparent;
@@ -352,81 +383,64 @@ html {
 .btn-outline:hover:not(:disabled) {
   background-color: var(--color-primary);
   color: #ffffff;
-  box-shadow: 0 6px 16px rgba(59, 74, 30, 0.25);
+  box-shadow: 0 10px 24px rgba(59, 74, 30, 0.28);
 }
 .btn-outline-invert {
   background-color: transparent;
-  border-color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.7);
   color: #ffffff;
 }
 .btn-outline-invert:hover:not(:disabled) {
   background-color: rgba(255, 255, 255, 0.12);
+  border-color: #ffffff;
 }
 
-/* Secondary text link with a trailing arrow — used for "View Specs",
-   "Learn More", "Read Full Study" etc. so every instance matches. The arrow
-   nudges forward on hover as a small directional cue. */
 .link-arrow {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   color: var(--color-secondary);
-  font-family: "Inter", sans-serif;
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.05em;
   text-decoration: none;
   cursor: pointer;
   transition: color 0.2s ease;
 }
-.link-arrow:hover {
-  color: var(--color-primary);
-  text-decoration: underline;
-}
+.link-arrow:hover { color: var(--color-primary); }
 .link-arrow .material-symbols-outlined {
   font-size: 16px;
   transition: transform 0.2s var(--ease-standard);
 }
-.link-arrow:hover .material-symbols-outlined {
-  transform: translateX(3px);
-}
-/* Same component, tuned for use on dark/primary-colored card backgrounds
-   where the default secondary-brown wouldn't have enough contrast. */
-.link-arrow--invert {
-  color: #ffdea6; /* secondary-fixed */
-}
-.link-arrow--invert:hover {
-  color: #ffffff;
-}
+.link-arrow:hover .material-symbols-outlined { transform: translateX(3px); }
+.link-arrow--invert { color: #ffdea6; }
+.link-arrow--invert:hover { color: #ffffff; }
 
 /* --------------------------------------------------------------------------
    Decorative patterns
    -------------------------------------------------------------------------- */
 .map-bg {
-  background-image: radial-gradient(circle at center, rgba(3, 36, 72, 0.03) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-image: radial-gradient(circle at center, rgba(20, 23, 13, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
 /* --------------------------------------------------------------------------
-   Forms — consistent hover/focus/invalid states used on contact & quote
-   forms. A hover state on the field border (before focus) makes the form
-   feel more responsive to the cursor moving around it.
+   Forms
    -------------------------------------------------------------------------- */
 .form-field {
-  border: 1px solid var(--color-outline-variant);
-  border-radius: 0.125rem;
-  padding: 12px;
-  font-family: "Inter", sans-serif;
-  background-color: #f8f9fa; /* surface-bright */
+  border: 1.5px solid var(--color-outline-variant);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  background-color: var(--color-surface-1);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.form-field:hover {
-  border-color: #9aa0aa;
-}
+.form-field:hover { border-color: #9aa0aa; }
 .form-field:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(59, 74, 30, 0.15);
+  box-shadow: 0 0 0 3px var(--color-primary-fixed);
 }
 .form-field[data-invalid="true"] {
   border-color: var(--color-error);
@@ -438,46 +452,43 @@ html {
   margin-top: 4px;
 }
 
-/* Toast used by cee.js to confirm form submissions across pages */
 .toast {
   position: fixed;
   bottom: 24px;
   right: 24px;
+  left: 24px;
   z-index: 60;
-  max-width: 360px;
-  background: var(--color-primary);
+  max-width: 380px;
+  margin-left: auto;
+  background: var(--color-ink);
   color: #ffffff;
-  border-radius: 0.25rem;
+  border-radius: var(--radius-md);
   padding: 16px 20px;
-  box-shadow: 0 12px 24px rgba(31, 58, 95, 0.24);
+  box-shadow: var(--shadow-lift);
   display: flex;
   align-items: flex-start;
   gap: 12px;
   opacity: 0;
   transform: translateY(12px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.25s var(--ease-out-expo), transform 0.25s var(--ease-out-expo);
   pointer-events: none;
 }
-.toast--visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-.toast--error {
-  background: var(--color-error);
+.toast--visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.toast--error { background: var(--color-error); }
+@media (max-width: 480px) {
+  .toast { left: 16px; right: 16px; bottom: 16px; max-width: none; }
 }
 
 /* --------------------------------------------------------------------------
-   Fleet filters (fleet.html) — pill buttons with icons and a clear pressed
-   state, plus a small tactile press effect for click feedback.
+   Fleet filters
    -------------------------------------------------------------------------- */
 .fleet-filter {
-  padding: 10px 18px;
+  padding: 11px 20px;
   border-radius: 9999px;
-  border: 1px solid var(--color-outline-variant);
-  background: #ffffff; /* surface-container-lowest */
-  color: #43474e; /* on-surface-variant */
-  font-family: "Inter", sans-serif;
+  border: 1.5px solid var(--color-outline-variant);
+  background: var(--color-surface-1);
+  color: var(--color-ink-soft);
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
@@ -487,51 +498,46 @@ html {
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease,
               box-shadow 0.15s ease, transform 0.15s var(--ease-standard);
 }
-.fleet-filter .material-symbols-outlined {
-  font-size: 18px;
-}
-.fleet-filter:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-.fleet-filter:active {
-  transform: scale(0.96);
-}
+.fleet-filter .material-symbols-outlined { font-size: 18px; }
+.fleet-filter:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.fleet-filter:active { transform: scale(0.96); }
 .fleet-filter[aria-pressed="true"] {
   background: var(--color-primary);
   color: #ffffff;
   border-color: var(--color-primary);
-  font-weight: 700;
-  box-shadow: 0 4px 10px rgba(59, 74, 30, 0.25);
+  box-shadow: 0 6px 16px rgba(59, 74, 30, 0.28);
 }
 
-.fleet-card[hidden] {
-  display: none;
-}
+.fleet-card[hidden] { display: none; }
 
-/* Fleet card image carousel controls, driven by js/fleet-render.js */
 .fleet-card__media { overflow: hidden; }
 .fleet-card__nav {
   position: absolute; top: 50%; transform: translateY(-50%);
-  width: 28px; height: 28px; border-radius: 9999px; border: none;
-  background: rgba(25, 28, 29, 0.55); color: #fff; font-size: 12px;
+  width: 30px; height: 30px; border-radius: 9999px; border: none;
+  background: rgba(20, 23, 13, 0.55); color: #fff; font-size: 12px;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
   opacity: 0; transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.15s var(--ease-standard);
 }
-.fleet-card__media:hover .fleet-card__nav { opacity: 1; }
-.fleet-card__nav:hover { background: rgba(25, 28, 29, 0.8); }
+.fleet-card__media:hover .fleet-card__nav,
+.fleet-card__media:focus-within .fleet-card__nav { opacity: 1; }
+.fleet-card__nav:hover { background: var(--color-ink); }
 .fleet-card__nav:active { transform: translateY(-50%) scale(0.9); }
-.fleet-card__nav--prev { left: 8px; }
-.fleet-card__nav--next { right: 8px; }
+.fleet-card__nav--prev { left: 10px; }
+.fleet-card__nav--next { right: 10px; }
 .fleet-card__count {
-  position: absolute; bottom: 8px; right: 8px;
-  background: rgba(25, 28, 29, 0.55); color: #fff; font-size: 11px;
-  padding: 2px 8px; border-radius: 9999px;
+  position: absolute; bottom: 10px; right: 10px;
+  background: rgba(20, 23, 13, 0.6); color: #fff; font-size: 11px;
+  padding: 3px 9px; border-radius: 9999px;
+}
+/* Always show nav arrows on touch devices, since there's no hover state to reveal them */
+@media (hover: none) {
+  .fleet-card__nav { opacity: 1; }
 }
 
 /* --------------------------------------------------------------------------
-   Fleet page — hero stat strip, skeleton loading state for the live grid,
-   "how it works" steps, and the closing booking CTA banner.
+   Fleet page — stat strip becomes a snap-scrolling rail on small screens
+   instead of just wrapping smaller; skeleton and steps get the same type
+   system as the rest of the page.
    -------------------------------------------------------------------------- */
 .fleet-stat-strip {
   display: flex;
@@ -539,26 +545,41 @@ html {
   gap: 32px;
   margin-top: 24px;
 }
-.fleet-stat {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.fleet-stat .material-symbols-outlined {
-  color: var(--color-secondary);
-  font-size: 22px;
-}
+.fleet-stat { display: flex; align-items: center; gap: 10px; }
+.fleet-stat .material-symbols-outlined { color: var(--color-secondary); font-size: 22px; }
 .fleet-stat span:last-child {
-  color: #43474e; /* on-surface-variant */
+  color: var(--color-ink-soft);
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 500;
 }
+@media (max-width: 640px) {
+  .fleet-stat-strip {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 0;
+    margin-inline: calc(var(--edge) * -1);
+    padding-inline: var(--edge);
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .fleet-stat-strip::-webkit-scrollbar { display: none; }
+  .fleet-stat {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+    padding: 4px 20px 4px 0;
+    border-right: 1px solid var(--color-line);
+    margin-right: 20px;
+  }
+  .fleet-stat:last-child { border-right: none; }
+}
 
 .fleet-skeleton-card {
-  border: 1px solid var(--color-outline-variant);
-  border-radius: 0.5rem;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  background: #ffffff;
+  background: var(--color-surface-1);
 }
 .fleet-skeleton-media {
   height: 180px;
@@ -568,7 +589,7 @@ html {
 }
 .fleet-skeleton-line {
   height: 12px;
-  border-radius: 0.25rem;
+  border-radius: var(--radius-sm);
   background: linear-gradient(90deg, #edeeef 25%, #e1e3e4 37%, #edeeef 63%);
   background-size: 400% 100%;
   animation: fleet-skeleton-shimmer 1.4s ease infinite;
@@ -581,20 +602,19 @@ html {
   .fleet-skeleton-media, .fleet-skeleton-line { animation: none; }
 }
 
-/* ----------------------------------------------------------------------
-   Homepage fleet photo gallery thumbnails (js/cee.js loadFleetPhotos) —
-   army-green frame is set via the border-primary utility class on the
-   button; this adds the tap/click affordance (lift + glow) on
-   hover/focus so it's obvious the photo opens a lightbox.
-   ---------------------------------------------------------------------- */
+/* Homepage fleet photo gallery — clean elevated tile instead of a thick
+   colored border; see cee.js for the matching markup simplification. */
 .fleet-photo-thumb {
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s var(--ease-out-expo);
 }
 .fleet-photo-thumb:hover,
 .fleet-photo-thumb:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(59, 74, 30, 0.35);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift);
   outline: none;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -602,11 +622,7 @@ html {
   .fleet-photo-thumb:hover, .fleet-photo-thumb:focus-visible { transform: none; }
 }
 
-.fleet-step {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-}
+.fleet-step { display: flex; gap: 16px; align-items: flex-start; }
 .fleet-step__index {
   flex-shrink: 0;
   width: 36px;
@@ -617,37 +633,31 @@ html {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 14px;
 }
 
 /* --------------------------------------------------------------------------
-   Contact page — info list rows, quick-action chips, map card
+   Contact page — info rows become real tappable cards on mobile (not a
+   shrunk list), quick-action chips, map card.
    -------------------------------------------------------------------------- */
 .info-row {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  padding: 16px 0;
-  border-bottom: 1px solid #edeeef; /* surface-container */
+  padding: 18px 0;
+  border-bottom: 1px solid var(--color-line);
   transition: padding-left 0.15s var(--ease-standard);
 }
-.info-row:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-.info-row:first-child {
-  padding-top: 0;
-}
-.info-row:hover {
-  padding-left: 4px;
-}
+.info-row:last-child { border-bottom: none; padding-bottom: 0; }
+.info-row:first-child { padding-top: 0; }
+.info-row:hover { padding-left: 4px; }
 .info-row__icon {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 0.5rem;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
   background: var(--color-primary-fixed);
   display: flex;
   align-items: center;
@@ -658,17 +668,30 @@ html {
   background: var(--color-secondary-container);
   transform: scale(1.05);
 }
+@media (max-width: 640px) {
+  .info-row {
+    background: var(--color-surface-1);
+    border: 1px solid var(--color-line);
+    border-bottom: 1px solid var(--color-line);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow-card);
+  }
+  .info-row:last-child { margin-bottom: 0; }
+  .info-row:hover { padding-left: 16px; }
+}
 
 .quick-action {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 16px;
-  border-radius: 0.5rem;
-  background: rgba(255, 255, 255, 0.1);
+  padding: 11px 18px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.35);
   color: #ffffff;
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-body);
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
@@ -676,86 +699,60 @@ html {
   transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s var(--ease-standard);
 }
 .quick-action:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.18);
   border-color: rgba(255, 255, 255, 0.6);
   transform: translateY(-1px);
 }
-.quick-action:active {
-  transform: translateY(0) scale(0.97);
-}
-.quick-action .material-symbols-outlined {
-  font-size: 18px;
-}
+.quick-action:active { transform: translateY(0) scale(0.97); }
+.quick-action .material-symbols-outlined { font-size: 18px; }
 
 .map-card {
   position: relative;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  border: 1px solid var(--color-outline-variant);
-  background: #e1e3e4; /* surface-variant, shows while the iframe loads */
+  border: 1px solid var(--color-line);
+  background: #e1e3e4;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .map-card:hover {
   border-color: var(--color-primary-container);
-  box-shadow: 0 8px 20px rgba(31, 58, 95, 0.12);
+  box-shadow: var(--shadow-card);
 }
-.map-card iframe {
-  display: block;
-  width: 100%;
-  height: 320px;
-  border: 0;
-}
+.map-card iframe { display: block; width: 100%; height: 320px; border: 0; filter: grayscale(0.15); }
 
 /* --------------------------------------------------------------------------
-   Contact logo tile (client.html) — replaces a photo with a simple phone
-   icon that links straight to the Contact page. Reused wherever a
-   case-study image was swapped out for a direct "call us" affordance.
+   Contact logo tile
    -------------------------------------------------------------------------- */
 .contact-logo-tile {
   background-color: var(--color-primary);
   transition: background-color 0.2s ease;
 }
-.contact-logo-tile:hover {
-  background-color: var(--color-primary-container);
-}
-.contact-logo-link {
-  color: #ffffff;
-  text-decoration: none;
-  cursor: pointer;
-}
+.contact-logo-tile:hover { background-color: var(--color-primary-container); }
+.contact-logo-link { color: #ffffff; text-decoration: none; cursor: pointer; }
 .contact-logo-link .material-symbols-outlined {
   font-size: 56px;
   transition: transform 0.2s var(--ease-standard);
 }
-.contact-logo-link:hover {
-  opacity: 0.9;
-}
-.contact-logo-link:hover .material-symbols-outlined {
-  transform: scale(1.1);
-}
-.contact-logo-link:active .material-symbols-outlined {
-  transform: scale(1.02);
-}
+.contact-logo-link:hover { opacity: 0.92; }
+.contact-logo-link:hover .material-symbols-outlined { transform: scale(1.1); }
+.contact-logo-link:active .material-symbols-outlined { transform: scale(1.02); }
 
 /* --------------------------------------------------------------------------
-   Partner tiles (client.html) — logo grid. Each tile links out to the
-   partner's real website; the corner glyph only reveals on hover/focus so
-   the grid stays clean until someone means to interact with it.
+   Partner tiles
    -------------------------------------------------------------------------- */
 .partner-tile {
   position: relative;
   text-decoration: none;
   cursor: pointer;
-  transition: transform 0.2s var(--ease-standard), border-color 0.2s ease;
+  border-radius: var(--radius-md);
+  transition: transform 0.2s var(--ease-standard), border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.partner-tile:hover,
-.partner-tile:focus-visible {
-  transform: translateY(-2px);
+.partner-tile:hover, .partner-tile:focus-visible {
+  transform: translateY(-3px);
   border-color: var(--color-primary);
+  box-shadow: var(--shadow-card);
 }
-.partner-tile:active {
-  transform: translateY(0) scale(0.98);
-}
+.partner-tile:active { transform: translateY(0) scale(0.98); }
 .partner-tile__external {
   position: absolute;
   top: 10px;
@@ -767,33 +764,20 @@ html {
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 .partner-tile:hover .partner-tile__external,
-.partner-tile:focus-visible .partner-tile__external {
-  opacity: 1;
-  transform: translateY(0);
-}
+.partner-tile:focus-visible .partner-tile__external { opacity: 1; transform: translateY(0); }
 .partner-tile:hover .partner-tile__label,
-.partner-tile:focus-visible .partner-tile__label {
-  color: var(--color-primary);
-}
-.partner-tile__label {
-  transition: color 0.15s ease;
-}
+.partner-tile:focus-visible .partner-tile__label { color: var(--color-primary); }
+.partner-tile__label { transition: color 0.15s ease; font-family: var(--font-display); font-weight: 600; }
 
 /* --------------------------------------------------------------------------
    Accessibility
    -------------------------------------------------------------------------- */
-a:focus-visible,
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
-    transition-duration: 0.001ms !important;
-    animation-duration: 0.001ms !important;
-  }
+  * { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
 }

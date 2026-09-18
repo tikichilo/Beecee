@@ -3,6 +3,11 @@
    Site-wide UI reactivity shared by every public page: active nav
    highlighting, mobile menu toggle, header scroll shadow, footer year.
    Page-specific business logic (forms, filters, dashboards) lives in cee.js.
+
+   v2 note: only change from the previous version is inside setupMobileMenu
+   — it now toggles a `menu-open` class on <body> so the page can't scroll
+   behind the new full-height mobile panel (see [data-mobile-menu] in
+   bee.css). Every selector, event and data-hook is otherwise unchanged.
    ========================================================================== */
 (function () {
   "use strict";
@@ -55,6 +60,7 @@
       toggle.setAttribute("aria-expanded", String(isOpen));
       menu.hidden = !isOpen;
       menu.classList.toggle("mobile-menu--open", isOpen);
+      document.body.classList.toggle("menu-open", isOpen);
       if (openIcon && closeIcon) {
         openIcon.classList.toggle("hidden", isOpen);
         closeIcon.classList.toggle("hidden", !isOpen);

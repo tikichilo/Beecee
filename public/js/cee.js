@@ -7,6 +7,13 @@
    file is safe to include on every public page — it simply no-ops on
    pages that don't have a given piece of markup. Cross-page UI reactivity
    (nav, mobile menu) lives in bee.js.
+
+   v2 note: logic, selectors, endpoints and event wiring are UNCHANGED from
+   the previous version. The only edits are inside loadFleetPhotos() and
+   openLightbox(), where the strings of Tailwind utility classes injected
+   into the DOM have been swapped for the new bee.css component classes so
+   the gallery matches the rest of the redesign. Nothing here touches the
+   backend contract.
    ========================================================================== */
 (function () {
   "use strict";
@@ -65,10 +72,13 @@
         }
 
         // Show every photo in the fleet database — no cap.
+        // Styling now lives entirely in .fleet-photo-thumb (bee.css) instead
+        // of a stack of Tailwind utilities, so the redesign only has to
+        // change one place.
         grid.innerHTML = images
           .map(
             (img) => `
-              <button type="button" class="fleet-photo-thumb rounded-xl overflow-hidden border-4 border-primary bg-surface-container-low aspect-square block w-full p-0" data-photo-url="${img.imageUrl}">
+              <button type="button" class="fleet-photo-thumb aspect-square block w-full p-0" data-photo-url="${img.imageUrl}">
                 <img src="${img.imageUrl}" alt="Bee Cee Logistics fleet vehicle" loading="lazy" class="w-full h-full object-cover"/>
               </button>
             `
@@ -90,17 +100,22 @@
   /* ------------------------------------------------------------------------
      Full-size photo lightbox, shared by the fleet photo gallery. Built
      once and reused, same lazy-create pattern as the toast helper below.
+     Backdrop is now a blurred scrim to match the header treatment, and the
+     close button is a proper filled circle instead of a bare icon.
      ------------------------------------------------------------------------ */
   function openLightbox(imageUrl) {
     let overlay = document.querySelector(".lightbox-overlay");
     if (!overlay) {
       overlay = document.createElement("div");
-      overlay.className = "lightbox-overlay fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 p-6";
+      overlay.className = "lightbox-overlay fixed inset-0 z-[100] hidden items-center justify-center p-6";
+      overlay.style.background = "rgba(20, 23, 13, 0.82)";
+      overlay.style.backdropFilter = "blur(6px)";
       overlay.innerHTML =
-        '<button type="button" class="lightbox-close absolute top-4 right-4 text-white p-2" aria-label="Close">' +
-        '<span class="material-symbols-outlined" aria-hidden="true" style="font-size:32px;">close</span>' +
+        '<button type="button" class="lightbox-close absolute top-4 right-4 text-white p-2" aria-label="Close" ' +
+        'style="background:rgba(255,255,255,0.12);border-radius:9999px;display:flex;align-items:center;justify-content:center;width:40px;height:40px;">' +
+        '<span class="material-symbols-outlined" aria-hidden="true" style="font-size:24px;">close</span>' +
         "</button>" +
-        '<img class="lightbox-image max-w-full max-h-full rounded-lg" alt="Fleet vehicle, full size"/>';
+        '<img class="lightbox-image max-w-full max-h-full rounded-lg" alt="Fleet vehicle, full size" style="border-radius:10px;"/>';
       document.body.appendChild(overlay);
 
       const close = () => {
