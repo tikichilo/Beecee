@@ -77,9 +77,21 @@
         <div class="p-4 flex flex-col gap-2 flex-grow">
           <div class="flex items-center justify-between gap-2">
             <h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">${escapeHtml(cat.label)}</h3>
-            <span class="text-xs font-medium px-2 py-0.5 rounded-full ${available ? "bg-primary-container text-on-primary-container" : "bg-surface-container text-on-surface-variant"}">
-              ${available ? "Available" : "Unavailable"}
-            </span>
+            <div
+              class="shrink-0"
+              data-category-tag
+              data-label="${typeof cat.label === "string" ? escapeHtml(cat.label) : ""}"
+              data-category="${typeof cat.category === "string" ? escapeHtml(cat.category) : ""}"
+              data-min-rate="${cat.minRate == null ? "" : Number.isFinite(cat.minRate) ? escapeHtml(cat.minRate) : "invalid"}"
+              data-max-rate="${cat.maxRate == null ? "" : Number.isFinite(cat.maxRate) ? escapeHtml(cat.maxRate) : "invalid"}"
+              data-accepting-bookings="${typeof cat.acceptingBookings === "boolean" ? cat.acceptingBookings : ""}"
+              data-created-at="${typeof cat.createdAt === "string" ? escapeHtml(cat.createdAt) : ""}"
+              data-updated-at="${typeof cat.updatedAt === "string" ? escapeHtml(cat.updatedAt) : ""}"
+            >
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full ${available ? "bg-primary-container text-on-primary-container" : "bg-surface-container text-on-surface-variant"}">
+                ${available ? "Available" : "Unavailable"}
+              </span>
+            </div>
           </div>
           <p class="font-body-md text-body-md text-on-surface-variant">${formatRate(cat)}</p>
           <div class="mt-auto pt-3">
@@ -104,12 +116,22 @@
       const categories = await fetchFleet();
       const visible = opts.limit ? categories.slice(0, opts.limit) : categories;
 
+      if (window.BeeCeeCategoryTags) {
+        window.BeeCeeCategoryTags.unmountCategoryTags(grid);
+      }
+
       if (!visible.length) {
         grid.innerHTML = '<p class="col-span-full text-center text-on-surface-variant py-8">No categories found.</p>';
         return;
       }
       grid.innerHTML = visible.map(cardTemplate).join("");
+      if (window.BeeCeeCategoryTags) {
+        window.BeeCeeCategoryTags.mountCategoryTags(grid);
+      }
     } catch (err) {
+      if (window.BeeCeeCategoryTags) {
+        window.BeeCeeCategoryTags.unmountCategoryTags(grid);
+      }
       grid.innerHTML = '<p class="col-span-full text-center text-red-600 py-8">Couldn\'t load the fleet right now. Please try again shortly.</p>';
     } finally {
       grid.setAttribute("aria-busy", "false");

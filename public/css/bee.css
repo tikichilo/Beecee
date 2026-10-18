@@ -8,53 +8,104 @@
    has been redone to read as a serious logistics operator rather than a
    template.
 
-   Fonts are pulled in here via @import so nothing in <head> needs to
-   change. For production performance you'll eventually want to move the
-   two @font-face requests below into <link rel="preload"> tags in each
-   page's <head> — flag for later, not required for this to work.
+   Public page heads load Montserrat and Inter. Tailwind utilities reference
+   the same CSS variables below so design tokens have one source of truth.
    ========================================================================== */
-
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 /* --------------------------------------------------------------------------
    Design tokens
    -------------------------------------------------------------------------- */
 :root {
-  /* Brand — unchanged values, do not edit without checking tailwind-config.js */
+  /* Brand and surface colors */
+  --color-white: #ffffff;
   --color-primary: #3B4A1E;
   --color-primary-dark: #2c3717;
   --color-primary-container: #4E5A26;
   --color-primary-fixed: #E4EAC9;
+  --color-primary-fixed-dim: #C2CE93;
+  --color-inverse-primary: var(--color-primary-fixed-dim);
   --color-secondary: #7b5800;
   --color-secondary-container: #fdc34d;
   --color-secondary-container-hover: #ffcf6e;
   --color-on-secondary-container: #715000;
-  --color-error: #ba1a1a;
-  --color-outline-variant: #c4c6cf;
+  --color-secondary-fixed: #ffdea6;
+  --color-secondary-fixed-dim: #f7bd48;
+  --color-tertiary: #3c1b00;
+  --color-tertiary-container: #5d2c00;
+  --color-tertiary-fixed: #ffdcc5;
+  --color-tertiary-fixed-dim: #ffb783;
+  --color-on-tertiary: var(--color-white);
+  --color-on-tertiary-container: #f2882c;
+  --color-on-tertiary-fixed: #301400;
+  --color-on-tertiary-fixed-variant: #713700;
   --color-surface: #f8f9fa;
-
-  /* New, additive tokens — used only by this v2 system */
-  --color-ink: #14170d;                 /* near-black tinted toward the brand green, replaces flat #000 */
+  --color-surface-bright: var(--color-surface);
+  --color-background: var(--color-surface);
+  --color-surface-container-lowest: var(--color-white);
+  --color-surface-container-low: #f3f4f5;
+  --color-surface-container: #edeeef;
+  --color-surface-container-high: #e7e8e9;
+  --color-surface-variant: #e1e3e4;
+  --color-surface-container-highest: var(--color-surface-variant);
+  --color-surface-dim: #d9dadb;
+  --color-inverse-surface: #2e3132;
+  --color-inverse-on-surface: #f0f1f2;
+  --color-surface-tint: #596A32;
+  --color-on-surface: #191c1d;
+  --color-on-background: var(--color-on-surface);
+  --color-on-surface-variant: #43474e;
+  --color-on-primary: var(--color-white);
+  --color-on-primary-container: #B6C58C;
+  --color-on-primary-fixed: #16210C;
+  --color-on-primary-fixed-variant: #4A5426;
+  --color-on-secondary: var(--color-white);
+  --color-on-secondary-fixed: #271900;
+  --color-on-secondary-fixed-variant: #5d4200;
+  --color-outline: #74777f;
+  --color-error: #ba1a1a;
+  --color-on-error: var(--color-white);
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  --color-success: #146c2e;
+  --color-success-container: #d1f4e0;
+  --color-on-success-container: #0e613b;
+  --color-outline-variant: #c4c6cf;
+  --color-ink: #14170d;
   --color-ink-soft: #2a2f1f;
-  --color-surface-1: #ffffff;
-  --color-line: rgba(20, 23, 13, 0.1);  /* structural hairline, not a shadow */
+  --color-surface-1: var(--color-surface-container-lowest);
+  --color-line: rgba(20, 23, 13, 0.1);
+
+  /* Shape, elevation, typography, and layout */
+  --radius-control: 6px;
+  --radius-card: 12px;
+  --radius-feature: 18px;
+  --radius-pill: 9999px;
+  --radius-circle: 50%;
+  --radius-sm: var(--radius-control);
+  --radius-md: var(--radius-card);
+  --radius-lg: var(--radius-feature);
   --shadow-card: 0 1px 2px rgba(20, 23, 13, 0.06), 0 10px 30px rgba(20, 23, 13, 0.06);
   --shadow-lift: 0 20px 48px rgba(20, 23, 13, 0.16);
-  --radius-sm: 4px;
-  --radius-md: 10px;
-  --radius-lg: 18px;
-  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --font-display: "Space Grotesk", "Montserrat", sans-serif;
+  --font-display: "Montserrat", sans-serif;
   --font-body: "Inter", sans-serif;
   --container-max: 1240px;
-  --edge: clamp(20px, 5vw, 64px); /* fluid page-edge padding, replaces fixed Tailwind gutters where this file governs */
+  --space-unit: 8px;
+  --space-gutter: 24px;
+  --page-margin-mobile: 16px;
+  --page-margin-desktop: 40px;
+  --section-padding: 5rem;
+
+  /* Component-specific neutral/elevation values */
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* --------------------------------------------------------------------------
    Base
    -------------------------------------------------------------------------- */
 * { box-sizing: border-box; }
+
+.rounded-circle { border-radius: var(--radius-circle); }
 
 body {
   font-family: var(--font-body);
@@ -99,7 +150,7 @@ html {
 ::-webkit-scrollbar-track { background: var(--color-surface); }
 ::-webkit-scrollbar-thumb {
   background-color: var(--color-primary-container);
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
 }
 ::-webkit-scrollbar-thumb:hover { background-color: var(--color-primary); }
 
@@ -154,7 +205,7 @@ html {
   bottom: 2px;
   height: 2px;
   background: var(--color-secondary-container);
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
 }
 
 .nav-link--inactive { color: var(--color-ink-soft); }
@@ -198,6 +249,58 @@ html {
    copy sits in real contrast without looking like a dark filter was just
    dropped on top of a stock photo.
    -------------------------------------------------------------------------- */
+.home-hero {
+  min-height: clamp(520px, calc(100svh - 5rem), 780px);
+  isolation: isolate;
+}
+
+.home-hero__content {
+  padding-block: clamp(5rem, 11vw, 8rem);
+}
+
+.home-hero .home-hero__title {
+  max-width: 950px;
+  margin: 0 0 24px;
+  font-size: clamp(2.75rem, 7vw, 5.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+.home-hero .home-hero__title span { color: var(--color-secondary-fixed); }
+
+.home-hero__description {
+  max-width: 42rem;
+  margin: 0;
+  padding-left: 18px;
+  border-left: 3px solid var(--color-secondary-container);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(1.0625rem, 2vw, 1.3rem);
+  line-height: 1.6;
+}
+
+.home-hero__actions { margin-top: 36px; }
+
+.home-hero__actions .btn-primary {
+  min-height: 54px;
+  padding-inline: 28px;
+  border: 1px solid var(--color-secondary-container);
+  background: var(--color-secondary-container);
+  color: var(--color-ink);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  font-size: 15px;
+  font-weight: 700;
+  transition: background-color 0.2s var(--ease-standard), transform 0.2s var(--ease-standard), box-shadow 0.2s var(--ease-standard);
+}
+
+.home-hero__actions .btn-primary:hover {
+  background: var(--color-secondary-container-hover);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.home-hero__actions .btn-primary:active { transform: translateY(0); }
+
 [data-hero-slideshow] { position: absolute; inset: 0; overflow: hidden; }
 
 .hero-slide {
@@ -219,7 +322,8 @@ html {
   inset: 0;
   z-index: 2;
   background:
-    linear-gradient(115deg, rgba(20, 23, 13, 0.78) 0%, rgba(20, 23, 13, 0.38) 42%, rgba(20, 23, 13, 0.22) 100%);
+    linear-gradient(90deg, rgba(20, 23, 13, 0.88) 0%, rgba(20, 23, 13, 0.68) 38%, rgba(20, 23, 13, 0.3) 72%, rgba(20, 23, 13, 0.18) 100%),
+    linear-gradient(0deg, rgba(20, 23, 13, 0.35), transparent 42%);
 }
 
 @keyframes hero-ken-burns {
@@ -230,7 +334,9 @@ html {
 @media (max-width: 767px) {
   .hero-slide { animation-name: hero-ken-burns-mobile; }
   .hero-slide__tint {
-    background: linear-gradient(180deg, rgba(20, 23, 13, 0.55) 0%, rgba(20, 23, 13, 0.72) 100%);
+    background:
+      linear-gradient(90deg, rgba(20, 23, 13, 0.74), rgba(20, 23, 13, 0.42)),
+      linear-gradient(0deg, rgba(20, 23, 13, 0.72), rgba(20, 23, 13, 0.28) 100%);
   }
 }
 @keyframes hero-ken-burns-mobile {
@@ -239,6 +345,13 @@ html {
   100% { transform: scale(1); }
 }
 @media (prefers-reduced-motion: reduce) { .hero-slide { animation: none; } }
+
+@media (max-width: 640px) {
+  .home-hero { min-height: clamp(520px, calc(100svh - 5rem), 680px); }
+  .home-hero__content { padding-block: 5rem; }
+  .home-hero .home-hero__title { margin-bottom: 20px; }
+  .home-hero__actions { margin-top: 28px; }
+}
 
 /* --------------------------------------------------------------------------
    Trust strip logos
@@ -484,7 +597,7 @@ html {
    -------------------------------------------------------------------------- */
 .fleet-filter {
   padding: 11px 20px;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   border: 1.5px solid var(--color-outline-variant);
   background: var(--color-surface-1);
   color: var(--color-ink-soft);
@@ -513,7 +626,7 @@ html {
 .fleet-card__media { overflow: hidden; }
 .fleet-card__nav {
   position: absolute; top: 50%; transform: translateY(-50%);
-  width: 30px; height: 30px; border-radius: 9999px; border: none;
+  width: 30px; height: 30px; border-radius: var(--radius-pill); border: none;
   background: rgba(20, 23, 13, 0.55); color: #fff; font-size: 12px;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
   opacity: 0; transition: opacity 0.15s ease, background-color 0.15s ease, transform 0.15s var(--ease-standard);
@@ -527,7 +640,7 @@ html {
 .fleet-card__count {
   position: absolute; bottom: 10px; right: 10px;
   background: rgba(20, 23, 13, 0.6); color: #fff; font-size: 11px;
-  padding: 3px 9px; border-radius: 9999px;
+  padding: 3px 9px; border-radius: var(--radius-pill);
 }
 /* Always show nav arrows on touch devices, since there's no hover state to reveal them */
 @media (hover: none) {
@@ -559,8 +672,8 @@ html {
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     gap: 0;
-    margin-inline: calc(var(--edge) * -1);
-    padding-inline: var(--edge);
+    margin-inline: calc(var(--page-margin-mobile) * -1);
+    padding-inline: var(--page-margin-mobile);
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
@@ -627,7 +740,7 @@ html {
   flex-shrink: 0;
   width: 36px;
   height: 36px;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   background: var(--color-primary);
   color: #ffffff;
   display: flex;
@@ -687,7 +800,7 @@ html {
   align-items: center;
   gap: 6px;
   padding: 11px 18px;
-  border-radius: 9999px;
+  border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.35);
   color: #ffffff;
