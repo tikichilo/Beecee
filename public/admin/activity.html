@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Activity - Bee Cee Logistics</title>
+<meta name="robots" content="noindex, nofollow"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="/admin/admin-shared.css" rel="stylesheet"/>
+<style>
+  .activity-card {
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+  }
+  .activity-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--admin-border);
+  }
+  .activity-card__header h2 {
+    margin: 0;
+    font-family: "Montserrat", sans-serif;
+    font-size: 15px;
+  }
+  .activity-refresh {
+    padding: 8px 12px;
+    border: 1px solid var(--admin-border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--admin-green);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .activity-table-wrap { overflow-x: auto; }
+  .activity-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 12.5px;
+  }
+  .activity-table th, .activity-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eef0eb;
+    vertical-align: top;
+  }
+  .activity-table th {
+    background: #fafbf9;
+    color: var(--admin-text-muted);
+    font-size: 10px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .activity-table tr:last-child td { border-bottom: 0; }
+  .activity-status { white-space: nowrap; }
+  .activity-status.is-error { color: #b42318; }
+  .activity-status.is-ok { color: #3B4A1E; }
+  .activity-message {
+    padding: 26px 20px;
+    color: var(--admin-text-muted);
+    text-align: center;
+    font-size: 13px;
+  }
+  @media (max-width: 640px) {
+    .activity-card__header { padding: 14px; }
+    .activity-table th, .activity-table td { padding: 10px 12px; }
+  }
+</style>
+</head>
+<body class="admin-body">
+<div id="adminSidebarRoot"></div>
+<div class="admin-main">
+  <header class="admin-topbar">
+    <div>
+      <h1 class="admin-topbar__title">Admin Activity</h1>
+      <p class="admin-topbar__subtitle">Recent dashboard activity by admin account.</p>
+    </div>
+    <div class="admin-topbar__meta" id="whoami"></div>
+  </header>
+  <main class="admin-content">
+    <section class="activity-card" aria-labelledby="activityHeading">
+      <div class="activity-card__header">
+        <h2 id="activityHeading">Latest 200 events</h2>
+        <button class="activity-refresh" id="refreshActivity" type="button">Refresh</button>
+      </div>
+      <div class="activity-table-wrap">
+        <table class="activity-table">
+          <thead>
+            <tr><th>Time</th><th>Admin</th><th>Activity</th><th>Result</th><th>IP address</th></tr>
+          </thead>
+          <tbody id="activityRows">
+            <tr><td class="activity-message" colspan="5">Loading activity…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="/admin/admin-shared.js"></script>
+<script>
+  AdminShell.init("/admin/activity");
+
+  const rows = document.getElementById("activityRows");
+
+  function escapeHtml(value) {
+    const div = document.createElement("div");
+    div.textContent = value == null ? "" : String(value);
+    return div.innerHTML;
+  }
+
+  async function loadActivity() {
+    rows.innerHTML = '<tr><td class="activity-message" colspan="5">Loading activity…</td></tr>';
+
+    try {
+      const response = await fetch("/api/admin-activity");
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not load activity.");
+      if (!data.length) {
+        rows.innerHTML = '<tr><td class="activity-message" colspan="5">No admin activity recorded yet.</td></tr>';
+        return;
+      }
+
+      rows.innerHTML = data.map((event) => {
+        const timestamp = new Date(event.createdAt);
+        const time = Number.isNaN(timestamp.getTime()) ? "Unknown" : timestamp.toLocaleString();
+        const statusClass = event.statusCode < 400 ? "is-ok" : "is-error";
+        return `<tr>
+          <td>${escapeHtml(time)}</td>
+          <td>${escapeHtml(event.username)}</td>
+          <td>${escapeHtml(event.action)}</td>
+          <td class="activity-status ${statusClass}">${escapeHtml(event.statusCode)}</td>
+          <td>${escapeHtml(event.ip)}</td>
+        </tr>`;
+      }).join("");
+    } catch (err) {
+      rows.innerHTML = `<tr><td class="activity-message" colspan="5">${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  document.getElementById("refreshActivity").addEventListener("click", loadActivity);
+  loadActivity();
+</script>
+</body>
+</html>

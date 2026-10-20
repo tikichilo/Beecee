@@ -30,6 +30,7 @@ async function main() {
 
   const passwordHash = await Admin.hashPassword(password);
   await Admin.create({ username: username.toLowerCase(), email: email.toLowerCase(), passwordHash });
+  await Admin.ensureFirstSuperAdmin();
 
   console.log(`Admin "${username}" created. You can now log in at /admin.`);
   await mongoose.disconnect();

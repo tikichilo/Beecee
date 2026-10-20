@@ -13,6 +13,7 @@
     { href: "/admin/fleet", label: "Fleet", icon: "directions_car" },
     { href: "/admin/bookings", label: "Bookings", icon: "event_available" },
     { href: "/admin/quotes", label: "Quote Requests", icon: "request_quote" },
+    { href: "/admin/activity", label: "Admin Activity", icon: "history", superAdmin: true },
   ];
 
   function escapeHtml(str) {
@@ -33,7 +34,7 @@
     const linksHtml = NAV_ITEMS.map((item) => {
       const isActive = currentPath === item.href || currentPath.startsWith(item.href + "/");
       return `
-        <a href="${item.href}" class="admin-sidebar__link${isActive ? " is-active" : ""}"${isActive ? ' aria-current="page"' : ""}>
+        <a href="${item.href}" class="admin-sidebar__link${isActive ? " is-active" : ""}"${isActive ? ' aria-current="page"' : ""}${item.superAdmin ? ' data-super-admin-nav hidden' : ""}>
           <span class="material-symbols-outlined" aria-hidden="true">${item.icon}</span>
           <span>${item.label}</span>
         </a>`;
@@ -141,6 +142,14 @@
       }
       const whoami = document.getElementById("whoami");
       if (whoami) whoami.textContent = "Logged in as " + escapeHtml(data.username);
+      if (window.location.pathname === "/admin/activity" && !data.isSuperAdmin) {
+        window.location.href = "/admin/dashboard";
+        return null;
+      }
+      if (data.isSuperAdmin) {
+        const activityLink = document.querySelector("[data-super-admin-nav]");
+        if (activityLink) activityLink.hidden = false;
+      }
       return data;
     } catch (err) {
       window.location.href = "/admin";

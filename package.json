@@ -4,7 +4,7 @@
   "private": true,
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node --use-system-ca server.js",
     "create-admin": "node scripts/createAdmin.js"
   },
   "dependencies": {

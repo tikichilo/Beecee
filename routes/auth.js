@@ -52,10 +52,12 @@ router.post("/signup", async (req, res) => {
 
     const passwordHash = await Admin.hashPassword(password);
     const admin = await Admin.create({ username: cleanUsername, email: cleanEmail, passwordHash });
+    const superAdmin = await Admin.ensureFirstSuperAdmin();
 
     // Log the new admin straight in, same as after a normal login
     req.session.adminId = admin._id.toString();
     req.session.username = admin.username;
+    req.session.isSuperAdmin = !!(superAdmin && superAdmin._id.equals(admin._id));
     res.status(201).json({ ok: true, username: admin.username });
   } catch (err) {
     console.error("POST /api/auth/signup:", err);
@@ -66,20 +68,21 @@ router.post("/signup", async (req, res) => {
 // POST /api/auth/forgot-password
 router.post("/forgot-password", async (req, res) => {
   try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "Email is required." });
+    const email = req.body && req.body.email;
+    if (typeof email !== "string" || !email.trim()) {
+      return res.status(400).json({ error: "Email is required." });
+    }
 
-    const admin = await Admin.findOne({ email: email.toLowerCase().trim() });
+    const admin = await Admin.findOne({ email: email.trim().toLowerCase() });
 
     // Always respond success — don't reveal whether the email exists
     if (!admin) return res.json({ ok: true });
-
-    await PasswordReset.deleteMany({ adminId: admin._id });
+    req.adminActivityActor = { adminId: admin._id, username: admin.username };
 
     const rawToken = crypto.randomBytes(32).toString("hex");
     const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
 
-    await PasswordReset.create({
+    const resetRecord = await PasswordReset.create({
       adminId: admin._id,
       token: hashedToken,
       expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
@@ -88,7 +91,17 @@ router.post("/forgot-password", async (req, res) => {
     const baseUrl = `${req.protocol}://${req.get("host")}`;
     const resetUrl = `${baseUrl}/admin/reset-password?token=${rawToken}`;
 
-    await sendPasswordResetEmail({ to: admin.email, username: admin.username, resetUrl });
+    try {
+      await sendPasswordResetEmail({ to: admin.email, username: admin.username, resetUrl });
+    } catch (err) {
+      await PasswordReset.deleteOne({ _id: resetRecord._id });
+      throw err;
+    }
+
+    await PasswordReset.deleteMany({
+      adminId: admin._id,
+      _id: { $ne: resetRecord._id },
+    });
 
     res.json({ ok: true });
   } catch (err) {
@@ -122,6 +135,7 @@ router.post("/reset-password", async (req, res) => {
     if (!admin) {
       return res.status(400).json({ error: "This reset link is invalid or has expired." });
     }
+    req.adminActivityActor = { adminId: admin._id, username: admin.username };
 
     const policyErrors = getPasswordPolicyErrors(password, {
       username: admin.username,
@@ -162,6 +176,7 @@ router.post("/login", async (req, res) => {
 
     req.session.adminId = admin._id.toString();
     req.session.username = admin.username;
+    req.session.isSuperAdmin = !!admin.isSuperAdmin;
     res.json({ ok: true, username: admin.username });
   } catch (err) {
     console.error("POST /api/auth/login:", err);
@@ -178,11 +193,26 @@ router.post("/logout", (req, res) => {
 });
 
 // GET /api/auth/me — lets the admin dashboard check if it's already logged in
-router.get("/me", (req, res) => {
-  if (req.session && req.session.adminId) {
-    return res.json({ loggedIn: true, username: req.session.username });
+router.get("/me", async (req, res) => {
+  if (!req.session || !req.session.adminId) {
+    return res.json({ loggedIn: false });
   }
-  res.json({ loggedIn: false });
+
+  try {
+    const admin = await Admin.findById(req.session.adminId).select("username isSuperAdmin");
+    if (!admin) return res.json({ loggedIn: false });
+
+    req.session.username = admin.username;
+    req.session.isSuperAdmin = !!admin.isSuperAdmin;
+    res.json({
+      loggedIn: true,
+      username: admin.username,
+      isSuperAdmin: !!admin.isSuperAdmin,
+    });
+  } catch (err) {
+    console.error("GET /api/auth/me:", err);
+    res.status(500).json({ error: "Could not verify admin session." });
+  }
 });
 
 module.exports = router;

@@ -5,10 +5,13 @@ const fs = require("fs");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
+const Admin = require("./models/Admin");
 
 require("./utils/cloudinaryUpload"); // fail-fast Cloudinary env check + config
 
 const authRoutes = require("./routes/auth");
+const adminActivityRoutes = require("./routes/adminActivity");
+const recordAdminActivity = require("./middleware/adminActivity");
 const fleetRoutes = require("./routes/fleet");
 const fleetImageRoutes = require("./routes/fleetImages"); // <-- added: homepage fleet photo gallery
 const quoteRoutes = require("./routes/quote");
@@ -33,7 +36,10 @@ const SITE_DIR = path.join(__dirname, "public");
 // --------------------------------------------------------------------
 mongoose
   .connect(MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
+  .then(async () => {
+    await Admin.ensureFirstSuperAdmin();
+    console.log("MongoDB connected");
+  })
   .catch((err) => console.error("MongoDB connection error:", err));
 
 mongoose.connection.on("error", (err) => {
@@ -74,12 +80,33 @@ app.use(
   })
 );
 
+app.use(recordAdminActivity);
 app.use(express.static(SITE_DIR));
+
+app.get("/admin/activity", async (req, res) => {
+  if (!req.session || !req.session.adminId) {
+    return res.redirect("/admin");
+  }
+
+  try {
+    const admin = await Admin.findById(req.session.adminId).select("isSuperAdmin");
+    if (!admin) return res.redirect("/admin");
+    if (!admin.isSuperAdmin) {
+      return res.status(403).send("Super admin access required.");
+    }
+
+    res.sendFile(path.join(SITE_DIR, "admin/activity.html"));
+  } catch (err) {
+    console.error("Admin activity page authorization error:", err);
+    res.status(500).send("Could not verify super admin access.");
+  }
+});
 
 // --------------------------------------------------------------------
 // API routes
 // --------------------------------------------------------------------
 app.use("/api/auth", authRoutes);
+app.use("/api/admin-activity", adminActivityRoutes);
 app.use("/api/fleet", fleetRoutes);
 app.use("/api/fleet-images", fleetImageRoutes); // <-- added: homepage fleet photo gallery
 app.use("/api/quote-requests", quoteRoutes);
