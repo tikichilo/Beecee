@@ -376,6 +376,26 @@ html {
 }
 .trust-logo:active { transform: translateY(0) scale(0.97); }
 
+/* Rounded cards respond to a mouse without adding hover-only motion on touch. */
+.rounded-lg {
+  transition: transform 0.22s var(--ease-out-expo), box-shadow 0.22s var(--ease-standard), border-color 0.22s var(--ease-standard);
+}
+.rounded-lg > img {
+  transition: transform 0.35s var(--ease-out-expo);
+}
+@media (hover: hover) and (pointer: fine) {
+  .rounded-lg:hover,
+  .rounded-lg:focus-within {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card);
+    border-color: var(--color-primary-fixed-dim);
+  }
+  .rounded-lg:hover > img,
+  .rounded-lg:focus-within > img {
+    transform: scale(1.025);
+  }
+}
+
 /* --------------------------------------------------------------------------
    Mobile navigation — a real full-height panel, not a shrunk dropdown.
    Slides in from the right with its own scroll, big touch targets, and the
