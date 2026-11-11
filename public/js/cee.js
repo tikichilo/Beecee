@@ -63,10 +63,13 @@
     const grid = document.querySelector("[data-fleet-photo-grid]");
     if (!grid) return;
 
+    const hasFallbackImages = Boolean(grid.querySelector("img"));
     grid.setAttribute("aria-busy", "true");
-    grid.innerHTML = Array.from({ length: 4 })
-      .map(() => '<div class="fleet-skeleton-card" aria-hidden="true"><div class="fleet-skeleton-media"></div></div>')
-      .join("");
+    if (!hasFallbackImages) {
+      grid.innerHTML = Array.from({ length: 4 })
+        .map(() => '<div class="fleet-skeleton-card" aria-hidden="true"><div class="fleet-skeleton-media"></div></div>')
+        .join("");
+    }
 
     fetch("/api/fleet-images")
       .then((res) => {
@@ -79,30 +82,73 @@
           return;
         }
 
-        // Show every photo in the fleet database — no cap.
-        // Styling now lives entirely in .fleet-photo-thumb (bee.css) instead
-        // of a stack of Tailwind utilities, so the redesign only has to
-        // change one place.
         grid.innerHTML = images
-          .map(
-            (img) => `
-              <button type="button" class="fleet-photo-thumb aspect-square block w-full p-0" data-photo-url="${img.imageUrl}">
-                <img src="${img.imageUrl}" alt="Bee Cee Logistics fleet vehicle" loading="lazy" class="w-full h-full object-cover"/>
+          .map((img) => {
+            const imageUrl = String(img.imageUrl || "");
+            const isCloudinaryImage =
+              imageUrl.startsWith("https://res.cloudinary.com/") &&
+              imageUrl.includes("/image/upload/");
+            const imageSrc = cloudinaryImageUrl(imageUrl, 640, true);
+            const imageSizes = "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw";
+            const imageSrcSet = isCloudinaryImage
+              ? [320, 640, 960]
+                  .map((width) => `${cloudinaryImageUrl(imageUrl, width, true)} ${width}w`)
+                  .join(", ")
+              : "";
+            const formatSources = isCloudinaryImage
+              ? ["avif", "webp"]
+                  .map((format) => {
+                    const srcset = [320, 640, 960]
+                      .map((width) => `${cloudinaryImageUrl(imageUrl, width, true, format)} ${width}w`)
+                      .join(", ");
+                    return `<source type="image/${format}" srcset="${escapeAttribute(srcset)}" sizes="${imageSizes}"/>`;
+                  })
+                  .join("")
+              : "";
+            return `
+              <button type="button" class="fleet-photo-thumb aspect-square block w-full p-0" data-photo-url="${escapeAttribute(imageUrl)}">
+                <picture class="block h-full w-full">
+                  ${formatSources}
+                  <img src="${escapeAttribute(imageSrc)}"${imageSrcSet ? ` srcset="${escapeAttribute(imageSrcSet)}" sizes="${imageSizes}"` : ""} alt="Bee Cee Logistics fleet vehicle" width="640" height="640" loading="lazy" decoding="async" class="w-full h-full object-cover"/>
+                </picture>
               </button>
-            `
-          )
+            `;
+          })
           .join("");
 
         grid.querySelectorAll("[data-photo-url]").forEach((btn) => {
           btn.addEventListener("click", () => openLightbox(btn.getAttribute("data-photo-url")));
         });
       })
-      .catch(() => {
-        grid.innerHTML = "";
+      .catch((err) => {
+        console.error("Could not load fleet photos:", err);
       })
       .finally(() => {
         grid.setAttribute("aria-busy", "false");
       });
+  }
+
+  function cloudinaryImageUrl(url, width, square, format) {
+    const marker = "/image/upload/";
+    const markerIndex = url.indexOf(marker);
+    if (!url.startsWith("https://res.cloudinary.com/") || markerIndex === -1) return url;
+
+    const formatTransform = format ? `f_${format}` : "f_auto";
+    const transform = square
+      ? `c_fill,ar_1:1,w_${width},${formatTransform},q_auto`
+      : `w_${width},${formatTransform},q_auto`;
+    const insertAt = markerIndex + marker.length;
+    return `${url.slice(0, insertAt)}${transform}/${url.slice(insertAt)}`;
+  }
+
+  function escapeAttribute(value) {
+    return String(value).replace(/[&<>"']/g, (character) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    }[character]));
   }
 
   /* ------------------------------------------------------------------------
@@ -123,7 +169,7 @@
         'style="background:rgba(255,255,255,0.12);border-radius:9999px;display:flex;align-items:center;justify-content:center;width:40px;height:40px;">' +
         '<span class="material-symbols-outlined" aria-hidden="true" style="font-size:24px;">close</span>' +
         "</button>" +
-        '<img class="lightbox-image max-w-full max-h-full rounded-lg" alt="Fleet vehicle, full size" style="border-radius:10px;"/>';
+        '<img class="lightbox-image max-w-full max-h-full rounded-lg" alt="Fleet vehicle, full size" width="1600" height="1200" decoding="async" style="border-radius:10px;"/>';
       document.body.appendChild(overlay);
 
       const close = () => {
@@ -139,7 +185,7 @@
       });
     }
 
-    overlay.querySelector(".lightbox-image").src = imageUrl;
+    overlay.querySelector(".lightbox-image").src = cloudinaryImageUrl(imageUrl, 1600, false);
     overlay.classList.remove("hidden");
     overlay.classList.add("flex");
   }

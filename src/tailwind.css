@@ -1,0 +1,6 @@
+@import "./tailwind-base.css";
+@import "../public/css/bee.css";
+@import "../public/admin/admin-shared.css";
+
+@tailwind components;
+@tailwind utilities;

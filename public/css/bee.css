@@ -132,6 +132,7 @@ p { max-width: 68ch; }
 .material-symbols-outlined {
   font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
 }
+.material-symbols-outlined.hidden { display: none; }
 .material-symbols-outlined[data-weight="fill"],
 .material-symbols-outlined.icon-fill {
   font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;

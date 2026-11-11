@@ -5,16 +5,18 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Bee Cee Logistics Ltd | Freight, Car Hire &amp; Customs Clearing in Zambia</title>
 <meta name="description" content="Bee Cee Logistics delivers institutional-grade freight forwarding, corporate car hire, customs clearing and general supply logistics across Zambia."/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script src="/js/tailwind-config.js"></script>
-<link rel="stylesheet" href="/css/bee.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://res.cloudinary.com">
+<link rel="preload" href="https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/site.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 </head>
 <body class="bg-background text-on-background font-body-md text-body-md overflow-x-hidden pt-20">
 <!-- TopNavBar -->
 <header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-desktop h-20 bg-surface border-b border-outline-variant" data-site-header>
-<a class="flex items-center gap-3 site-brand" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" class="site-logo"/><span class="site-wordmark">Bee Cee<br/>Logistics Ltd</span></a>
+<a class="flex items-center gap-3 site-brand" href="index.html"><img src="/logo.png" alt="Bee Cee Logistics" width="213" height="177" decoding="async" class="site-logo"/><span class="site-wordmark">Bee Cee<br/>Logistics Ltd</span></a>
 <nav class="hidden md:flex gap-6" aria-label="Primary">
 <a class="font-body-md text-body-md nav-link--inactive" data-page="services.html" href="services.html">Services</a>
 <a class="font-body-md text-body-md nav-link--inactive" data-page="fleet.html" href="fleet.html">Fleet</a>
@@ -41,16 +43,16 @@
 <!-- Hero Section -->
 <section class="home-hero relative w-full flex items-center bg-primary text-on-primary">
 <div class="absolute inset-0 z-0" aria-hidden="true" data-hero-slideshow>
-<img class="hero-slide hero-slide--active" data-hero-slide src="/images/hero1.jpg" alt="" loading="eager" fetchpriority="high"/>
-<img class="hero-slide" data-hero-slide src="/images/hero2.jpg" alt="" loading="lazy"/>
-<img class="hero-slide" data-hero-slide src="/images/hero3.jpg" alt="" loading="lazy"/>
-<img class="hero-slide" data-hero-slide src="/images/hero4.jpg" alt="" loading="lazy"/>
-<img class="hero-slide" data-hero-slide src="/images/hero5.jpg" alt="" loading="lazy"/>
-<img class="hero-slide" data-hero-slide src="/images/hero6.jpg" alt="" loading="lazy"/>
-<img class="hero-slide" data-hero-slide src="/images/hero7.jpg" alt="" loading="lazy"/>
-<img class="hero-slide" data-hero-slide src="/images/hero8.jpg" alt="" loading="lazy"/>
-<img class="hero-slide" data-hero-slide src="/images/hero9.jpg" alt="" loading="lazy"/>
-<img class="hero-slide" data-hero-slide src="/images/hero10.jpg" alt="" loading="lazy"/>
+<img class="hero-slide hero-slide--active" data-hero-slide src="/images/hero1.jpg" alt="" width="1280" height="853" loading="eager" fetchpriority="high" decoding="async"/>
+<img class="hero-slide" data-hero-slide src="/images/hero2.jpg" alt="" width="780" height="1040" loading="lazy" decoding="async"/>
+<img class="hero-slide" data-hero-slide src="/images/hero3.jpg" alt="" width="1080" height="809" loading="lazy" decoding="async"/>
+<img class="hero-slide" data-hero-slide src="/images/hero4.jpg" alt="" width="2560" height="1152" loading="lazy" decoding="async"/>
+<img class="hero-slide" data-hero-slide src="/images/hero5.jpg" alt="" width="1953" height="2560" loading="lazy" decoding="async"/>
+<img class="hero-slide" data-hero-slide src="/images/hero6.jpg" alt="" width="744" height="992" loading="lazy" decoding="async"/>
+<img class="hero-slide" data-hero-slide src="/images/hero7.jpg" alt="" width="2560" height="1152" loading="lazy" decoding="async"/>
+<img class="hero-slide" data-hero-slide src="/images/hero8.jpg" alt="" width="810" height="1080" loading="lazy" decoding="async"/>
+<img class="hero-slide" data-hero-slide src="/images/hero9.jpg" alt="" width="992" height="744" loading="lazy" decoding="async"/>
+<img class="hero-slide" data-hero-slide src="/images/hero10.jpg" alt="" width="1080" height="809" loading="lazy" decoding="async"/>
 <div class="hero-slide__tint"></div>
 </div>
 <div class="home-hero__content relative z-10 w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop">
@@ -146,7 +148,12 @@
      opens a full-size lightbox on tap/click. This is a plain photo
      gallery — no categories or pricing live here, that's on fleet.html
      via /api/fleet instead. -->
-<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" data-fleet-photo-grid></div>
+<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" data-fleet-photo-grid>
+<div class="fleet-photo-thumb aspect-square block w-full"><img src="/images/fleet.jpg" alt="Bee Cee Logistics fleet vehicles" width="640" height="640" loading="lazy" decoding="async" class="w-full h-full object-cover"/></div>
+<div class="fleet-photo-thumb aspect-square block w-full"><img src="/images/hero1.jpg" alt="Bee Cee Logistics vehicles at the logistics compound" width="640" height="640" loading="lazy" decoding="async" class="w-full h-full object-cover"/></div>
+<div class="fleet-photo-thumb aspect-square block w-full"><img src="/images/hero4.jpg" alt="Bee Cee Logistics truck fleet" width="640" height="640" loading="lazy" decoding="async" class="w-full h-full object-cover"/></div>
+<div class="fleet-photo-thumb aspect-square block w-full"><img src="/images/yard1.jpg" alt="Bee Cee Logistics vehicle yard" width="640" height="640" loading="lazy" decoding="async" class="w-full h-full object-cover"/></div>
+</div>
 <div class="text-center mt-8">
 <a class="link-arrow" href="fleet.html">Book Now<span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span></a>
 </div>

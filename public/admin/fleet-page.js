@@ -175,7 +175,7 @@
       selectedGalleryPreviewUrls.push(url);
       return `
         <div class="preview-tile">
-          <img class="thumb-lg" src="${url}" alt="${escapeHtml(file.name)}"/>
+          <img class="thumb-lg" src="${url}" alt="${escapeHtml(file.name)}" width="88" height="88" loading="lazy" decoding="async"/>
           <button type="button" data-remove-new="${i}" class="preview-remove" aria-label="Remove this photo">×</button>
         </div>
       `;
@@ -204,7 +204,7 @@
   function galleryPhotoTemplate(img) {
     return `
       <div class="preview-tile" data-photo-id="${escapeHtml(img._id)}">
-        <img class="thumb-lg" src="${escapeHtml(img.imageUrl)}" alt=""/>
+        <img class="thumb-lg" src="${escapeHtml(img.imageUrl)}" alt="Bee Cee Logistics fleet photo" width="88" height="88" loading="lazy" decoding="async"/>
         <button type="button" data-delete-photo="${escapeHtml(img._id)}" class="preview-remove" aria-label="Delete this photo">×</button>
       </div>
     `;

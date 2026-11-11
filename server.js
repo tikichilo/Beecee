@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const compression = require("compression");
 const path = require("path");
 const fs = require("fs");
 const mongoose = require("mongoose");
@@ -63,6 +64,7 @@ mongoose.connection.on("reconnected", () => {
 // /api/auth/me on the dashboard came back loggedIn:false.
 app.set("trust proxy", 1);
 
+app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -81,7 +83,15 @@ app.use(
 );
 
 app.use(recordAdminActivity);
-app.use(express.static(SITE_DIR));
+app.use(
+  express.static(SITE_DIR, {
+    setHeaders(res, filePath) {
+      if (/\.(?:avif|gif|jpe?g|png|svg|webp|css|js|woff2?)$/i.test(filePath)) {
+        res.setHeader("Cache-Control", "public, max-age=2592000");
+      }
+    },
+  })
+);
 
 app.get("/admin/activity", async (req, res) => {
   if (!req.session || !req.session.adminId) {

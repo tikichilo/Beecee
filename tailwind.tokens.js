@@ -1,11 +1,9 @@
 /* ==========================================================================
-   Bee Cee Logistics — tailwind-config.js
-   Tailwind CDN (Play CDN / JIT) design-token config. Load this AFTER the
-   cdn.tailwindcss.com <script> tag and BEFORE your page markup needs any
-   utility classes that depend on these tokens (colors, spacing, fonts).
+   Bee Cee Logistics — shared Tailwind design-token config.
+   Used by the production Tailwind CLI build and shared by every page.
    One copy, shared by every public page — edit brand colors/fonts here once.
    ========================================================================== */
-tailwind.config = {
+module.exports = {
   darkMode: "class",
   theme: {
     extend: {
