@@ -1,18 +1,6 @@
 /* ============================================================
    Bee Cee Logistics — Fleet category data + card/filter rendering
-   Exposes window.BeeCeeFleet so any page can:
-     - fetchFleet(): get the (cached) list of the 5 fixed categories
-       with their rate ranges, from GET /api/fleet.
-     - renderFleetInto(selector, opts): render category rate cards
-       into a container. opts.limit caps how many cards render, if
-       ever needed; omit it to show all.
-     - renderFleetFilters(selector, opts): render the "All" + one
-       pill per category filter bar from the same live data, and
-       wire clicks to filter the rendered cards. opts.gridSelector
-       tells it which grid to filter (defaults to [data-fleet-grid]).
-   Used by fleet.html (via cee.js's loadFleet()) and by
-   request.html's category-booking form (via fetchFleet() directly).
-   Load this before cee.js on any page that needs it.
+   Three.js is requested only when a fleet card is near the viewport.
    ============================================================ */
 
 (function () {
@@ -20,7 +8,8 @@
 
   const ICONS = {
     saloon: "directions_car",
-    "4x4": "terrain",
+    "4x4-pickup": "airport_shuttle",
+    "4x4-car": "terrain",
     bus: "directions_bus",
     truck: "local_shipping",
   };
@@ -28,6 +17,11 @@
 
   let cachedFleet = null;
   let fetchPromise = null;
+  let fleet3dGrid = null;
+  let fleet3dCleanup = null;
+  let fleet3dLoaderObserver = null;
+  let fleet3dRequest = 0;
+  let fleet3dModulePromise = null;
 
   function escapeHtml(str) {
     return String(str ?? "").replace(/[&<>"']/g, (c) => ({
@@ -42,8 +36,6 @@
     return `K${cat.minRate.toLocaleString()} – K${cat.maxRate.toLocaleString()} / day`;
   }
 
-  // Cached + de-duped so fleet.html and request.html can both call this
-  // freely without firing off duplicate requests.
   function fetchFleet() {
     if (cachedFleet) return Promise.resolve(cachedFleet);
     if (!fetchPromise) {
@@ -63,16 +55,133 @@
     return fetchPromise;
   }
 
+  function vehicleType(cat) {
+    const category = String(cat.category || "").toLowerCase();
+    const label = String(cat.label || "").toLowerCase();
+    if (category.includes("pickup") || label.includes("pickup")) return "pickup";
+    if (category.includes("truck") || label.includes("truck")) return "truck";
+    if (category.includes("bus") || label.includes("bus") || label.includes("coach")) return "bus";
+    if (category.includes("4x4") || category.includes("suv") || label.includes("suv") || label.includes("4x4")) {
+      return "suv";
+    }
+    return "saloon";
+  }
+
+  function vehicleArt(cat) {
+    const type = vehicleType(cat);
+    const label = escapeHtml(cat.label || "Vehicle");
+    const body = type === "bus" || type === "truck"
+      ? `<path class="art-body" d="${type === "bus"
+        ? "M81 91V53q0-9 10-12l16-4h96q12 0 16 12l8 24v18z"
+        : "M67 91V62q0-7 8-10l20-8h38v47z"}"/>`
+      : `<path class="art-body" d="${type === "pickup"
+        ? "M54 91V73q0-8 9-11l21-4 14-21h48l13 22h45q12 0 17 10l5 22z"
+        : type === "suv"
+          ? "M54 91V68q0-9 11-12l22-3 15-24h52l17 24 32 5q13 2 17 13v20z"
+          : "M53 91V71q0-9 11-13l24-5 17-22h47l20 22 28 5q14 2 18 13v20z"}"/>`;
+    let detail = "";
+    if (type === "bus") {
+      detail = `<path class="art-glass" d="M111 46h82q7 0 10 8l5 17h-97z"/>
+        <path class="art-trim" d="M82 78h146v4H82z"/>
+        <path class="art-door" d="M204 44v46h-20V44"/>`;
+    } else if (type === "truck") {
+      detail = `<path class="art-cargo" d="M144 43h70q7 0 9 7l7 39h-86z"/>
+        <path class="art-glass" d="M96 51h31v21H81q1-8 6-12z"/>
+        <text class="art-lettering" x="179" y="68" text-anchor="middle">BEE CEE</text>`;
+    } else if (type === "pickup") {
+      detail = `<path class="art-glass" d="M102 42h35l12 18h-59z"/>
+        <path class="art-glass" d="M145 43h12l12 18h-19z"/>
+        <path class="art-trim" d="M165 65h37v5h-37z"/>`;
+    } else {
+      detail = `<path class="art-glass" d="M105 46h40l15 18h-68z"/>
+        <path class="art-glass" d="M149 46h9l15 18h-9z"/>`;
+    }
+    const wheels = `<g class="art-wheel">
+      <circle cx="92" cy="91" r="15"/><circle class="art-rim" cx="92" cy="91" r="7"/>
+      <circle cx="198" cy="91" r="15"/><circle class="art-rim" cx="198" cy="91" r="7"/>
+    </g>`;
+    return `<svg class="fleet-vehicle-art" viewBox="0 0 280 140" role="img" aria-label="${label}">
+      <ellipse class="art-shadow" cx="143" cy="109" rx="94" ry="13"/>
+      ${body}${detail}${wheels}
+      <path class="art-light" d="M54 77l15-3v8H54z"/><path class="art-tail" d="M229 73l8 3v9h-8z"/>
+      <path class="art-highlight" d="M63 69q4-8 13-9l24-4"/>
+    </svg>`;
+  }
+
+  function disposeFleet3d() {
+    fleet3dRequest += 1;
+    if (fleet3dLoaderObserver) {
+      fleet3dLoaderObserver.disconnect();
+      fleet3dLoaderObserver = null;
+    }
+    if (fleet3dCleanup) {
+      fleet3dCleanup();
+      fleet3dCleanup = null;
+    }
+    fleet3dGrid = null;
+  }
+
+  function enhanceFleet3d(grid) {
+    fleet3dGrid = grid;
+    const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (
+      reducedMotion ||
+      !(window.WebGLRenderingContext || window.WebGL2RenderingContext) ||
+      !("IntersectionObserver" in window) ||
+      !grid.querySelector("[data-fleet-vehicle-stage]")
+    ) return;
+
+    const request = ++fleet3dRequest;
+    fleet3dLoaderObserver = new IntersectionObserver((entries) => {
+      if (request !== fleet3dRequest || fleet3dGrid !== grid) return;
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      fleet3dLoaderObserver.disconnect();
+      fleet3dLoaderObserver = null;
+      if (!fleet3dModulePromise) fleet3dModulePromise = import("/js/fleet-3d.js");
+      fleet3dModulePromise
+        .then((module) => {
+          if (request !== fleet3dRequest || fleet3dGrid !== grid) return;
+          fleet3dCleanup = module.mountFleet3d(grid);
+        })
+        .catch((err) => {
+          console.warn("Fleet 3D enhancement unavailable; keeping the static vehicle art.", err);
+        });
+    }, { rootMargin: "120px 0px", threshold: 0 });
+    grid.querySelectorAll("[data-fleet-vehicle-stage]").forEach((stage) => fleet3dLoaderObserver.observe(stage));
+  }
+
+  if (window.matchMedia) {
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handleMotionChange = () => {
+      if (motionPreference.matches) {
+        if (fleet3dLoaderObserver) fleet3dLoaderObserver.disconnect();
+        fleet3dLoaderObserver = null;
+        if (fleet3dCleanup) fleet3dCleanup();
+        fleet3dCleanup = null;
+        fleet3dRequest += 1;
+      } else if (fleet3dGrid) {
+        enhanceFleet3d(fleet3dGrid);
+      }
+    };
+    if (motionPreference.addEventListener) {
+      motionPreference.addEventListener("change", handleMotionChange);
+    } else if (motionPreference.addListener) {
+      motionPreference.addListener(handleMotionChange);
+    }
+  }
+
   function cardTemplate(cat) {
     const icon = ICONS[cat.category] || DEFAULT_ICON;
     const available = !!cat.acceptingBookings;
+    const label = typeof cat.label === "string" ? cat.label : "Vehicle";
+    const type = vehicleType(cat);
 
-    // "fleet-card" class added so the filter bar below (and the existing
-    // .fleet-card[hidden] rule in bee.css) has something to select.
     return `
       <article class="fleet-card bg-surface border border-outline-variant rounded-xl overflow-hidden flex flex-col" data-category="${escapeHtml(cat.category)}">
-        <div class="fleet-skeleton-media flex items-center justify-center" style="min-height:160px;">
-          <span class="material-symbols-outlined text-primary" style="font-size:56px;" aria-hidden="true">${icon}</span>
+        <div class="fleet-vehicle-stage${available ? "" : " is-unavailable"}" data-fleet-vehicle-stage data-vehicle-type="${type}" data-vehicle-label="${escapeHtml(label)}" data-vehicle-available="${available}">
+          ${vehicleArt(cat)}
+          <span class="fleet-vehicle-stage__caption" aria-hidden="true">${escapeHtml(label)}</span>
+          <span class="material-symbols-outlined fleet-vehicle-stage__fallback-icon" aria-hidden="true">${icon}</span>
         </div>
         <div class="p-4 flex flex-col gap-2 flex-grow">
           <div class="flex items-center justify-between gap-2">
@@ -119,6 +228,7 @@
       if (window.BeeCeeCategoryTags) {
         window.BeeCeeCategoryTags.unmountCategoryTags(grid);
       }
+      disposeFleet3d();
 
       if (!visible.length) {
         grid.innerHTML = '<p class="col-span-full text-center text-on-surface-variant py-8">No categories found.</p>';
@@ -128,25 +238,18 @@
       if (window.BeeCeeCategoryTags) {
         window.BeeCeeCategoryTags.mountCategoryTags(grid);
       }
+      enhanceFleet3d(grid);
     } catch (err) {
       if (window.BeeCeeCategoryTags) {
         window.BeeCeeCategoryTags.unmountCategoryTags(grid);
       }
+      disposeFleet3d();
       grid.innerHTML = '<p class="col-span-full text-center text-red-600 py-8">Couldn\'t load the fleet right now. Please try again shortly.</p>';
     } finally {
       grid.setAttribute("aria-busy", "false");
     }
   }
 
-  /* ------------------------------------------------------------------------
-     Filter pill bar — one "All" pill plus one pill per live category,
-     built from the same /api/fleet data as the cards. Clicking a pill
-     toggles which .fleet-card elements are visible in the target grid by
-     comparing each card's data-category to the pill's data-filter.
-     No-ops quietly (leaves whatever static markup was already there, e.g.
-     just the "All" button) if the fetch fails, so a network hiccup never
-     leaves the filter bar empty.
-     ------------------------------------------------------------------------ */
   function filterButtonTemplate(cat) {
     const icon = ICONS[cat.category] || DEFAULT_ICON;
     return `
@@ -176,7 +279,7 @@
     try {
       categories = await fetchFleet();
     } catch (err) {
-      return; // keep whatever static "All" button is already in the markup
+      return;
     }
 
     const allButtonTemplate = `
@@ -198,5 +301,5 @@
     });
   }
 
-  window.BeeCeeFleet = { fetchFleet, renderFleetInto, renderFleetFilters };
+  window.BeeCeeFleet = { fetchFleet, renderFleetInto, renderFleetFilters, vehicleArt };
 })();
