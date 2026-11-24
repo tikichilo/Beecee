@@ -19,6 +19,8 @@
     setupMobileMenu();
     setupHeaderScrollShadow();
     setupYear();
+    setupReveal();
+    setupBackToTop();
   }
 
   /**
@@ -87,6 +89,9 @@
 
     function update() {
       header.classList.toggle("site-header--scrolled", window.scrollY > 8);
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = scrollable > 0 ? Math.min(1, window.scrollY / scrollable) : 0;
+      header.style.setProperty("--scroll-progress", String(progress));
     }
     update();
     window.addEventListener("scroll", update, { passive: true });
@@ -97,5 +102,41 @@
     document.querySelectorAll("[data-current-year]").forEach((el) => {
       el.textContent = new Date().getFullYear();
     });
+  }
+
+  function setupReveal() {
+    if (!("IntersectionObserver" in window) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const sections = document.querySelectorAll("main section:not(.home-hero), body > section:not(.home-hero)");
+    sections.forEach((section) => section.setAttribute("data-reveal", ""));
+    document.documentElement.classList.add("reveal-ready");
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("reveal-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: "0px 0px -40px" });
+
+    sections.forEach((section) => observer.observe(section));
+  }
+
+  function setupBackToTop() {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "back-to-top";
+    button.setAttribute("aria-label", "Back to top");
+    button.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">arrow_upward</span>';
+    document.body.appendChild(button);
+
+    function update() {
+      button.classList.toggle("back-to-top--visible", window.scrollY > 600);
+    }
+
+    button.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+    update();
+    window.addEventListener("scroll", update, { passive: true });
   }
 })();

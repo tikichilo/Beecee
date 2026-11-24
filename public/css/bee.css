@@ -177,6 +177,16 @@ html {
   border-bottom: 1px solid transparent;
   transition: box-shadow 0.3s var(--ease-standard), border-color 0.3s var(--ease-standard), background-color 0.3s var(--ease-standard);
 }
+[data-site-header]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: calc(var(--scroll-progress, 0) * 100%);
+  height: 2px;
+  background: var(--color-secondary-container);
+  pointer-events: none;
+}
 .site-header--scrolled {
   border-bottom-color: var(--color-line);
   box-shadow: 0 1px 0 var(--color-line), 0 12px 24px -12px rgba(20, 23, 13, 0.18);
@@ -257,6 +267,24 @@ html {
 
 .home-hero__content {
   padding-block: clamp(5rem, 11vw, 8rem);
+}
+
+.home-hero__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 20px;
+  color: var(--color-secondary-fixed);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.home-hero__eyebrow span {
+  width: 28px;
+  height: 2px;
+  background: var(--color-secondary-container);
 }
 
 .home-hero .home-hero__title {
@@ -346,6 +374,16 @@ html {
   100% { transform: scale(1); }
 }
 @media (prefers-reduced-motion: reduce) { .hero-slide { animation: none; } }
+
+.reveal-ready [data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.65s var(--ease-out-expo), transform 0.65s var(--ease-out-expo);
+}
+.reveal-ready [data-reveal].reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 @media (max-width: 640px) {
   .home-hero { min-height: clamp(520px, calc(100svh - 5rem), 680px); }
@@ -611,6 +649,38 @@ html {
 .toast--error { background: var(--color-error); }
 @media (max-width: 480px) {
   .toast { left: 16px; right: 16px; bottom: 16px; max-width: none; }
+}
+
+.back-to-top {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 55;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-circle);
+  background: var(--color-primary);
+  color: #ffffff;
+  box-shadow: var(--shadow-lift);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s var(--ease-out-expo), background-color 0.2s ease;
+}
+.back-to-top--visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.back-to-top:hover { background: var(--color-primary-container); }
+.back-to-top:focus-visible {
+  outline: 3px solid var(--color-secondary-fixed-dim);
+  outline-offset: 3px;
 }
 
 /* --------------------------------------------------------------------------
@@ -915,3 +985,148 @@ select:focus-visible, textarea:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.001ms !important; animation-duration: 0.001ms !important; }
 }
+
+/* --------------------------------------------------------------------------
+   Homepage fleet carousel (index.html / cee.js loadFleetCarousel)
+   One big main photo, previous/next buttons, swipe on touch via native
+   scroll-snap, thumbnail strip underneath. Replaces the old .fleet-photo-thumb
+   grid on the home page (that rule is kept above for any other use).
+   -------------------------------------------------------------------------- */
+.fleet-carousel { max-width: 960px; margin-inline: auto; }
+
+.fleet-carousel__stage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  background: var(--color-surface-container);
+}
+@media (min-width: 768px) {
+  .fleet-carousel__stage { aspect-ratio: 16 / 9; }
+}
+
+.fleet-carousel__viewport {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.fleet-carousel__viewport::-webkit-scrollbar { display: none; }
+.fleet-carousel__viewport:focus-visible {
+  outline: 3px solid var(--color-secondary-fixed-dim);
+  outline-offset: -3px;
+}
+
+.fleet-carousel__slide {
+  flex: 0 0 100%;
+  height: 100%;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}
+.fleet-carousel__open {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+}
+.fleet-carousel__open picture,
+.fleet-carousel__open img { display: block; width: 100%; height: 100%; }
+.fleet-carousel__open img { object-fit: cover; }
+
+.fleet-carousel__nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: rgba(20, 23, 13, 0.6);
+  color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s var(--ease-standard);
+}
+.fleet-carousel__nav:hover { background: var(--color-primary); }
+.fleet-carousel__nav:active { transform: translateY(-50%) scale(0.92); }
+.fleet-carousel__nav:focus-visible {
+  outline: 3px solid var(--color-secondary-fixed-dim);
+  outline-offset: 2px;
+}
+.fleet-carousel__nav--prev { left: 12px; }
+.fleet-carousel__nav--next { right: 12px; }
+.fleet-carousel__nav .material-symbols-outlined { font-size: 28px; }
+
+.fleet-carousel__count {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 2;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(20, 23, 13, 0.6);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fleet-carousel__thumbs {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 4px 2px;
+  overflow-x: auto;
+  justify-content: flex-start;
+  justify-content: safe center;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.fleet-carousel__thumbs::-webkit-scrollbar { display: none; }
+.fleet-carousel__thumb {
+  flex: 0 0 auto;
+  width: 84px;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-container);
+  opacity: 0.65;
+  cursor: pointer;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+.fleet-carousel__thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.fleet-carousel__thumb:hover { opacity: 1; }
+.fleet-carousel__thumb[aria-current="true"] { opacity: 1; border-color: var(--color-primary); }
+.fleet-carousel__thumb:focus-visible {
+  outline: 3px solid var(--color-secondary-fixed-dim);
+  outline-offset: 2px;
+}
+
+/* A fleet item with a single photo needs no arrows, counter or thumbnails. */
+.fleet-carousel--single .fleet-carousel__nav,
+.fleet-carousel--single .fleet-carousel__count,
+.fleet-carousel--single .fleet-carousel__thumbs { display: none; }
+
+@media (max-width: 640px) {
+  .fleet-carousel__nav { width: 38px; height: 38px; }
+  .fleet-carousel__nav--prev { left: 8px; }
+  .fleet-carousel__nav--next { right: 8px; }
+  .fleet-carousel__thumb { width: 64px; }
+}
+
+/* Anchor links (#our-story) shouldn't hide under the fixed 80px header. */
+section[id] { scroll-margin-top: 5rem; }

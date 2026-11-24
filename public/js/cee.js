@@ -8,6 +8,11 @@
    pages that don't have a given piece of markup. Cross-page UI reactivity
    (nav, mobile menu) lives in bee.js.
 
+   v3 note: added loadFleetCarousel() / setupCarousel() for the homepage fleet
+   carousel ([data-fleet-carousel]). Nothing else was removed or changed.
+   loadFleetPhotos() (the old thumbnail grid) is left in place and simply
+   no-ops now that index.html no longer has [data-fleet-photo-grid].
+
    v2 note: logic, selectors, endpoints and event wiring are UNCHANGED from
    the previous version. The only edits are inside loadFleetPhotos() and
    openLightbox(), where the strings of Tailwind utility classes injected
@@ -23,6 +28,7 @@
   function init() {
     loadFleet();
     loadFleetPhotos();
+    loadFleetCarousel();
     setupRequestModes();
     setupFormValidation("[data-contact-form]", contactFormFields);
     setupFormValidation("[data-quote-form]", quoteFormFields);
@@ -126,6 +132,213 @@
       .finally(() => {
         grid.setAttribute("aria-busy", "false");
       });
+  }
+
+  /* ------------------------------------------------------------------------
+     Homepage fleet carousel — one large main photo with previous/next
+     buttons, swipe on touch (native scroll-snap), a thumbnail strip, and the
+     same full-size lightbox on tap. The slides already in the markup are the
+     fallback; if GET /api/fleet-images returns photos they replace them.
+     No-ops on any page without [data-fleet-carousel].
+     ------------------------------------------------------------------------ */
+  function loadFleetCarousel() {
+    const root = document.querySelector("[data-fleet-carousel]");
+    if (!root) return;
+
+    const carousel = setupCarousel(root);
+    root.setAttribute("aria-busy", "true");
+
+    fetch("/api/fleet-images")
+      .then((res) => {
+        if (!res.ok) throw new Error("Could not load fleet photos.");
+        return res.json();
+      })
+      .then((images) => {
+        const urls = (Array.isArray(images) ? images : [])
+          .map((img) => String((img && img.imageUrl) || ""))
+          .filter(Boolean);
+        if (!urls.length) return; // keep the fallback slides already in the markup
+        carousel.setSlides(urls.map((url) => carouselSlideTemplate(url)));
+      })
+      .catch((err) => {
+        console.error("Could not load fleet photos:", err);
+      })
+      .finally(() => {
+        root.setAttribute("aria-busy", "false");
+      });
+  }
+
+  function carouselSlideTemplate(imageUrl) {
+    const isCloudinaryImage =
+      imageUrl.startsWith("https://res.cloudinary.com/") &&
+      imageUrl.includes("/image/upload/");
+    const widths = [640, 960, 1280];
+    const sizes = "(max-width: 1024px) 100vw, 960px";
+    const imageSrc = cloudinaryImageUrl(imageUrl, 960, false);
+    const imageSrcSet = isCloudinaryImage
+      ? widths.map((width) => `${cloudinaryImageUrl(imageUrl, width, false)} ${width}w`).join(", ")
+      : "";
+    const formatSources = isCloudinaryImage
+      ? ["avif", "webp"]
+          .map((format) => {
+            const srcset = widths
+              .map((width) => `${cloudinaryImageUrl(imageUrl, width, false, format)} ${width}w`)
+              .join(", ");
+            return `<source type="image/${format}" srcset="${escapeAttribute(srcset)}" sizes="${sizes}"/>`;
+          })
+          .join("")
+      : "";
+    const thumbSrc = cloudinaryImageUrl(imageUrl, 160, true);
+    return `<div class="fleet-carousel__slide" data-thumb="${escapeAttribute(thumbSrc)}">` +
+      `<button type="button" class="fleet-carousel__open" data-photo-url="${escapeAttribute(imageUrl)}" aria-label="View photo full size">` +
+      `<picture>${formatSources}` +
+      `<img src="${escapeAttribute(imageSrc)}"${imageSrcSet ? ` srcset="${escapeAttribute(imageSrcSet)}" sizes="${sizes}"` : ""} alt="Bee Cee Logistics fleet vehicle" width="960" height="540" loading="lazy" decoding="async"/>` +
+      `</picture></button></div>`;
+  }
+
+  function setupCarousel(root) {
+    const viewport = root.querySelector("[data-carousel-viewport]");
+    const thumbs = root.querySelector("[data-carousel-thumbs]");
+    const prevBtn = root.querySelector("[data-carousel-prev]");
+    const nextBtn = root.querySelector("[data-carousel-next]");
+    const countEl = root.querySelector("[data-carousel-count]");
+    if (!viewport) return { setSlides() {} };
+
+    let index = 0;
+    let pendingIndex = null; // set while a button/thumb-triggered scroll is in flight
+    let pendingTimer = 0;
+    let scrollTicking = false;
+
+    const getSlides = () => Array.from(viewport.children);
+    const reducedMotion = () =>
+      Boolean(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+    function scrollBox(box, left, instant) {
+      const behavior = instant || reducedMotion() ? "auto" : "smooth";
+      if (typeof box.scrollTo === "function") box.scrollTo({ left: left, behavior: behavior });
+      else box.scrollLeft = left;
+    }
+
+    function setActive(i) {
+      const slides = getSlides();
+      if (!slides.length) return;
+      index = Math.max(0, Math.min(slides.length - 1, i));
+      if (countEl) countEl.textContent = `${index + 1} / ${slides.length}`;
+      if (thumbs) {
+        Array.from(thumbs.children).forEach((thumb, n) => {
+          const active = n === index;
+          thumb.setAttribute("aria-current", String(active));
+          if (active) {
+            const left = thumb.offsetLeft - (thumbs.clientWidth - thumb.clientWidth) / 2;
+            scrollBox(thumbs, Math.max(0, left), false);
+          }
+        });
+      }
+    }
+
+    function goTo(i, instant) {
+      const slides = getSlides();
+      if (!slides.length) return;
+      const target = (i + slides.length) % slides.length; // wraps around at both ends
+      pendingIndex = target;
+      window.clearTimeout(pendingTimer);
+      pendingTimer = window.setTimeout(() => {
+        pendingIndex = null;
+        syncFromScroll();
+      }, 700);
+      setActive(target);
+      scrollBox(viewport, target * viewport.clientWidth, instant);
+    }
+
+    function syncFromScroll() {
+      const width = viewport.clientWidth || 1;
+      setActive(Math.round(viewport.scrollLeft / width));
+    }
+
+    function refresh() {
+      const slides = getSlides();
+      root.classList.toggle("fleet-carousel--single", slides.length < 2);
+      slides.forEach((slide, n) => {
+        slide.setAttribute("role", "group");
+        slide.setAttribute("aria-roledescription", "slide");
+        slide.setAttribute("aria-label", `${n + 1} of ${slides.length}`);
+      });
+      if (thumbs) {
+        thumbs.innerHTML = slides
+          .map((slide, n) => {
+            const img = slide.querySelector("img");
+            const thumbSrc = slide.getAttribute("data-thumb") || (img ? img.getAttribute("src") : "") || "";
+            return `<button type="button" class="fleet-carousel__thumb" data-carousel-thumb="${n}" aria-label="Show photo ${n + 1} of ${slides.length}"><img src="${escapeAttribute(thumbSrc)}" alt="" width="96" height="72" loading="lazy" decoding="async"/></button>`;
+          })
+          .join("");
+      }
+      setActive(index);
+    }
+
+    function setSlides(slideHtmlList) {
+      viewport.innerHTML = slideHtmlList.join("");
+      index = 0;
+      pendingIndex = null;
+      window.clearTimeout(pendingTimer);
+      viewport.scrollLeft = 0;
+      refresh();
+    }
+
+    if (prevBtn) prevBtn.addEventListener("click", () => goTo(index - 1));
+    if (nextBtn) nextBtn.addEventListener("click", () => goTo(index + 1));
+
+    root.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        goTo(index - 1);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        goTo(index + 1);
+      }
+    });
+
+    if (thumbs) {
+      thumbs.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-carousel-thumb]");
+        if (btn) goTo(Number(btn.getAttribute("data-carousel-thumb")));
+      });
+    }
+
+    // Tap/click on the main photo opens the shared full-size lightbox.
+    viewport.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-photo-url]");
+      if (btn) openLightbox(btn.getAttribute("data-photo-url"));
+    });
+
+    // Swipes (native scroll-snap) update the thumbnail + counter as the photo settles.
+    viewport.addEventListener(
+      "scroll",
+      () => {
+        if (scrollTicking) return;
+        scrollTicking = true;
+        window.requestAnimationFrame(() => {
+          scrollTicking = false;
+          if (pendingIndex === null) syncFromScroll();
+        });
+      },
+      { passive: true }
+    );
+    if ("onscrollend" in window) {
+      viewport.addEventListener("scrollend", () => {
+        pendingIndex = null;
+        window.clearTimeout(pendingTimer);
+        syncFromScroll();
+      });
+    }
+
+    // Keep the current photo aligned if the viewport width changes (rotate, resize).
+    window.addEventListener("resize", () => {
+      const aligned = index * viewport.clientWidth;
+      if (Math.abs(viewport.scrollLeft - aligned) > 1) scrollBox(viewport, aligned, true);
+    });
+
+    refresh();
+    return { setSlides: setSlides };
   }
 
   function cloudinaryImageUrl(url, width, square, format) {
